@@ -552,6 +552,20 @@
       "close_game": "close_game"
     }
   },
+  "AutoStart": {
+    "_info": {
+      "name": "自動起動",
+      "help": "GUI起動後にスケジューラーを自動的に起動する"
+    },
+    "Enable": {
+      "name": "自動起動を有効にする",
+      "help": "有効にすると、GUI起動完了後にこの設定のスケジューラーが自動的に起動します"
+    },
+    "Delay": {
+      "name": "遅延時間",
+      "help": "GUI起動後、スケジューラーを起動するまでの遅延時間（秒）"
+    }
+  },
   "DropRecord": {
     "_info": {
       "name": "DropRecord._info.name",

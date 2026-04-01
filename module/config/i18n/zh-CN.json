@@ -552,6 +552,20 @@
       "close_game": "关闭游戏"
     }
   },
+  "AutoStart": {
+    "_info": {
+      "name": "自动启动",
+      "help": "GUI启动后自动启动调度器"
+    },
+    "Enable": {
+      "name": "启用自动启动",
+      "help": "开启后，GUI启动完成将自动启动该配置的调度器"
+    },
+    "Delay": {
+      "name": "延迟时间",
+      "help": "GUI启动后延迟多少秒再启动调度器（秒）"
+    }
+  },
   "DropRecord": {
     "_info": {
       "name": "掉落记录",

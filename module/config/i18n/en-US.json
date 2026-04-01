@@ -552,6 +552,20 @@
       "close_game": "Close Game"
     }
   },
+  "AutoStart": {
+    "_info": {
+      "name": "Auto Start",
+      "help": "Automatically start scheduler after GUI startup"
+    },
+    "Enable": {
+      "name": "Enable Auto Start",
+      "help": "When enabled, the scheduler for this config will start automatically after GUI startup"
+    },
+    "Delay": {
+      "name": "Delay Time",
+      "help": "Delay in seconds before starting the scheduler after GUI startup"
+    }
+  },
   "DropRecord": {
     "_info": {
       "name": "Drop Record Settings",
