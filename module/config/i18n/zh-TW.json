@@ -552,6 +552,20 @@
       "close_game": "關閉遊戲"
     }
   },
+  "AutoStart": {
+    "_info": {
+      "name": "自動啟動",
+      "help": "GUI啟動後自動啟動排程器"
+    },
+    "Enable": {
+      "name": "啟用自動啟動",
+      "help": "開啟後，GUI啟動完成將自動啟動該配置的排程器"
+    },
+    "Delay": {
+      "name": "延遲時間",
+      "help": "GUI啟動後延遲多少秒再啟動排程器（秒）"
+    }
+  },
   "DropRecord": {
     "_info": {
       "name": "掉落紀錄",

@@ -26,6 +26,10 @@
       "TaskHoardingDuration": 0,
       "WhenTaskQueueEmpty": "goto_main"
     },
+    "AutoStart": {
+      "Enable": false,
+      "Delay": 10
+    },
     "DropRecord": {
       "SaveFolder": "./screenshots",
       "AzurStatsID": null,
