@@ -219,6 +219,16 @@
         ]
       }
     },
+    "AutoStart": {
+      "Enable": {
+        "type": "checkbox",
+        "value": false
+      },
+      "Delay": {
+        "type": "input",
+        "value": 10
+      }
+    },
     "DropRecord": {
       "SaveFolder": {
         "type": "input",

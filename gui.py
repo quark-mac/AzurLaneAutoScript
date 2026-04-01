@@ -1,8 +1,33 @@
 import threading
+import time
 from multiprocessing import Event, Process
 
 from module.logger import logger
 from module.webui.setting import State
+
+
+def auto_start_scheduler(ev: threading.Event):
+    """Auto start scheduler after GUI startup"""
+    time.sleep(2)
+
+    from module.config.config import AzurLaneConfig
+    from module.config.utils import alas_instance
+    from module.webui.process_manager import ProcessManager
+
+    for config_name in alas_instance():
+        try:
+            config = AzurLaneConfig(config_name=config_name)
+            if config.AutoStart_Enable:
+                delay = config.AutoStart_Delay
+                logger.info(f"Auto start enabled for [{config_name}], delay: {delay}s")
+                time.sleep(delay)
+
+                manager = ProcessManager.get_manager(config_name)
+                if not manager.alive:
+                    logger.info(f"Auto starting scheduler for [{config_name}]")
+                    manager.start(func=None, ev=ev)
+        except Exception as e:
+            logger.error(f"Failed to auto start [{config_name}]: {e}")
 
 
 def func(ev: threading.Event):
@@ -41,7 +66,10 @@ def func(ev: threading.Event):
         "--electron", action="store_true", help="Runs by electron client."
     )
     parser.add_argument(
-        "--ssl-key", dest="ssl_key", type=str, help="SSL key file path for HTTPS support"
+        "--ssl-key",
+        dest="ssl_key",
+        type=str,
+        help="SSL key file path for HTTPS support",
     )
     parser.add_argument(
         "--ssl-cert", type=str, help="SSL certificate file path for HTTPS support"
@@ -72,15 +100,29 @@ def func(ev: threading.Event):
         # https://github.com/LmeSzinc/AzurLaneAutoScript/issues/2051
         logger.info("Electron detected, remove log output to stdout")
         from module.logger import console_hdlr
+
         logger.removeHandler(console_hdlr)
 
     if ssl_cert is None and ssl_key is not None:
-        logger.error("SSL key provided without certificate. Please provide both SSL key and certificate.")
+        logger.error(
+            "SSL key provided without certificate. Please provide both SSL key and certificate."
+        )
     elif ssl_key is None and ssl_cert is not None:
-        logger.error("SSL certificate provided without key. Please provide both SSL key and certificate.")
+        logger.error(
+            "SSL certificate provided without key. Please provide both SSL key and certificate."
+        )
+
+    threading.Thread(target=auto_start_scheduler, args=(ev,), daemon=True).start()
 
     if ssl:
-        uvicorn.run("module.webui.app:app", host=host, port=port, factory=True, ssl_keyfile=ssl_key, ssl_certfile=ssl_cert)
+        uvicorn.run(
+            "module.webui.app:app",
+            host=host,
+            port=port,
+            factory=True,
+            ssl_keyfile=ssl_key,
+            ssl_certfile=ssl_cert,
+        )
     else:
         uvicorn.run("module.webui.app:app", host=host, port=port, factory=True)
 

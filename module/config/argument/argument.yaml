@@ -96,6 +96,11 @@ Optimization:
   WhenTaskQueueEmpty:
     value: goto_main
     option: [ stay_there, goto_main, close_game ]
+AutoStart:
+  Enable:
+    type: checkbox
+    value: false
+  Delay: 10
 DropRecord:
   SaveFolder: ./screenshots
   AzurStatsID: null
