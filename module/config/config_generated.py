@@ -43,6 +43,10 @@ class GeneratedConfig:
     Optimization_TaskHoardingDuration = 0
     Optimization_WhenTaskQueueEmpty = 'goto_main'  # stay_there, goto_main, close_game
 
+    # Group `AutoStart`
+    AutoStart_Enable = False
+    AutoStart_Delay = 10
+
     # Group `DropRecord`
     DropRecord_SaveFolder = './screenshots'
     DropRecord_AzurStatsID = None
