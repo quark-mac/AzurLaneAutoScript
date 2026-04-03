@@ -7170,13 +7170,11 @@
   "Commission": {
     "Scheduler": {
       "Enable": {
-        "type": "lock",
-        "value": true,
+        "type": "checkbox",
+        "value": false,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -7240,7 +7238,7 @@
     "Scheduler": {
       "Enable": {
         "type": "checkbox",
-        "value": true,
+        "value": false,
         "option": [
           true,
           false
@@ -7337,13 +7335,11 @@
   "Research": {
     "Scheduler": {
       "Enable": {
-        "type": "lock",
-        "value": true,
+        "type": "checkbox",
+        "value": false,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -7454,7 +7450,7 @@
     "Scheduler": {
       "Enable": {
         "type": "checkbox",
-        "value": true,
+        "value": false,
         "option": [
           true,
           false
@@ -7532,7 +7528,7 @@
     "Scheduler": {
       "Enable": {
         "type": "checkbox",
-        "value": true,
+        "value": false,
         "option": [
           true,
           false
@@ -7617,7 +7613,7 @@
     "Scheduler": {
       "Enable": {
         "type": "checkbox",
-        "value": true,
+        "value": false,
         "option": [
           true,
           false
@@ -7701,13 +7697,11 @@
   "Reward": {
     "Scheduler": {
       "Enable": {
-        "type": "lock",
-        "value": true,
+        "type": "checkbox",
+        "value": false,
         "option": [
-          true
-        ],
-        "option_bold": [
-          true
+          true,
+          false
         ]
       },
       "NextRun": {
@@ -8699,7 +8693,7 @@
     "Scheduler": {
       "Enable": {
         "type": "checkbox",
-        "value": true,
+        "value": false,
         "option": [
           true,
           false
