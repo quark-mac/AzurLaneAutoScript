@@ -1,0 +1,97 @@
+name: Sync Upstream Repository
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天 UTC 2:00（北京时间 10:00）
+  workflow_dispatch:      # 手动触发按钮
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/LmeSzinc/AzurLaneAutoScript.git
+          git fetch upstream
+          git fetch origin
+      
+      - name: Check if sync needed
+        id: check
+        run: |
+          LOCAL=$(git rev-parse HEAD)
+          UPSTREAM=$(git rev-parse upstream/master)
+          if [ "$LOCAL" = "$UPSTREAM" ]; then
+            echo "already_synced=true" >> $GITHUB_OUTPUT
+            echo "✅ Already up to date with upstream"
+          else
+            echo "already_synced=false" >> $GITHUB_OUTPUT
+            echo "📥 New commits found in upstream"
+          fi
+      
+      - name: Rebase onto upstream
+        if: steps.check.outputs.already_synced == 'false'
+        id: rebase
+        continue-on-error: true
+        run: |
+          git rebase upstream/master
+      
+      - name: Handle rebase failure
+        if: steps.rebase.outcome == 'failure'
+        run: |
+          echo "❌ Rebase failed, aborting..."
+          git rebase --abort
+          exit 1
+      
+      - name: Push changes
+        if: steps.rebase.outcome == 'success'
+        run: |
+          git push --force-with-lease origin master
+          echo "✅ Successfully synced and pushed"
+      
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ 上游同步失败：Rebase 冲突',
+              body: `## 同步失败通知\n\n` +
+                    `自动同步上游仓库时发生 rebase 冲突，需要手动处理。\n\n` +
+                    `### 手动解决步骤\n\n` +
+                    `\`\`\`bash\n` +
+                    `# 1. 克隆仓库（如果还没有）\n` +
+                    `git clone https://github.com/${context.repo.owner}/${context.repo.repo}.git\n` +
+                    `cd ${context.repo.repo}\n\n` +
+                    `# 2. 添加上游仓库\n` +
+                    `git remote add upstream https://github.com/LmeSzinc/AzurLaneAutoScript.git\n` +
+                    `git fetch upstream\n\n` +
+                    `# 3. 执行 rebase\n` +
+                    `git rebase upstream/master\n\n` +
+                    `# 4. 解决冲突（编辑冲突文件）\n` +
+                    `git add <冲突文件>\n` +
+                    `git rebase --continue\n\n` +
+                    `# 5. 推送\n` +
+                    `git push --force origin master\n` +
+                    `\`\`\`\n\n` +
+                    `### 查看详情\n` +
+                    `[Actions 运行日志](${context.payload.repository.html_url}/actions/runs/${context.runId})`,
+              labels: ['sync-conflict', 'automated', 'needs-attention']
+            });
+            console.log(`Created issue #${issue.data.number}`);
