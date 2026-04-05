@@ -17,8 +17,14 @@ import_fake_pil_module()
 
 from module.logger import logger, set_file_logger, set_func_logger
 from module.submodule.submodule import load_mod
-from module.submodule.utils import get_available_func, get_available_mod, get_available_mod_func, get_config_mod, \
-    get_func_mod, list_mod_instance
+from module.submodule.utils import (
+    get_available_func,
+    get_available_mod,
+    get_available_mod_func,
+    get_config_mod,
+    get_func_mod,
+    list_mod_instance,
+)
 from module.webui.setting import State
 
 
@@ -34,6 +40,20 @@ class ProcessManager:
         self._process: Process = None
         self._process_locks: Dict[str, threading.Lock] = {}
         self.thd_log_queue_handler: threading.Thread = None
+
+    @property
+    def custom_status_message(self) -> str:
+        """Read custom status message from file, returns status code not translated text"""
+        try:
+            import os
+
+            status_file = f"./config/.status_{self.config_name}"
+            if os.path.exists(status_file):
+                with open(status_file, "r", encoding="utf-8") as f:
+                    return f.read().strip()
+        except Exception:
+            pass
+        return None
 
     def start(self, func, ev: threading.Event = None) -> None:
         if not self.alive:
@@ -147,6 +167,7 @@ class ProcessManager:
             # https://github.com/LmeSzinc/AzurLaneAutoScript/issues/2051
             logger.info("Electron detected, remove log output to stdout")
             from module.logger import console_hdlr
+
             logger.removeHandler(console_hdlr)
         set_func_logger(func=q.put)
 
@@ -167,7 +188,9 @@ class ProcessManager:
             elif func in get_available_func():
                 from alas import AzurLaneAutoScript
 
-                AzurLaneAutoScript(config_name=config_name).run(inflection.underscore(func), skip_first_screenshot=True)
+                AzurLaneAutoScript(config_name=config_name).run(
+                    inflection.underscore(func), skip_first_screenshot=True
+                )
             elif func in get_available_mod():
                 mod = load_mod(func)
 
@@ -175,7 +198,9 @@ class ProcessManager:
                     mod.set_stop_event(e)
                 mod.loop(config_name)
             elif func in get_available_mod_func():
-                getattr(load_mod(get_func_mod(func)), inflection.underscore(func))(config_name)
+                getattr(load_mod(get_func_mod(func)), inflection.underscore(func))(
+                    config_name
+                )
             else:
                 logger.critical(f"No function matched: {func}")
             logger.info(f"[{config_name}] exited. Reason: Finish\n")

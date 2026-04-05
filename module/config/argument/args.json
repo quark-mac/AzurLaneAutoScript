@@ -7223,6 +7223,18 @@
       "DoMajorCommission": {
         "type": "checkbox",
         "value": false
+      },
+      "EnableShipCheck": {
+        "type": "checkbox",
+        "value": true,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "ShipCheckTimeout": {
+        "type": "input",
+        "value": 15
       }
     },
     "Storage": {

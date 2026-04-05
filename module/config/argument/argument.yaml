@@ -378,6 +378,11 @@ Commission:
     > Extra-0:20 > Extra-0:30 > Extra-1:00 > Extra-1:30 > Extra-2:00
     > shortest
   DoMajorCommission: false
+  EnableShipCheck:
+    type: checkbox
+    value: true
+    option: [ true, false ]
+  ShipCheckTimeout: 15
 Tactical:
   TacticalFilter: |-
     SameT4 > SameT3 > SameT2 > SameT1
