@@ -1454,6 +1454,16 @@
     "DoMajorCommission": {
       "name": "Do Major Commissions",
       "help": "1200 oil commission is now outdated, the yield is very low, it is recommended to disable"
+    },
+    "EnableShipCheck": {
+      "name": "Enable Ship Availability Check",
+      "help": "When a commission has no ships meeting its requirements, automatically skip it and proceed to the next one. Disabling this will trigger a game restart when ships are insufficient",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "Ship Check Timeout (seconds)",
+      "help": "Maximum time to wait for the start button to appear after clicking the recommend button. If the start button doesn't appear within this time, it will be considered as insufficient ships"
     }
   },
   "Tactical": {
@@ -2808,7 +2818,8 @@
       "Running": "Running",
       "Inactive": "Inactive",
       "Warning": "Warning",
-      "Updating": "Waiting Update"
+      "Updating": "Waiting Update",
+      "CommissionShipInsufficient": "Insufficient ships for commission"
     },
     "MenuAlas": {
       "Overview": "Overview",

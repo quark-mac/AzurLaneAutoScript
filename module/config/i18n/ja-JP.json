@@ -1454,6 +1454,16 @@
     "DoMajorCommission": {
       "name": "Commission.DoMajorCommission.name",
       "help": "Commission.DoMajorCommission.help"
+    },
+    "EnableShipCheck": {
+      "name": "Commission.EnableShipCheck.name",
+      "help": "Commission.EnableShipCheck.help",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "Commission.ShipCheckTimeout.name",
+      "help": "Commission.ShipCheckTimeout.help"
     }
   },
   "Tactical": {
@@ -2808,7 +2818,8 @@
       "Running": "実行中",
       "Inactive": "実行中止",
       "Warning": "エラー発生",
-      "Updating": "アップデータを待っています"
+      "Updating": "アップデータを待っています",
+      "CommissionShipInsufficient": "委託に利用可能な艦船が不足"
     },
     "MenuAlas": {
       "Overview": "概要",

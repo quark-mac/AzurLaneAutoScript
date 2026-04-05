@@ -38,7 +38,15 @@ from pywebio.output import (
     use_scope,
 )
 from pywebio.pin import pin, pin_on_change
-from pywebio.session import download, go_app, info, local, register_thread, run_js, set_env
+from pywebio.session import (
+    download,
+    go_app,
+    info,
+    local,
+    register_thread,
+    run_js,
+    set_env,
+)
 
 import module.webui.lang as lang
 from module.config.config import AzurLaneConfig, Function
@@ -63,7 +71,11 @@ from module.webui.base import Frame
 from module.webui.discord_presence import close_discord_rpc, init_discord_rpc
 from module.webui.fastapi import asgi_app
 from module.webui.lang import _t, t
-from module.webui.patch import fix_py37_subprocess_communicate, patch_executor, patch_mimetype
+from module.webui.patch import (
+    fix_py37_subprocess_communicate,
+    patch_executor,
+    patch_mimetype,
+)
 from module.webui.pin import put_input, put_select
 from module.webui.process_manager import ProcessManager
 from module.webui.remote_access import RemoteAccess
@@ -139,10 +151,13 @@ class AlasGUI(Frame):
             buttons=[{"label": t("Gui.Aside.Home"), "value": "Home", "color": "aside"}],
             onclick=[self.ui_develop],
         )
-        put_scope("aside_instance", [
-            put_scope(f"alas-instance-{i}", [])
-            for i, _ in enumerate(alas_instance())
-        ])
+        put_scope(
+            "aside_instance",
+            [
+                put_scope(f"alas-instance-{i}", [])
+                for i, _ in enumerate(alas_instance())
+            ],
+        )
         self.set_aside_status()
         put_icon_buttons(
             Icon.SETTING,
@@ -166,7 +181,7 @@ class AlasGUI(Frame):
                 icon_html = Icon.RUN
                 rendered_state = ProcessManager.get_manager(inst).state
                 if rendered_state == 1 and self.af_flag:
-                    icon_html = icon_html[:31] + ' anim-rotate' + icon_html[31:]
+                    icon_html = icon_html[:31] + " anim-rotate" + icon_html[31:]
                 put_icon_buttons(
                     icon_html,
                     buttons=[{"label": name, "value": name, "color": "aside"}],
@@ -199,11 +214,30 @@ class AlasGUI(Frame):
 
         return
 
+    def get_status_with_message(self):
+        """
+        Get combined state and custom message for Switch monitoring.
+        Returns a tuple (state, custom_message_code) to detect changes in both.
+        """
+        process = getattr(self, "alas", None)
+        if process is None:
+            return -1
+
+        state = process.state
+        # Only check custom message when running (state == 1)
+        if state == 1:
+            msg = process.custom_status_message
+            # Return tuple so Switch can detect message changes
+            return (state, msg)
+        return state
+
     @use_scope("header_status")
-    def set_status(self, state: int) -> None:
+    def set_status(self, state) -> None:
         """
         Args:
-            state (int):
+            state: int or tuple
+                int: state value
+                tuple: (state, custom_message_code) for running state with custom message
                 1 (running)
                 2 (not running)
                 3 (warning, stop unexpectedly)
@@ -211,12 +245,22 @@ class AlasGUI(Frame):
                 0 (hide)
                 -1 (*state not changed)
         """
+        # Handle tuple from get_status_with_message
+        custom_msg = None
+        if isinstance(state, tuple):
+            state, msg_code = state
+            if msg_code == "commission_ship_insufficient":
+                custom_msg = t("Gui.Status.CommissionShipInsufficient")
+
         if state == -1:
             return
         clear()
 
         if state == 1:
-            put_loading_text(t("Gui.Status.Running"), color="success")
+            status_text = t("Gui.Status.Running")
+            if custom_msg:
+                status_text = f"{status_text}（{custom_msg}）"
+            put_loading_text(status_text, color="success")
         elif state == 2:
             put_loading_text(t("Gui.Status.Inactive"), color="secondary", fill=True)
         elif state == 3:
@@ -275,7 +319,7 @@ class AlasGUI(Frame):
                     '<span class="hr-task-group-line"></span>'
                     f'<span class="hr-task-group-text">{title}</span>'
                     '<span class="hr-task-group-line"></span>'
-                    '</div>'
+                    "</div>"
                 )
                 for task in task_data.get("tasks", []):
                     put_buttons(
@@ -470,7 +514,7 @@ class AlasGUI(Frame):
         self._log.dashboard_arg_group = LogRes(self.alas_config).groups
 
         with use_scope("logs"):
-            if not 'Alas' in self.ALAS_ARGS:
+            if not "Alas" in self.ALAS_ARGS:
                 put_scope(
                     "log-bar",
                     [
@@ -530,7 +574,7 @@ class AlasGUI(Frame):
 
         self.task_handler.add(switch_scheduler.g(), 1, True)
         self.task_handler.add(switch_log_scroll.g(), 1, True)
-        if 'Alas' in self.ALAS_ARGS:
+        if "Alas" in self.ALAS_ARGS:
             self.task_handler.add(switch_dashboard.g(), 1, True)
             self.task_handler.add(self.alas_update_dashboard, 10, True)
         self.task_handler.add(self.alas_update_overview_task, 10, True)
@@ -570,10 +614,10 @@ class AlasGUI(Frame):
                     break
 
     def _save_config(
-            self,
-            modified: Dict[str, str],
-            config_name: str,
-            config_updater: AzurLaneConfig = State.config_updater,
+        self,
+        modified: Dict[str, str],
+        config_name: str,
+        config_updater: AzurLaneConfig = State.config_updater,
     ) -> None:
         try:
             valid = []
@@ -581,9 +625,9 @@ class AlasGUI(Frame):
             config = config_updater.read_file(config_name)
             n = datetime.now()
             for p, v in deep_iter(config, depth=3):
-                if p[-1].endswith('un') and not isinstance(v, bool):
+                if p[-1].endswith("un") and not isinstance(v, bool):
                     if (v - n).days >= 31:
-                        deep_set(config, p, '')
+                        deep_set(config, p, "")
             for k, v in modified.copy().items():
                 valuetype = deep_get(self.ALAS_ARGS, k + ".valuetype")
                 v = parse_pin_value(v, valuetype)
@@ -682,72 +726,102 @@ class AlasGUI(Frame):
     def _update_dashboard(self, num=None, groups_to_display=None):
         x = 0
         _num = 10000 if num is None else num
-        _arg_group = self._log.dashboard_arg_group if groups_to_display is None else groups_to_display
+        _arg_group = (
+            self._log.dashboard_arg_group
+            if groups_to_display is None
+            else groups_to_display
+        )
         for group_name in _arg_group:
             group = LogRes(self.alas_config).group(group_name)
             if group is None:
                 continue
 
-            value = str(group['Value'])
-            if 'Limit' in group.keys():
-                value_limit = f' / {group["Limit"]}'
-                value_total = ''
-            elif 'Total' in group.keys():
-                value_total = f' ({group["Total"]})'
-                value_limit = ''
-            elif group_name == 'Pt':
-                value_limit = ' / ' + re.sub(r'[,.\'"，。]', '',
-                                             str(deep_get(self.alas_config.data, 'EventGeneral.EventGeneral.PtLimit')))
-                if value_limit == ' / 0':
-                    value_limit = ''
+            value = str(group["Value"])
+            if "Limit" in group.keys():
+                value_limit = f" / {group['Limit']}"
+                value_total = ""
+            elif "Total" in group.keys():
+                value_total = f" ({group['Total']})"
+                value_limit = ""
+            elif group_name == "Pt":
+                value_limit = " / " + re.sub(
+                    r'[,.\'"，。]',
+                    "",
+                    str(
+                        deep_get(
+                            self.alas_config.data, "EventGeneral.EventGeneral.PtLimit"
+                        )
+                    ),
+                )
+                if value_limit == " / 0":
+                    value_limit = ""
             else:
-                value = str(group['Value'])
-                value_limit = ''
-                value_total = ''
+                value = str(group["Value"])
+                value_limit = ""
+                value_total = ""
 
-            value_time = group['Record']
-            timedata = readable_time(str(value_time), str(group['Value']))
-            value =timedata['value']
-            time = timedata['time']
-            time_name = timedata['time_name']
-            delta = str(time) + t(f'Gui.Dashboard.{time_name}')
+            value_time = group["Record"]
+            timedata = readable_time(str(value_time), str(group["Value"]))
+            value = timedata["value"]
+            time = timedata["time"]
+            time_name = timedata["time_name"]
+            delta = str(time) + t(f"Gui.Dashboard.{time_name}")
             if group_name not in self._log.last_display_time.keys():
-                self._log.last_display_time[group_name] = ''
-            if self._log.last_display_time[group_name] == delta and not self._log.first_display:
+                self._log.last_display_time[group_name] = ""
+            if (
+                self._log.last_display_time[group_name] == delta
+                and not self._log.first_display
+            ):
                 continue
             self._log.last_display_time[group_name] = delta
 
-            value_limit = '' if value == 'None' else value_limit
-            value_total = '' if value == 'None' else value_total
-            limit_style = '--dashboard-limit--' if value_limit else '--dashboard-total--'
+            value_limit = "" if value == "None" else value_limit
+            value_total = "" if value == "None" else value_total
+            limit_style = (
+                "--dashboard-limit--" if value_limit else "--dashboard-total--"
+            )
             value_limit = value_limit if value_limit else value_total
             # Handle dot color
-            _color = f"""background-color:{deep_get(group, 'Color').replace('^', '#')}"""
+            _color = (
+                f"""background-color:{deep_get(group, "Color").replace("^", "#")}"""
+            )
             color = f'<div class="status-point" style={_color}>'
             with use_scope(group_name, clear=True):
-                put_row(
-                    [
-                        put_html(color),
-                        put_scope(
-                            f"{group_name}_group",
-                            [
-                                put_column(
-                                    [
-                                        put_row(
-                                            [
-                                                put_text(value).style("--dashboard-value--"),
-                                                put_text(value_limit).style(limit_style),
-                                            ],
-                                        ).style("grid-template-columns:min-content auto;align-items: baseline;"),
-                                        put_text(t(f"Gui.Dashboard.{group_name}") + " - " + delta).style("---dashboard-help--")
-                                    ],
-                                    size="auto auto",
-                                ),
-                            ],
-                        ),
-                    ],
-                    size="20px 1fr"
-                ).style("height: 1fr"),
+                (
+                    put_row(
+                        [
+                            put_html(color),
+                            put_scope(
+                                f"{group_name}_group",
+                                [
+                                    put_column(
+                                        [
+                                            put_row(
+                                                [
+                                                    put_text(value).style(
+                                                        "--dashboard-value--"
+                                                    ),
+                                                    put_text(value_limit).style(
+                                                        limit_style
+                                                    ),
+                                                ],
+                                            ).style(
+                                                "grid-template-columns:min-content auto;align-items: baseline;"
+                                            ),
+                                            put_text(
+                                                t(f"Gui.Dashboard.{group_name}")
+                                                + " - "
+                                                + delta
+                                            ).style("---dashboard-help--"),
+                                        ],
+                                        size="auto auto",
+                                    ),
+                                ],
+                            ),
+                        ],
+                        size="20px 1fr",
+                    ).style("height: 1fr"),
+                )
             x += 1
             if x >= _num:
                 break
@@ -759,7 +833,9 @@ class AlasGUI(Frame):
             return
         with use_scope("dashboard", clear=_clear):
             if not self._log.display_dashboard:
-                self._update_dashboard(num=4, groups_to_display=['Oil', 'Coin', 'Gem', 'Pt'])
+                self._update_dashboard(
+                    num=4, groups_to_display=["Oil", "Coin", "Gem", "Pt"]
+                )
             elif self._log.display_dashboard:
                 self._update_dashboard()
 
@@ -1130,8 +1206,8 @@ class AlasGUI(Frame):
                     "--loading-border-fill--"
                 )
                 if (
-                        State.deploy_config.EnableRemoteAccess
-                        and State.deploy_config.Password
+                    State.deploy_config.EnableRemoteAccess
+                    and State.deploy_config.Password
                 ):
                     put_text(t("Gui.Remote.NotRunning"), scope="remote_state")
                 else:
@@ -1356,9 +1432,11 @@ class AlasGUI(Frame):
             status={
                 True: [
                     lambda: self.__setattr__("visible", True),
-                    lambda: self.alas_update_overview_task()
-                    if self.page == "Overview"
-                    else 0,
+                    lambda: (
+                        self.alas_update_overview_task()
+                        if self.page == "Overview"
+                        else 0
+                    ),
                     lambda: self.task_handler._task.__setattr__("delay", 15),
                 ],
                 False: [
@@ -1372,7 +1450,7 @@ class AlasGUI(Frame):
 
         self.state_switch = Switch(
             status=self.set_status,
-            get_state=lambda: getattr(getattr(self, "alas", -1), "state", 0),
+            get_state=self.get_status_with_message,
             name="state",
         )
 
@@ -1576,8 +1654,8 @@ def startup():
     if State.deploy_config.StartOcrServer:
         start_ocr_server_process(State.deploy_config.OcrServerPort)
     if (
-            State.deploy_config.EnableRemoteAccess
-            and State.deploy_config.Password is not None
+        State.deploy_config.EnableRemoteAccess
+        and State.deploy_config.Password is not None
     ):
         task_handler.add(RemoteAccess.keep_ssh_alive(), 60)
 
@@ -1638,7 +1716,8 @@ def app():
     logger.attr("IS_ON_PHONE_CLOUD", IS_ON_PHONE_CLOUD)
 
     from deploy.atomic import atomic_failure_cleanup
-    atomic_failure_cleanup('./config')
+
+    atomic_failure_cleanup("./config")
 
     def index():
         if key is not None and not login(key):
