@@ -1454,6 +1454,16 @@
     "DoMajorCommission": {
       "name": "做主要委託 (1200油/1000油委託)",
       "help": "1200油委託現在已經過時，收益很低，建議關閉"
+    },
+    "EnableShipCheck": {
+      "name": "啟用船隻不足檢測",
+      "help": "當委託沒有符合要求的船隻時，自動跳過該委託並繼續執行下一個。關閉此選項則會在船隻不足時觸發遊戲重啟",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "船隻檢測超時時間（秒）",
+      "help": "點擊推薦按鈕後，等待開始按鈕出現的最大時間。如果超過此時間仍未出現開始按鈕，則判定為船隻不足"
     }
   },
   "Tactical": {
@@ -2808,7 +2818,8 @@
       "Running": "執行中",
       "Inactive": "閒置",
       "Warning": "發生錯誤",
-      "Updating": "等待更新"
+      "Updating": "等待更新",
+      "CommissionShipInsufficient": "委託可用艦船不足"
     },
     "MenuAlas": {
       "Overview": "總覽",

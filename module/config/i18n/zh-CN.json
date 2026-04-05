@@ -1454,6 +1454,16 @@
     "DoMajorCommission": {
       "name": "做主要委托（1200油/1000油委托）",
       "help": "1200油委托现在已经过时，收益很低，建议关闭"
+    },
+    "EnableShipCheck": {
+      "name": "启用船只不足检测",
+      "help": "当委托没有符合要求的船只时，自动跳过该委托并继续执行下一个。关闭此选项则会在船只不足时触发游戏重启",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "船只检测超时时间（秒）",
+      "help": "点击推荐按钮后，等待开始按钮出现的最大时间。如果超过此时间仍未出现开始按钮，则判定为船只不足"
     }
   },
   "Tactical": {
@@ -2808,7 +2818,8 @@
       "Running": "运行中",
       "Inactive": "闲置",
       "Warning": "发生错误",
-      "Updating": "等待更新"
+      "Updating": "等待更新",
+      "CommissionShipInsufficient": "委托可用船只不足"
     },
     "MenuAlas": {
       "Overview": "总览",
