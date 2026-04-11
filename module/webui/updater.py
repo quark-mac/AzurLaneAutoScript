@@ -47,7 +47,7 @@ class Updater(DeployConfig, GitManager, PipManager):
     def get_commit(self, revision="", n=1, short_sha1=False) -> Tuple:
         """
         Return:
-            (sha1, author, isotime, message,)
+        (sha1, author, isotime, message,)
         """
         ph = "h" if short_sha1 else "H"
 
@@ -56,7 +56,10 @@ class Updater(DeployConfig, GitManager, PipManager):
         )
 
         if not log:
-            return None, None, None, None
+            if n == 1:
+                return None, None, None, None
+            else:
+                return []
 
         logs = log.split("\n")
         logs = list(map(lambda log: tuple(log.split("---")), logs))
