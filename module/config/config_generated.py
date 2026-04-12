@@ -47,6 +47,13 @@ class GeneratedConfig:
     AutoStart_Enable = False
     AutoStart_Delay = 10
 
+    # Group `LogCleaner`
+    LogCleaner_Enable = False
+    LogCleaner_CleanOnStartup = True
+    LogCleaner_ScheduledClean = False
+    LogCleaner_ScheduledTime = '00:00'
+    LogCleaner_KeepDays = 7
+
     # Group `DropRecord`
     DropRecord_SaveFolder = './screenshots'
     DropRecord_AzurStatsID = None

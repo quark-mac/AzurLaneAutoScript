@@ -30,6 +30,13 @@
       "Enable": false,
       "Delay": 10
     },
+    "LogCleaner": {
+      "Enable": false,
+      "CleanOnStartup": true,
+      "ScheduledClean": false,
+      "ScheduledTime": "00:00",
+      "KeepDays": 7
+    },
     "DropRecord": {
       "SaveFolder": "./screenshots",
       "AzurStatsID": null,

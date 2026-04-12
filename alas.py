@@ -658,6 +658,13 @@ class AzurLaneAutoScript:
         except Exception as e:
             logger.warning(f"Failed to clear custom status message: {e}")
 
+        # Initialize log cleaner
+        from module.log_cleaner import LogCleaner
+
+        log_cleaner = LogCleaner(config=self.config)
+        log_cleaner.run_on_startup()
+        log_cleaner.start_scheduler()
+
         while 1:
             # Check update event from GUI
             if self.stop_event is not None:
