@@ -566,6 +566,32 @@
       "help": "Delay in seconds before starting the scheduler after GUI startup"
     }
   },
+  "LogCleaner": {
+    "_info": {
+      "name": "Log Cleaner",
+      "help": "Automatically clean up expired log files, keeping logs within specified days"
+    },
+    "Enable": {
+      "name": "Enable Log Cleaner",
+      "help": "When enabled, expired log files will be automatically cleaned based on the settings below"
+    },
+    "CleanOnStartup": {
+      "name": "Clean on Startup",
+      "help": "When enabled, log cleaning will be performed once immediately when Alas starts"
+    },
+    "ScheduledClean": {
+      "name": "Enable Scheduled Clean",
+      "help": "When enabled, log cleaning will run automatically at the specified time every day"
+    },
+    "ScheduledTime": {
+      "name": "Scheduled Clean Time",
+      "help": "Time of day to perform log cleaning, format HH:MM (e.g. 03:00), invalid input will be reset to default 00:00"
+    },
+    "KeepDays": {
+      "name": "Keep Log Days",
+      "help": "Keep log files from the last N days, older ones will be deleted (range 1-365), invalid input will be reset to default 7"
+    }
+  },
   "DropRecord": {
     "_info": {
       "name": "Drop Record Settings",
@@ -2818,8 +2844,7 @@
       "Running": "Running",
       "Inactive": "Inactive",
       "Warning": "Warning",
-      "Updating": "Waiting Update",
-      "CommissionShipInsufficient": "Insufficient ships for commission"
+      "Updating": "Waiting Update"
     },
     "MenuAlas": {
       "Overview": "Overview",

@@ -566,6 +566,32 @@
       "help": "GUI啟動後延遲多少秒再啟動排程器（秒）"
     }
   },
+  "LogCleaner": {
+    "_info": {
+      "name": "日誌清理",
+      "help": "自動清理過期日誌檔案，保留指定天數內的日誌"
+    },
+    "Enable": {
+      "name": "啟用日誌清理",
+      "help": "開啟後，將根據下方設定自動清理過期日誌檔案"
+    },
+    "CleanOnStartup": {
+      "name": "啟動時清理",
+      "help": "開啟後，Alas 啟動時將立即執行一次日誌清理"
+    },
+    "ScheduledClean": {
+      "name": "啟用定時清理",
+      "help": "開啟後，每天在指定時間自動執行日誌清理"
+    },
+    "ScheduledTime": {
+      "name": "定時清理時間",
+      "help": "每天執行日誌清理的時間，格式為 HH:MM（例如 03:00），輸入不合法時將重置為預設值 00:00"
+    },
+    "KeepDays": {
+      "name": "保留日誌天數",
+      "help": "保留最近 N 天內的日誌檔案，更早的將被刪除（範圍 1-365），輸入不合法時將重置為預設值 7"
+    }
+  },
   "DropRecord": {
     "_info": {
       "name": "掉落紀錄",
@@ -2818,8 +2844,7 @@
       "Running": "執行中",
       "Inactive": "閒置",
       "Warning": "發生錯誤",
-      "Updating": "等待更新",
-      "CommissionShipInsufficient": "委託可用艦船不足"
+      "Updating": "等待更新"
     },
     "MenuAlas": {
       "Overview": "總覽",

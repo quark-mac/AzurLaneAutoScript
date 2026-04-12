@@ -566,6 +566,32 @@
       "help": "GUI启动后延迟多少秒再启动调度器（秒）"
     }
   },
+  "LogCleaner": {
+    "_info": {
+      "name": "日志清理",
+      "help": "自动清理过期日志文件，保留指定天数内的日志"
+    },
+    "Enable": {
+      "name": "启用日志清理",
+      "help": "开启后，将根据下方设置自动清理过期日志文件"
+    },
+    "CleanOnStartup": {
+      "name": "启动时清理",
+      "help": "开启后，Alas启动时将立即执行一次日志清理"
+    },
+    "ScheduledClean": {
+      "name": "启用定时清理",
+      "help": "开启后，每天在指定时间自动执行日志清理"
+    },
+    "ScheduledTime": {
+      "name": "定时清理时间",
+      "help": "每天执行日志清理的时间，格式为 HH:MM（例如 03:00），输入不合法时将重置为默认值 00:00"
+    },
+    "KeepDays": {
+      "name": "保留日志天数",
+      "help": "保留最近 N 天内的日志文件，更早的将被删除（范围 1-365），输入不合法时将重置为默认值 7"
+    }
+  },
   "DropRecord": {
     "_info": {
       "name": "掉落记录",
@@ -2818,8 +2844,7 @@
       "Running": "运行中",
       "Inactive": "闲置",
       "Warning": "发生错误",
-      "Updating": "等待更新",
-      "CommissionShipInsufficient": "委托可用船只不足"
+      "Updating": "等待更新"
     },
     "MenuAlas": {
       "Overview": "总览",
