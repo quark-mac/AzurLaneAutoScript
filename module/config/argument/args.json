@@ -229,6 +229,29 @@
         "value": 10
       }
     },
+    "LogCleaner": {
+      "Enable": {
+        "type": "checkbox",
+        "value": false
+      },
+      "CleanOnStartup": {
+        "type": "checkbox",
+        "value": true
+      },
+      "ScheduledClean": {
+        "type": "checkbox",
+        "value": false
+      },
+      "ScheduledTime": {
+        "type": "input",
+        "value": "00:00",
+        "valuetype": "str"
+      },
+      "KeepDays": {
+        "type": "input",
+        "value": 7
+      }
+    },
     "DropRecord": {
       "SaveFolder": {
         "type": "input",
