@@ -312,7 +312,8 @@
     },
     "NextRun": {
       "name": "Next Run",
-      "help": "Updated automatically after completing the task to set next scheduled run, typically not manually modified\nHowever you can force immediate scheduling if text field cleared"
+      "help": "Updated automatically after completing the task to set next scheduled run, typically not manually modified\nHowever you can force immediate scheduling if text field cleared",
+      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
     },
     "Command": {
       "name": "Command",
@@ -562,8 +563,9 @@
       "help": "When enabled, the scheduler for this config will start automatically after GUI startup"
     },
     "Delay": {
-      "name": "Delay Time",
-      "help": "Delay in seconds before starting the scheduler after GUI startup"
+      "name": "Delay Start",
+      "help": "Delay in seconds before starting the scheduler after GUI startup",
+      "invalid_feedback": "Please enter an integer between 0-600 (seconds)"
     }
   },
   "LogCleaner": {
@@ -585,11 +587,13 @@
     },
     "ScheduledTime": {
       "name": "Scheduled Clean Time",
-      "help": "Time of day to perform log cleaning, format HH:MM (e.g. 03:00), invalid input will be reset to default 00:00"
+      "help": "Time of day to perform log cleaning, format HH:MM (e.g. 03:00), invalid input will be reset to default 00:00",
+      "invalid_feedback": "Please enter correct time format (HH:MM), e.g.: 08:30"
     },
     "KeepDays": {
       "name": "Keep Log Days",
-      "help": "Keep log files from the last N days, older ones will be deleted (range 1-365), invalid input will be reset to default 7"
+      "help": "Keep log files from the last N days, older ones will be deleted (range 1-365), invalid input will be reset to default 7",
+      "invalid_feedback": "Please enter an integer between 1-365"
     }
   },
   "DropRecord": {
@@ -1085,7 +1089,8 @@
     },
     "Fleet1Record": {
       "name": "Fleet 1 Emotion Record",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
     },
     "Fleet1Control": {
       "name": "Fleet 1 Emotion Control",
@@ -1112,7 +1117,8 @@
     },
     "Fleet2Record": {
       "name": "Fleet 2 Emotion Record",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
     },
     "Fleet2Control": {
       "name": "Fleet 2 Emotion Control",
@@ -1313,7 +1319,8 @@
     },
     "TimeLimit": {
       "name": "Event Time Limit",
-      "help": "When the local time exceeds the given value, disable all event tasks. '2020-01-01 00:00:00' means no limit and the time will be reset once it's triggered\nThis can prevent the occurrence of forgetting to disable event tasks after the event ends"
+      "help": "When the local time exceeds the given value, disable all event tasks. '2020-01-01 00:00:00' means no limit and the time will be reset once it's triggered\nThis can prevent the occurrence of forgetting to disable event tasks after the event ends",
+      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
     }
   },
   "TaskBalancer": {
@@ -1655,7 +1662,8 @@
     },
     "LastRun": {
       "name": "Last Check Time",
-      "help": "The time of the last check is recorded here to prevent the task from running repeatedly. Check interval is 6 days. This value is automatically recorded and generally does not need to be modified."
+      "help": "The time of the last check is recorded here to prevent the task from running repeatedly. Check interval is 6 days. This value is automatically recorded and generally does not need to be modified.",
+      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
     }
   },
   "Meowfficer": {
@@ -2048,7 +2056,8 @@
     },
     "LastRun": {
       "name": "Last Purchase Time",
-      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified."
+      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified.",
+      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
     }
   },
   "Shipyard": {
@@ -2083,7 +2092,8 @@
     },
     "LastRun": {
       "name": "Last Purchase Time",
-      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified."
+      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified.",
+      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
     }
   },
   "Gacha": {
@@ -2411,7 +2421,8 @@
     },
     "OpponentRefreshRecord": {
       "name": "Last Refresh Record",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
     }
   },
   "Sos": {
@@ -2696,7 +2707,8 @@
     },
     "LastRun": {
       "name": "Last Check Time",
-      "help": "Automatically updated with the last check time, generally does not need to be modified"
+      "help": "Automatically updated with the last check time, generally does not need to be modified",
+      "invalid_feedback": "OpsiCheckLeveling.LastRun.invalid_feedback"
     },
     "DelayAfterFull": {
       "name": "Delay task when target level reached",

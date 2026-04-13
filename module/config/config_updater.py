@@ -306,7 +306,11 @@ class ConfigGenerator:
                 if path[0] not in visited_group:
                     deep_load([path[0], "_info"])
                     visited_group.add(path[0])
-                deep_load(path)
+                # Only add invalid_feedback for items with validate rule
+                if "validate" in data:
+                    deep_load(path, words=("name", "help", "invalid_feedback"))
+                else:
+                    deep_load(path, words=("name", "help"))
             if "option" in data:
                 deep_load(path, words=data["option"], default=False)
         # Event names

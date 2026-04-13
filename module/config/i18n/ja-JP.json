@@ -312,7 +312,8 @@
     },
     "NextRun": {
       "name": "Scheduler.NextRun.name",
-      "help": "Scheduler.NextRun.help"
+      "help": "Scheduler.NextRun.help",
+      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
     },
     "Command": {
       "name": "Scheduler.Command.name",
@@ -562,8 +563,9 @@
       "help": "有効にすると、GUI起動完了後にこの設定のスケジューラーが自動的に起動します"
     },
     "Delay": {
-      "name": "遅延時間",
-      "help": "GUI起動後、スケジューラーを起動するまでの遅延時間（秒）"
+      "name": "遅延起動",
+      "help": "GUI起動後、スケジューラーを起動するまでの遅延時間（秒）",
+      "invalid_feedback": "0-600の整数を入力してください（秒）"
     }
   },
   "LogCleaner": {
@@ -585,11 +587,13 @@
     },
     "ScheduledTime": {
       "name": "定期クリーン時刻",
-      "help": "ログクリーニングを実行する時刻（HH:MM形式、例: 03:00）、無効な入力はデフォルト値 00:00 にリセットされます"
+      "help": "ログクリーニングを実行する時刻（HH:MM形式、例: 03:00）、無効な入力はデフォルト値 00:00 にリセットされます",
+      "invalid_feedback": "正しい時刻形式（HH:MM）を入力してください。例：08:30"
     },
     "KeepDays": {
       "name": "ログ保存日数",
-      "help": "直近 N 日間のログファイルを保持し、それより古いものは削除されます（範囲 1-365）、無効な入力はデフォルト値 7 にリセットされます"
+      "help": "直近 N 日間のログファイルを保持し、それより古いものは削除されます（範囲 1-365）、無効な入力はデフォルト値 7 にリセットされます",
+      "invalid_feedback": "1-365の整数を入力してください"
     }
   },
   "DropRecord": {
@@ -1085,7 +1089,8 @@
     },
     "Fleet1Record": {
       "name": "Emotion.Fleet1Record.name",
-      "help": "Emotion.Fleet1Record.help"
+      "help": "Emotion.Fleet1Record.help",
+      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
     },
     "Fleet1Control": {
       "name": "Emotion.Fleet1Control.name",
@@ -1112,7 +1117,8 @@
     },
     "Fleet2Record": {
       "name": "Emotion.Fleet2Record.name",
-      "help": "Emotion.Fleet2Record.help"
+      "help": "Emotion.Fleet2Record.help",
+      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
     },
     "Fleet2Control": {
       "name": "Emotion.Fleet2Control.name",
@@ -1313,7 +1319,8 @@
     },
     "TimeLimit": {
       "name": "EventGeneral.TimeLimit.name",
-      "help": "EventGeneral.TimeLimit.help"
+      "help": "EventGeneral.TimeLimit.help",
+      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
     }
   },
   "TaskBalancer": {
@@ -1655,7 +1662,8 @@
     },
     "LastRun": {
       "name": "BuyFurniture.LastRun.name",
-      "help": "BuyFurniture.LastRun.help"
+      "help": "BuyFurniture.LastRun.help",
+      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
     }
   },
   "Meowfficer": {
@@ -2048,7 +2056,8 @@
     },
     "LastRun": {
       "name": "ShipyardDr.LastRun.name",
-      "help": "ShipyardDr.LastRun.help"
+      "help": "ShipyardDr.LastRun.help",
+      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
     }
   },
   "Shipyard": {
@@ -2083,7 +2092,8 @@
     },
     "LastRun": {
       "name": "Shipyard.LastRun.name",
-      "help": "Shipyard.LastRun.help"
+      "help": "Shipyard.LastRun.help",
+      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
     }
   },
   "Gacha": {
@@ -2411,7 +2421,8 @@
     },
     "OpponentRefreshRecord": {
       "name": "Exercise.OpponentRefreshRecord.name",
-      "help": "Exercise.OpponentRefreshRecord.help"
+      "help": "Exercise.OpponentRefreshRecord.help",
+      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
     }
   },
   "Sos": {
@@ -2696,7 +2707,8 @@
     },
     "LastRun": {
       "name": "OpsiCheckLeveling.LastRun.name",
-      "help": "OpsiCheckLeveling.LastRun.help"
+      "help": "OpsiCheckLeveling.LastRun.help",
+      "invalid_feedback": "OpsiCheckLeveling.LastRun.invalid_feedback"
     },
     "DelayAfterFull": {
       "name": "OpsiCheckLeveling.DelayAfterFull.name",
