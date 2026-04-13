@@ -419,8 +419,25 @@ class AlasGUI(Frame):
             if arg_help == "" or not arg_help:
                 arg_help = None
             output_kwargs["help"] = arg_help
-            # Invalid feedback
-            output_kwargs["invalid_feedback"] = t("Gui.Text.InvalidFeedBack", value)
+            # Invalid feedback - Mixed approach: i18n > argument.yaml > default
+            feedback_key = f"{group_name}.{arg_name}.invalid_feedback"
+            custom_feedback = t(feedback_key)
+            if custom_feedback != feedback_key:
+                # i18n translation exists, use multilingual version
+                output_kwargs["invalid_feedback"] = custom_feedback
+            else:
+                # Try to get from argument.yaml
+                yaml_feedback = deep_get(
+                    self.ALAS_ARGS, f"{task}.{group_name}.{arg_name}.invalid_feedback"
+                )
+                if yaml_feedback:
+                    # Use Chinese version from YAML
+                    output_kwargs["invalid_feedback"] = yaml_feedback
+                else:
+                    # Use default generic message
+                    output_kwargs["invalid_feedback"] = t(
+                        "Gui.Text.InvalidFeedBack", value
+                    )
 
             o = put_output(output_kwargs)
             if o is not None:
@@ -630,16 +647,24 @@ class AlasGUI(Frame):
                         deep_set(config, p, "")
             for k, v in modified.copy().items():
                 valuetype = deep_get(self.ALAS_ARGS, k + ".valuetype")
-                v = parse_pin_value(v, valuetype)
                 validate = deep_get(self.ALAS_ARGS, k + ".validate")
-                if not len(str(v)):
+
+                # Validate BEFORE parsing (regex works on strings)
+                v_str = str(v)
+                if not len(v_str):
                     default = deep_get(self.ALAS_ARGS, k + ".value")
                     modified[k] = default
                     deep_set(config, k, default)
                     valid.append(k)
                     pin["_".join(k.split("."))] = default
-
-                elif not validate or re_fullmatch(validate, v):
+                elif validate and not re_fullmatch(validate, v_str):
+                    # Validation failed
+                    modified.pop(k)
+                    invalid.append(k)
+                    logger.warning(f"Invalid value {v_str} for key {k}, skip saving.")
+                else:
+                    # Validation passed or no validation rule, parse and save
+                    v = parse_pin_value(v, valuetype)
                     deep_set(config, k, v)
                     modified[k] = v
                     valid.append(k)
@@ -648,10 +673,6 @@ class AlasGUI(Frame):
                         deep_set(config, set_key, set_value)
                         valid.append(set_key)
                         pin["_".join(set_key.split("."))] = to_pin_value(set_value)
-                else:
-                    modified.pop(k)
-                    invalid.append(k)
-                    logger.warning(f"Invalid value {v} for key {k}, skip saving.")
             self.pin_remove_invalid_mark(valid)
             self.pin_set_invalid_mark(invalid)
             if modified:

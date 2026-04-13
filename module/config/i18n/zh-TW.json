@@ -312,7 +312,8 @@
     },
     "NextRun": {
       "name": "下一次執行時間",
-      "help": "自動計算的數值，不需要手動修改。清空後將立刻執行"
+      "help": "自動計算的數值，不需要手動修改。清空後將立刻執行",
+      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
     },
     "Command": {
       "name": "內部任務名稱",
@@ -562,8 +563,9 @@
       "help": "開啟後，GUI啟動完成將自動啟動該配置的排程器"
     },
     "Delay": {
-      "name": "延遲時間",
-      "help": "GUI啟動後延遲多少秒再啟動排程器（秒）"
+      "name": "延遲啟動",
+      "help": "GUI啟動後延遲多少秒再啟動排程器（秒）",
+      "invalid_feedback": "請輸入 0-600 之間的整數（秒）"
     }
   },
   "LogCleaner": {
@@ -585,11 +587,13 @@
     },
     "ScheduledTime": {
       "name": "定時清理時間",
-      "help": "每天執行日誌清理的時間，格式為 HH:MM（例如 03:00），輸入不合法時將重置為預設值 00:00"
+      "help": "每天執行日誌清理的時間，格式為 HH:MM（例如 03:00），輸入不合法時將重置為預設值 00:00",
+      "invalid_feedback": "請輸入正確的時間格式（HH:MM），例如：08:30"
     },
     "KeepDays": {
       "name": "保留日誌天數",
-      "help": "保留最近 N 天內的日誌檔案，更早的將被刪除（範圍 1-365），輸入不合法時將重置為預設值 7"
+      "help": "保留最近 N 天內的日誌檔案，更早的將被刪除（範圍 1-365），輸入不合法時將重置為預設值 7",
+      "invalid_feedback": "請輸入 1-365 之間的整數"
     }
   },
   "DropRecord": {
@@ -1085,7 +1089,8 @@
     },
     "Fleet1Record": {
       "name": "一隊心情紀錄時間",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
     },
     "Fleet1Control": {
       "name": "一隊心情控制",
@@ -1112,7 +1117,8 @@
     },
     "Fleet2Record": {
       "name": "二隊心情紀錄時間",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
     },
     "Fleet2Control": {
       "name": "二隊心情控制",
@@ -1313,7 +1319,8 @@
     },
     "TimeLimit": {
       "name": "活動時間限制",
-      "help": "當本地時間超過給定數值後，禁用所有活動任務，'2020-01-01 00:00:00' 表示不限制，觸發一次後時間將被重置\n設定後能防止活動結束後忘記關閉任務的事情發生"
+      "help": "當本地時間超過給定數值後，禁用所有活動任務，'2020-01-01 00:00:00' 表示不限制，觸發一次後時間將被重置\n設定後能防止活動結束後忘記關閉任務的事情發生",
+      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
     }
   },
   "TaskBalancer": {
@@ -1655,7 +1662,8 @@
     },
     "LastRun": {
       "name": "上次檢查時間",
-      "help": "記錄上一次檢查的時間以防止任務重複執行，檢查間隔為6天，這個數值是自動記錄的，一般不需要修改"
+      "help": "記錄上一次檢查的時間以防止任務重複執行，檢查間隔為6天，這個數值是自動記錄的，一般不需要修改",
+      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
     }
   },
   "Meowfficer": {
@@ -2048,7 +2056,8 @@
     },
     "LastRun": {
       "name": "上一次購買時間",
-      "help": "因為遊戲不顯示今天已經購買了幾張，所以這裡記錄上一次購買的時間以防止任務重複運行，這個數值是自動記錄的，一般不需要修改"
+      "help": "因為遊戲不顯示今天已經購買了幾張，所以這裡記錄上一次購買的時間以防止任務重複運行，這個數值是自動記錄的，一般不需要修改",
+      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
     }
   },
   "Shipyard": {
@@ -2083,7 +2092,8 @@
     },
     "LastRun": {
       "name": "上一次購買時間",
-      "help": "因為遊戲不顯示今天已經購買了幾張，所以這裡記錄上一次購買的時間以防止任務重複運行，這個數值是自動記錄的，一般不需要修改"
+      "help": "因為遊戲不顯示今天已經購買了幾張，所以這裡記錄上一次購買的時間以防止任務重複運行，這個數值是自動記錄的，一般不需要修改",
+      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
     }
   },
   "Gacha": {
@@ -2411,7 +2421,8 @@
     },
     "OpponentRefreshRecord": {
       "name": "演習對手刷新紀錄時間",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
     }
   },
   "Sos": {
@@ -2696,7 +2707,8 @@
     },
     "LastRun": {
       "name": "上次檢查時間",
-      "help": "記錄上一次檢查的時間以防止任務重複運行，檢查間隔為1天，該數值是自動記錄的，一般不需要修改"
+      "help": "記錄上一次檢查的時間以防止任務重複運行，檢查間隔為1天，該數值是自動記錄的，一般不需要修改",
+      "invalid_feedback": "OpsiCheckLeveling.LastRun.invalid_feedback"
     },
     "DelayAfterFull": {
       "name": "達到目標等級後延遲任務",

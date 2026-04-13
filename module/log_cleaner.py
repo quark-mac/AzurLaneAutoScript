@@ -10,72 +10,11 @@ from module.logger import logger
 
 LOG_DIR = "./log"
 LOG_ERROR_DIR = "./log/error"
-DEFAULT_SCHEDULED_TIME = "00:00"
-DEFAULT_KEEP_DAYS = 7
-MIN_KEEP_DAYS = 1
-MAX_KEEP_DAYS = 365
 
 # Matches ./log/YYYY-MM-DD_*.txt
 _LOG_FILE_PATTERN = re.compile(r"^(\d{4}-\d{2}-\d{2})_.+\.txt$")
 # Matches a pure integer directory name (millisecond timestamp)
 _MS_TIMESTAMP_PATTERN = re.compile(r"^\d+$")
-
-
-def validate_scheduled_time(value):
-    """
-    Validate and normalize a HH:MM time string.
-
-    Args:
-        value (str):
-
-    Returns:
-        str: Normalized 'HH:MM' string, or DEFAULT_SCHEDULED_TIME if invalid.
-    """
-    if not isinstance(value, str):
-        logger.warning(
-            f'LogCleaner: ScheduledTime "{value}" is not a string, reset to {DEFAULT_SCHEDULED_TIME}'
-        )
-        return DEFAULT_SCHEDULED_TIME
-    value = value.strip()
-    if not re.match(r"^\d{2}:\d{2}$", value):
-        logger.warning(
-            f'LogCleaner: ScheduledTime "{value}" is not in HH:MM format, reset to {DEFAULT_SCHEDULED_TIME}'
-        )
-        return DEFAULT_SCHEDULED_TIME
-    hour, minute = value.split(":")
-    hour, minute = int(hour), int(minute)
-    if not (0 <= hour <= 23 and 0 <= minute <= 59):
-        logger.warning(
-            f'LogCleaner: ScheduledTime "{value}" is out of valid range, reset to {DEFAULT_SCHEDULED_TIME}'
-        )
-        return DEFAULT_SCHEDULED_TIME
-    return f"{hour:02d}:{minute:02d}"
-
-
-def validate_keep_days(value):
-    """
-    Validate keep_days value. Must be an integer between MIN_KEEP_DAYS and MAX_KEEP_DAYS.
-
-    Args:
-        value (int, str):
-
-    Returns:
-        int: Valid keep_days, or DEFAULT_KEEP_DAYS if invalid.
-    """
-    try:
-        value = int(value)
-    except (TypeError, ValueError):
-        logger.warning(
-            f'LogCleaner: KeepDays "{value}" is not an integer, reset to {DEFAULT_KEEP_DAYS}'
-        )
-        return DEFAULT_KEEP_DAYS
-    if not (MIN_KEEP_DAYS <= value <= MAX_KEEP_DAYS):
-        logger.warning(
-            f"LogCleaner: KeepDays {value} is out of range [{MIN_KEEP_DAYS}, {MAX_KEEP_DAYS}], "
-            f"reset to {DEFAULT_KEEP_DAYS}"
-        )
-        return DEFAULT_KEEP_DAYS
-    return value
 
 
 class LogCleaner:
@@ -87,26 +26,6 @@ class LogCleaner:
         self.config = config
         self._scheduler_thread = None
         self._stop_event = threading.Event()
-
-    def _get_validated_keep_days(self):
-        """
-        Returns:
-            int:
-        """
-        keep_days = validate_keep_days(self.config.LogCleaner_KeepDays)
-        if keep_days != self.config.LogCleaner_KeepDays:
-            self.config.LogCleaner_KeepDays = keep_days
-        return keep_days
-
-    def _get_validated_scheduled_time(self):
-        """
-        Returns:
-            str: HH:MM
-        """
-        scheduled_time = validate_scheduled_time(self.config.LogCleaner_ScheduledTime)
-        if scheduled_time != self.config.LogCleaner_ScheduledTime:
-            self.config.LogCleaner_ScheduledTime = scheduled_time
-        return scheduled_time
 
     @staticmethod
     def _cutoff_timestamp_ms(cutoff_date):
@@ -255,7 +174,7 @@ class LogCleaner:
             keep_days (int, optional): Number of days to keep. Uses config value if None.
         """
         if keep_days is None:
-            keep_days = self._get_validated_keep_days()
+            keep_days = self.config.LogCleaner_KeepDays
 
         cutoff_date = datetime.now().date() - timedelta(days=keep_days)
         cutoff_ms = self._cutoff_timestamp_ms(cutoff_date)
@@ -320,7 +239,7 @@ class LogCleaner:
                 )
                 break
 
-            scheduled_time = self._get_validated_scheduled_time()
+            scheduled_time = self.config.LogCleaner_ScheduledTime
             wait_seconds = self._seconds_until_next_run(scheduled_time)
             logger.info(
                 f"LogCleaner: Next scheduled clean at {scheduled_time}, waiting {wait_seconds:.0f}s"
