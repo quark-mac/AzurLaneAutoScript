@@ -1,0 +1,71 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    # 每天 UTC 00:00 运行（北京时间 08:00）
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/guoh064/AzurLaneAutoScript.git || true
+          git fetch upstream
+
+      - name: Merge upstream
+        id: merge
+        run: |
+          git merge upstream/main --no-edit
+        continue-on-error: true
+
+      - name: Push changes
+        if: steps.merge.outcome == 'success'
+        run: |
+          git push origin master
+
+      - name: Create issue on conflict
+        if: steps.merge.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '⚠️ Upstream sync failed - Manual intervention required';
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-conflict'
+            });
+            const existingIssue = issues.data.find(issue => issue.title === title);
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                labels: ['sync-conflict'],
+                body: 'The automatic upstream sync failed due to merge conflicts.\n\n**Please manually sync using:**\n\n```bash\ngit fetch upstream\ngit merge upstream/main\n# Resolve conflicts manually\ngit add <conflicted-files>\ngit commit\ngit push origin master\n```\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: 'Another sync attempt failed.\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+              });
+            }
