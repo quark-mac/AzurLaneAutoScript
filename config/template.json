@@ -1337,7 +1337,7 @@
   },
   "Commission": {
     "Scheduler": {
-      "Enable": false,
+      "Enable": true,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Commission",
       "SuccessInterval": "30-60",
@@ -1386,7 +1386,7 @@
   },
   "Research": {
     "Scheduler": {
-      "Enable": false,
+      "Enable": true,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Research",
       "SuccessInterval": "30-60",
@@ -1481,7 +1481,7 @@
   },
   "Reward": {
     "Scheduler": {
-      "Enable": false,
+      "Enable": true,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Reward",
       "SuccessInterval": "120-240",
