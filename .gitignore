@@ -255,3 +255,49 @@ console.bat
 
 # Pylance configuration file
 pyrightconfig.json
+
+# ========================================
+# Personal modifications - untracked files
+# ========================================
+
+# GitHub configurations
+.github/pull.yml
+.github/workflows/main.yml
+
+# Assets
+assets/
+
+# Bin - Models
+bin/cnocr_models/azur_lane_jp/
+
+# Deploy
+deploy/Termux/
+deploy/launcher/Alas-gui.bat
+
+# Dev Tools
+dev_tools/akashi_statistics.py
+dev_tools/war_archives_update.py
+
+# Module - Config
+module/config/argument/dashboard.yaml
+
+# Module - Event Hospital
+module/event_hospital/
+
+# Module - Island
+module/island/
+
+# Module - Runtime
+module/log_res/
+module/screenshots/
+module/storage/
+
+# Startup
+startup_win/
+
+# Test Files
+test_invalid_feedback_strategy.py
+
+# Chinese Batch Files
+启动Alas.bat
+启动Alas(纯GUI).bat
