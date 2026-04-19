@@ -104,18 +104,22 @@ class GitManager(DeployConfig):
             logger.info('AutoUpdate is disabled, skip')
             return
 
-        if self.GitOverCdn:
-            if self.goc_client.update(keep_changes=self.KeepLocalChanges):
-                return
+        try:
+            if self.GitOverCdn:
+                if self.goc_client.update(keep_changes=self.KeepLocalChanges):
+                    return
 
-        self.git_repository_init(
-            repo=self.Repository,
-            source='origin',
-            branch=self.Branch,
-            proxy=self.GitProxy,
-            ssl_verify=self.SSLVerify,
-            keep_changes=self.KeepLocalChanges,
-        )
+            self.git_repository_init(
+                repo=self.Repository,
+                source='origin',
+                branch=self.Branch,
+                proxy=self.GitProxy,
+                ssl_verify=self.SSLVerify,
+                keep_changes=self.KeepLocalChanges,
+            )
+        except Exception as e:
+            logger.warning(f'Git update failed: {e}')
+            logger.warning('Continue startup without update')
 
 
 if __name__ == '__main__':

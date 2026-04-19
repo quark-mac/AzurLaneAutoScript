@@ -343,11 +343,58 @@ assets/            # Image assets for recognition
 6. **Device abstraction** - All device operations through `Device` class
 7. **Asset-based UI** - Use `Button` objects for screen recognition
 
+## Advanced Topics
+
+### Custom Status System
+ALAS supports custom status messages displayed in the WebUI (e.g., "Running (Commission ships insufficient)"):
+
+**Architecture**:
+- Subprocess (task execution) writes status to `./config/.status_{config_name}`
+- Main process (GUI) polls status file every 2 seconds
+- Status codes defined in `module/config/i18n/*.json` under `Gui.Status`
+
+**Adding new status**:
+1. Write status code to file in task module: `self.config.write_status('status_code')`
+2. Add translations to all i18n files: `"Gui.Status.StatusCode": "Display text"`
+3. Status automatically cleared when scheduler starts
+
+See `docs/status_system.md` for detailed implementation.
+
+### Input Validation System
+Configuration input validation is handled at the WebUI layer:
+
+**Validation flow**:
+1. User inputs value in WebUI
+2. System validates against regex in `args.json` (from `argument.yaml`)
+3. If valid: parse type and save; if invalid: show red border + error message
+
+**Adding validation to config option**:
+1. Add `validate: '^regex$'` to `module/config/argument/argument.yaml`
+2. Add `invalid_feedback` translations to all `module/config/i18n/*.json` files
+3. Run config generator: `.\toolkit\python.exe -c "from module.config.config_updater import ConfigGenerator; ConfigGenerator().generate()"`
+4. Test in GUI
+
+**Important**:
+- Validation runs on **original string** before type conversion
+- Only `type: input` fields need validation (checkbox/select/datetime have built-in validation)
+- After adding WebUI validation, remove any backend defensive validation to avoid conflicts
+
+See `docs/input-validation-spec.md` for complete guide and `docs/input-validation-lessons.md` for common pitfalls.
+
+### Upstream Synchronization
+This fork can sync with upstream `guoh064/AzurLaneAutoScript`:
+
+**Automatic sync**: GitHub Actions runs daily at UTC 00:00
+**Manual sync**: `git sync` (uses merge) or `git sync-clean` (uses rebase)
+
+See `docs/upstream-sync-guide.md` for detailed workflow and conflict resolution.
+
 ## Additional Resources
 
 - **Official Wiki**: https://github.com/LmeSzinc/AzurLaneAutoScript/wiki
 - **Development Guide**: https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Development
 - **Configuration Guide**: https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Configuration
+- **Local Documentation**: See `docs/` folder for custom features and development guides
 
 ## Common Pitfalls
 
@@ -358,8 +405,13 @@ assets/            # Image assets for recognition
 - ❌ Don't bypass the Device abstraction layer
 - ❌ Don't use system Python - always use `.\toolkit\python.exe`
 - ❌ Don't edit generated JSON files directly - edit YAML sources instead
+- ❌ Don't add validation to `argument.yaml` without running ConfigGenerator
+- ❌ Don't put display text in `argument.yaml` - use i18n files for multilingual support
+- ❌ Don't keep backend validation after adding WebUI validation (causes conflicts)
 - ✅ Do use the logger for all output
 - ✅ Do follow the existing inheritance patterns
 - ✅ Do use custom exceptions for control flow
 - ✅ Do test with actual game screenshots when possible
 - ✅ Do regenerate configs after modifying YAML files
+- ✅ Do validate regex on original string before type conversion
+- ✅ Do add translations to all 4 i18n files (zh-CN, en-US, ja-JP, zh-TW)
