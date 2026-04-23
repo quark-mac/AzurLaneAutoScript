@@ -9,6 +9,9 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
@@ -29,16 +32,16 @@ jobs:
           git remote add upstream https://github.com/guoh064/AzurLaneAutoScript.git || true
           git fetch upstream
 
-      - name: Merge upstream
+      - name: Rebase onto upstream
         id: merge
         run: |
-          git merge upstream/main --no-edit
+          git rebase upstream/main
         continue-on-error: true
 
       - name: Push changes
         if: steps.merge.outcome == 'success'
         run: |
-          git push origin master
+          git push origin master --force-with-lease
 
       - name: Create issue on conflict
         if: steps.merge.outcome == 'failure'
