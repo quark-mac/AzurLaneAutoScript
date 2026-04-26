@@ -32,10 +32,19 @@ jobs:
           git remote add upstream https://github.com/guoh064/AzurLaneAutoScript.git || true
           git fetch upstream
 
-      - name: Rebase onto upstream
+      - name: Reset and cherry-pick
         id: merge
         run: |
-          git rebase upstream/main
+          # Get list of your commits (authored by quark-mac)
+          COMMITS=$(git log --oneline --no-merges --reverse --author="quark-mac" upstream/main..master | awk '{print $1}')
+          
+          # Reset to upstream
+          git reset --hard upstream/main
+          
+          # Cherry-pick your commits
+          for commit in $COMMITS; do
+            git cherry-pick $commit || exit 1
+          done
         continue-on-error: true
 
       - name: Push changes
