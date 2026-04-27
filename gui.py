@@ -8,7 +8,8 @@ from module.webui.setting import State
 
 def auto_start_scheduler(ev: threading.Event):
     """Auto start scheduler after GUI startup"""
-    time.sleep(2)
+    while not State._init:
+        time.sleep(0.5)
 
     from module.config.config import AzurLaneConfig
     from module.config.utils import alas_instance
