@@ -189,7 +189,18 @@ class Updater(DeployConfig, GitManager, PipManager):
 
     @retry(ExecutionError, tries=3, delay=5, logger=None)
     def git_install(self):
-        return super().git_install()
+        logger.hr('Update Alas', 0)
+        if self.GitOverCdn:
+            if self.goc_client.update(keep_changes=self.KeepLocalChanges):
+                return
+        self.git_repository_init(
+            repo=self.Repository,
+            source='origin',
+            branch=self.Branch,
+            proxy=self.GitProxy,
+            ssl_verify=self.SSLVerify,
+            keep_changes=self.KeepLocalChanges,
+        )
 
     @retry(ExecutionError, tries=3, delay=5, logger=None)
     def pip_install(self):
