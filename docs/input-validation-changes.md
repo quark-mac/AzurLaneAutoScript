@@ -2,6 +2,8 @@
 
 本文档列出为实现配置输入验证系统而对原始 ALAS 代码所做的全部修改。
 
+> 相关提交：`33ef2c927`, `b2de07d3d`, `06f491a20`
+
 ---
 
 ## 1. `module/webui/app.py`
@@ -75,7 +77,7 @@ for k, v in modified.copy().items():
         logger.warning(f"Invalid value {v} for key {k}, skip saving.")
 ```
 
-**修改后**：
+**最终代码**：
 ```python
 for k, v in modified.copy().items():
     valuetype = deep_get(self.ALAS_ARGS, k + ".valuetype")
@@ -88,7 +90,6 @@ for k, v in modified.copy().items():
         modified[k] = default
         deep_set(config, k, default)
         valid.append(k)
-        pin["_".join(k.split("."))] = default
     elif validate and not re_fullmatch(validate, v_str):
         # Validation failed
         modified.pop(k)
@@ -107,7 +108,9 @@ for k, v in modified.copy().items():
             pin["_".join(set_key.split("."))] = to_pin_value(set_value)
 ```
 
-**说明**：将验证步骤移到 `parse_pin_value()` 之前，对原始字符串做正则匹配；只有验证通过后才进行类型转换和保存。
+**说明**（包含两处改动）：
+1. 将验证步骤移到 `parse_pin_value()` 之前，对原始字符串做正则匹配；只有验证通过后才进行类型转换和保存。
+2. 删除了空值时向 UI 回写默认值的 `pin["_".join(k.split("."))] = default` 行。空值时默认值仍写入配置文件，但不再推回 UI 组件——用户清空字段后可以不受干扰地输入新值。
 
 ---
 
@@ -303,7 +306,7 @@ scheduled_time = self.config.LogCleaner_ScheduledTime
 
 | 文件 | 修改性质 |
 |------|---------|
-| `module/webui/app.py` | 新增错误提示三级优先级；验证时机前移至类型转换之前 |
+| `module/webui/app.py` | 新增错误提示三级优先级；验证时机前移至类型转换之前；删除空值时向 UI 回写默认值的 pin pushback |
 | `module/config/config_updater.py` | `generate_i18n` 按需生成 `invalid_feedback` |
 | `module/config/argument/argument.yaml` | 为配置项新增 `validate` 规则 |
 | `module/config/i18n/zh-CN.json` | 新增 `invalid_feedback` 翻译 |
