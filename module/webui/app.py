@@ -656,7 +656,6 @@ class AlasGUI(Frame):
                     modified[k] = default
                     deep_set(config, k, default)
                     valid.append(k)
-                    pin["_".join(k.split("."))] = default
                 elif validate and not re_fullmatch(validate, v_str):
                     # Validation failed
                     modified.pop(k)
