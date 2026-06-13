@@ -2025,6 +2025,19 @@
       "Storage": {}
     }
   },
+  "IslandProductionPlanner": {
+    "IslandProductionPlanner": {
+      "RescanIslandTechnology": false,
+      "DailyProfitLowerLimit": 50000,
+      "MinStockSafetyMargin": 0,
+      "FieldsEfficiency": 0,
+      "OrchardEfficiency": 0,
+      "NurseryEfficiency": 0
+    },
+    "Storage": {
+      "Storage": {}
+    }
+  },
   "Benchmark": {
     "Benchmark": {
       "DeviceType": "emulator",
