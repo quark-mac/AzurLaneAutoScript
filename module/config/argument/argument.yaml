@@ -735,6 +735,19 @@ OpsiHazard1Leveling:
     option: [ 0, 44, 22 ]
 
 # =================== Island ====================
+IslandProduction:
+  PreservedItems:
+    type: textarea
+    value: |-
+      {}
+  MinStockItems:
+    type: textarea
+    value: |-
+      {}
+  AccumulatingItems:
+    type: textarea
+    value: |-
+      {}
 IslandFreebie:
   Share: true
 IslandRestaurant:

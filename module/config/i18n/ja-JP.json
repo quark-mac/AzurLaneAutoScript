@@ -258,6 +258,10 @@
       "name": "Cross Month Daily",
       "help": "    ALAS will enter OpSi 10min before OpSi reset, wait until OpSi reset but not exit OpSi. Then do the daily, obscure, abyssal and meowfficer farming to get extra gold plates. When running dailies, settings in task \"OpSiDaily\" are used, the rest function are the same.\n    IMPORTANT: Please do not touch the game while ALAS is waiting for OpSi reset."
     },
+    "IslandProduction": {
+      "name": "離島生産",
+      "help": ""
+    },
     "IslandFreebie": {
       "name": "デイリー補給",
       "help": ""
@@ -2573,6 +2577,24 @@
       "0": "0",
       "44": "44",
       "22": "22"
+    }
+  },
+  "IslandProduction": {
+    "_info": {
+      "name": "離島生産",
+      "help": ""
+    },
+    "PreservedItems": {
+      "name": "要望品目",
+      "help": "ユーザーが保持する品目をカスタム設定し、各品目をいくつ備蓄するかを指定します。\nAlas は最低在庫品目以外でこれらの品目を優先して生産し、十分な在庫があることを確保します。\n形式例：\n(現在のサーバーでの品目名): (数量)"
+    },
+    "MinStockItems": {
+      "name": "最低在庫品目",
+      "help": "在庫が少なくなったときに生産する品目と、各品目ごとに維持する在庫数です。\n在庫が少ない品目はAlasが優先して生産し、アイドル時には他の品目を生産します。\nこれはツール内の島生産プランナーで自動生成できます。"
+    },
+    "AccumulatingItems": {
+      "name": "累積品目",
+      "help": "過剰生産分を無視し、各品目の在庫増加率を設定します。\nAlas はこれらの品目を過剰生産として扱わず、アイドル時には現在の在庫を増加率で割った値に基づいて生産します。\nこれはツール内の島生産プランナーで自動生成できます。"
     }
   },
   "IslandFreebie": {
