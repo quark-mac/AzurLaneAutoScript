@@ -98,6 +98,17 @@
       "OpsiCrossMonth"
     ]
   },
+  "Island": {
+    "menu": "collapse",
+    "page": "setting",
+    "tasks": [
+      "IslandProduction",
+      "IslandFreebie",
+      "IslandCollect",
+      "IslandSeasonTask",
+      "IslandBusiness"
+    ]
+  },
   "Tool": {
     "menu": "collapse",
     "page": "tool",
@@ -105,6 +116,7 @@
       "Daemon",
       "OpsiDaemon",
       "EventStory",
+      "IslandProductionPlanner",
       "Benchmark",
       "AzurLaneUncensored",
       "GameManager"
