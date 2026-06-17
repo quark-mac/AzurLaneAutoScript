@@ -1,373 +1,132 @@
 # 上游同步指南
 
-本文档说明如何自动和手动同步上游仓库 `guoh064/AzurLaneAutoScript`。
+本文档说明当前可用的自动同步方案：**以 `upstream/main` 为基准，自动重放 `master` 的最终 overlay diff，成功就自动推送，失败才人工介入**。
 
-## 自动同步（GitHub Actions）
+---
 
-### 工作原理
+## 机制概览
 
-- **触发时间**：每天 UTC 00:00（北京时间 08:00）自动运行
-- **同步策略**：先用补丁层脚本重放 `origin/master` 上的本地 overlay，再把结果推回 `master`
-- **成功时**：自动推送到 `master`
-- **失败时**：创建 GitHub Issue 通知你需要手动处理冲突
-- **原则**：平时自动更新 `master`；只有 overlay 补丁无法套用时才需要人工介入
+同步脚本：`scripts/sync_overlay.ps1`
 
-### 手动触发
+工作流程：
 
-1. 访问：`https://github.com/quark-mac/AzurLaneAutoScript/actions`
-2. 选择 "Sync Upstream" workflow
-3. 点击 "Run workflow" 按钮
-4. 选择 `master` 分支
-5. 点击 "Run workflow" 确认
+1. `git fetch origin` 和 `git fetch upstream`
+2. 计算 `upstream/main` 与 `origin/master` 的共同祖先 `merge-base`
+3. 取 `origin/master` 相对 `merge-base` 的最终差异作为 overlay
+4. 在新的 `upstream/main` 上用三方合并方式套用这份 overlay
+5. 套用成功后提交一个新的 overlay commit
+6. 如果传了 `-Push`，再把结果推回 `origin/master`
 
-### 查看运行状态
+核心命令模型：
 
-访问：`https://github.com/quark-mac/AzurLaneAutoScript/actions/workflows/sync-upstream.yml`
+```bash
+git merge-base upstream/main origin/master
+git diff --binary <merge-base> origin/master
+git checkout -B sync/overlay upstream/main
+git apply --3way --index overlay.patch
+```
 
-### 为什么不用全自动推送到 master
+---
 
-本仓库长期维护自己的功能，且 ALAS 上游更新频繁。即使上游没有修改同一个函数，只要修改了同一文件，Git 也可能要求重新解决冲突。尤其是以下文件容易被放大：
+## 三方合并
 
-- `module/config/argument/*.yaml` 和生成的 `args.json`、`menu.json`
+`git apply --3way` 的“三方”是：
+
+1. **BASE**：`merge-base` 时的旧文件
+2. **OURS**：当前要应用到的新 `upstream/main`
+3. **THEIRS**：从 `origin/master` 提取出来的最终 overlay diff
+
+它不是逐个 replay 历史 commit，而是只重放“当前最终想要的结果”。这能避免把中间无效提交、已撤销提交、旧 cherry-pick 历史一起带进去。
+
+---
+
+## 为什么这样做
+
+以前的 `merge` / `cherry-pick` 方式有两个问题：
+
+1. upstream 只要改了同一个文件，哪怕没改同一个函数，也容易反复冲突
+2. 逐个提交重放会把中间过程也当成维护对象，历史越久越碎
+
+现在的 overlay 模式只维护**最终差异**：
+
+- 不保留中间无效提交
+- 不把旧的调试提交重复 replay
+- 生成文件、i18n、template 等可以直接按最终结果重建
+
+这就是这套系统比 cherry-pick 更稳的地方。
+
+---
+
+## GitHub Actions
+
+工作流文件：`.github/workflows/sync-upstream.yml`
+
+现在的行为是：
+
+- 定时运行
+- 如果 `upstream/main` 已经包含在 `origin/master`，直接跳过
+- 如果有新 upstream，调用 `scripts/sync_overlay.ps1 -Push`
+- 如果 overlay 能成功套用，自动推送到 `master`
+- 如果 overlay 套不上，创建 Issue 提醒人工处理
+
+这意味着：**平时自动同步，只有真正需要人工判断时才停下来。**
+
+---
+
+## 本地测试
+
+### Dry run
+
+```bash
+./scripts/sync_overlay.ps1 -Force
+```
+
+作用：
+
+- 即使当前 `origin/master` 已经包含 `upstream/main`，也强制执行一次 overlay 重放
+- 适合验证脚本逻辑和补丁可套用性
+- 不推送到远端
+
+### 正式同步
+
+```bash
+./scripts/sync_overlay.ps1 -Push
+```
+
+作用：
+
+- 自动计算 overlay diff
+- 套用到新的 `upstream/main`
+- 成功后推送到 `origin/master`
+
+运行前要求：
+
+- 工作区必须干净
+- 不能有未提交修改
+
+---
+
+## 常见冲突来源
+
+即使这套 overlay 模式已经比 cherry-pick 稳，以下文件仍然是高风险区：
+
+- `module/config/argument/*.yaml`
 - `module/config/i18n/*.json`
 - `config/template.json`
-- 上游大功能新增时的 assets 和模块文件
+- `module/webui/app.py`
+- 大型 assets / island 相关模块
 
-因此当前策略是：workflow 先把上游更新和你的 overlay 补丁串起来自动执行。只要补丁还能干净套用，就会自动更新 `master`；只有补丁层真的套不上时，才需要手动处理。
-
----
-
-## 手动同步
-
-### 方法 1：自动同步（推荐）
-
-1. 访问：`https://github.com/quark-mac/AzurLaneAutoScript/actions/workflows/sync-upstream.yml`
-2. 手动运行 `Sync Upstream`，或等待定时任务
-3. 如果无冲突，workflow 会自动把补丁层结果推送到 `master`
-4. 如果有冲突，workflow 会创建 Issue 通知你手动处理
-
-**使用场景**：日常同步，默认自动完成
-
-### 本地 overlay 脚本
-
-你也可以在本地直接运行补丁层同步：
-
-```bash
-.\scripts\sync_overlay.ps1 -Push
-```
-
-如果 upstream 当前已经包含在 `origin/master` 中，但你想测试补丁重放流程，可以加 `-Force`：
-
-```bash
-.\scripts\sync_overlay.ps1 -Force
-```
-
-脚本会：
-
-1. 拉取 `origin` 和 `upstream`
-2. 找到 `upstream/main` 和 `origin/master` 的共同祖先 `merge-base`
-3. 计算 `origin/master` 相对 `merge-base` 的最终 overlay diff
-4. 在新的 `upstream/main` 上用 `git apply --3way --index` 套用这个最终差异
-5. 成功后提交一个新的 overlay commit，并把结果推回 `master`
-
-这里不能直接计算 `git diff upstream/main origin/master`，否则新 upstream 里的新增内容会被误认为是本地 overlay 的反向差异。正确模型是：从旧共同祖先提取你的本地最终改动，再把它套到新 upstream 上。
-
-运行脚本前工作区必须是干净的；如果有未提交改动，脚本会直接退出，避免覆盖本地修改。
-
-注意：该脚本使用 `--force-with-lease` 推送，是有意把历史整理成“当前 upstream + 当前 overlay”的形态，而不是保留所有中间提交。这样冲突面比逐个 cherry-pick 或逐个 `git am` 小。当前仓库是个人 fork，适合这种维护方式。
+原因很简单：这些文件要么是生成链的一部分，要么 upstream 也在频繁改动。
 
 ---
 
-### 方法 2：使用 Git 别名
+## 当前结论
 
-已配置两个便捷别名：
+这套机制已经实际跑通过：
 
-#### 日常同步（使用 merge）
-```bash
-git sync
-```
+- `merge-base` 取对了
+- overlay diff 取对了
+- `git apply --3way --index` 能正确套用
+- dry run 可成功生成 overlay commit
 
-等同于：
-```bash
-git fetch upstream
-git merge upstream/main
-git push origin master
-```
-
-**使用场景**：日常同步，每周或每月执行
-
-#### 定期清理（使用 rebase）
-```bash
-git sync-clean
-```
-
-等同于：
-```bash
-git fetch upstream
-git rebase upstream/main
-git push origin master --force-with-lease
-```
-
-**使用场景**：每季度执行一次，保持提交历史清晰
-
----
-
-### 方法 3：完整命令
-
-如果别名不可用，可以使用完整命令：
-
-#### 使用 Merge（推荐）
-```bash
-# 1. 获取上游更新
-git fetch upstream
-
-# 2. 合并上游
-git merge upstream/main
-
-# 3. 如果有冲突，解决后：
-git add <冲突文件>
-git commit
-
-# 4. 推送
-git push origin master
-```
-
-#### 使用 Rebase（历史更清晰）
-```bash
-# 1. 获取上游更新
-git fetch upstream
-
-# 2. Rebase
-git rebase upstream/main
-
-# 3. 如果有冲突，解决后：
-git add <冲突文件>
-git rebase --continue
-
-# 4. 推送（需要强制推送）
-git push origin master --force-with-lease
-```
-
----
-
-## 冲突处理
-
-### 常见冲突文件
-
-1. **配置文件**
-   - `config/template.json`
-   - `module/config/argument/args.json`
-   - `module/config/argument/argument.yaml`
-
-2. **翻译文件**
-   - `module/config/i18n/zh-CN.json`
-   - `module/config/i18n/en-US.json`
-   - `module/config/i18n/ja-JP.json`
-   - `module/config/i18n/zh-TW.json`
-
-3. **核心文件**
-   - `alas.py`
-   - `module/webui/app.py`
-   - `module/config/config_updater.py`
-
-### 冲突解决策略
-
-#### 策略 1：保留你的修改
-```bash
-git checkout --ours <文件>
-git add <文件>
-```
-
-#### 策略 2：保留上游修改
-```bash
-git checkout --theirs <文件>
-git add <文件>
-```
-
-#### 策略 3：手动合并
-```bash
-# 编辑文件，解决冲突标记：
-# <<<<<<< HEAD
-# 你的修改
-# =======
-# 上游的修改
-# >>>>>>> upstream/main
-
-# 保存后：
-git add <文件>
-```
-
-### 冲突解决后
-
-**如果使用 merge**：
-```bash
-git commit
-git push origin master
-```
-
-**如果使用 rebase**：
-```bash
-git rebase --continue
-# 如果还有冲突，重复解决过程
-# 全部解决后：
-git push origin master --force-with-lease
-```
-
----
-
-## 添加新功能的建议
-
-### 方式 1：直接在 master 开发（简单）
-
-```bash
-# 1. 确保是最新的
-git sync
-
-# 2. 开发新功能
-# 编辑文件...
-
-# 3. 提交
-git add .
-git commit -m "feat: Add new feature"
-git push origin master
-```
-
-### 方式 2：使用功能分支（推荐）
-
-```bash
-# 1. 创建功能分支
-git checkout -b feature/new-feature
-
-# 2. 开发新功能
-# 编辑文件...
-
-# 3. 提交到功能分支
-git add .
-git commit -m "feat: Add new feature"
-git push origin feature/new-feature
-
-# 4. 合并到 master
-git checkout master
-git merge feature/new-feature
-git push origin master
-
-# 5. 删除功能分支（可选）
-git branch -d feature/new-feature
-git push origin --delete feature/new-feature
-```
-
----
-
-## 推荐工作流程
-
-### 日常工作流
-
-```
-每周/每月：
-  1. 自动同步到 master（GitHub Actions）
-     或手动运行 Sync Upstream workflow
-      ↓
-  2. 如果有冲突，按 Issue 手动解决
-      ↓
-  3. workflow 正常时无需额外操作
-      ↓
-      4. 开发新功能并提交
-
-每季度（可选）：
-  1. 清理提交历史
-     git sync-clean
-     ↓
-  2. 解决冲突（如果有）
-     ↓
-  3. 验证功能正常
-```
-
----
-
-## 故障排除
-
-### 问题 1：GitHub Actions 失败
-
-**症状**：收到 Issue 通知，提示同步失败
-
-**解决**：
-1. 查看 Actions 运行日志
-2. 本地手动同步：`git sync`
-3. 解决冲突后推送
-4. 关闭 Issue
-
-### 问题 2：推送被拒绝
-
-**症状**：`git push` 提示 `rejected`
-
-**原因**：远程有新的提交
-
-**解决**：
-```bash
-git pull origin master
-# 解决冲突（如果有）
-git push origin master
-```
-
-### 问题 3：Rebase 冲突太多
-
-**症状**：`git rebase` 遇到大量冲突
-
-**解决**：
-```bash
-# 中止 rebase
-git rebase --abort
-
-# 改用 merge
-git merge upstream/main
-# 解决冲突
-git push origin master
-```
-
-### 问题 4：不小心强制推送覆盖了提交
-
-**症状**：提交丢失
-
-**解决**：
-```bash
-# 查看 reflog
-git reflog
-
-# 找到丢失的提交 ID
-# 恢复到该提交
-git reset --hard <提交ID>
-
-# 重新推送
-git push origin master --force-with-lease
-```
-
----
-
-## 配置文件位置
-
-- **GitHub Actions Workflow**：`.github/workflows/sync-upstream.yml`
-- **Git 别名配置**：`.git/config`（本地）
-
----
-
-## 相关链接
-
-- **上游仓库**：https://github.com/guoh064/AzurLaneAutoScript
-- **你的 Fork**：https://github.com/quark-mac/AzurLaneAutoScript
-- **Actions 页面**：https://github.com/quark-mac/AzurLaneAutoScript/actions
-- **Issues 页面**：https://github.com/quark-mac/AzurLaneAutoScript/issues
-
----
-
-## 总结
-
-- ✅ **自动同步**：GitHub Actions 每天自动运行
-- ✅ **手动同步**：使用 `git sync` 命令
-- ✅ **定期清理**：使用 `git sync-clean` 命令
-- ✅ **冲突处理**：收到通知后手动解决
-- ✅ **功能开发**：直接在 master 或使用功能分支
-
-**推荐频率**：
-- 自动同步：每天（已配置）
-- 手动检查：每周
-- 历史清理：每季度
+所以现在的维护策略就是：**用 overlay 取代逐提交 cherry-pick。**
