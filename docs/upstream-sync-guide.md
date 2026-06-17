@@ -7,10 +7,10 @@
 ### 工作原理
 
 - **触发时间**：每天 UTC 00:00（北京时间 08:00）自动运行
-- **同步策略**：在 `sync/upstream-main` 分支上合并 `upstream/main`
-- **成功时**：创建或更新一个同步 PR，等待人工 review 后再合并到 `master`
+- **同步策略**：直接在 `master` 上尝试合并 `upstream/main`
+- **成功时**：自动推送到 `master`
 - **失败时**：创建 GitHub Issue 通知你需要手动处理冲突
-- **原则**：自动化不直接改写 `master`，避免冲突解决失败或错误 cherry-pick 污染主分支
+- **原则**：只有合并失败时才需要人工介入；平时自动更新 `master`
 
 ### 手动触发
 
@@ -33,21 +33,20 @@
 - `config/template.json`
 - 上游大功能新增时的 assets 和模块文件
 
-因此当前策略改为：自动准备同步 PR，但不自动合并。这样 `master` 始终保持可控状态，冲突集中在 PR 中处理。
+因此当前策略是：自动尝试合并到 `master`，只有失败时才创建 Issue 让你手动处理冲突。这样平时可以全自动同步，只有真正有冲突时才需要人工介入。
 
 ---
 
 ## 手动同步
 
-### 方法 1：通过同步 PR（推荐）
+### 方法 1：自动同步（推荐）
 
 1. 访问：`https://github.com/quark-mac/AzurLaneAutoScript/actions/workflows/sync-upstream.yml`
-2. 手动运行 `Sync Upstream`
-3. 等待 workflow 创建或更新 `sync/upstream-main` → `master` 的 PR
-4. 如果 PR 可自动合并，review 后手动 merge
-5. 如果 PR 有冲突，在本地 checkout `sync/upstream-main` 解决后推回该分支
+2. 手动运行 `Sync Upstream`，或等待定时任务
+3. 如果无冲突，workflow 会自动把 upstream 合并到 `master` 并推送
+4. 如果有冲突，workflow 会创建 Issue 通知你手动处理
 
-**使用场景**：日常同步，优先使用，避免自动化直接污染 `master`
+**使用场景**：日常同步，默认自动完成
 
 ---
 
@@ -237,15 +236,14 @@ git push origin --delete feature/new-feature
 
 ```
 每周/每月：
-  1. 自动同步生成 PR（GitHub Actions）
+  1. 自动同步到 master（GitHub Actions）
      或手动运行 Sync Upstream workflow
       ↓
-  2. Review 同步 PR
-     如果有冲突，在 PR 分支解决
+  2. 如果有冲突，按 Issue 手动解决
       ↓
-  3. 合并同步 PR 到 master
+  3. workflow 正常时无需额外操作
       ↓
-  4. 开发新功能并提交
+      4. 开发新功能并提交
 
 每季度（可选）：
   1. 清理提交历史

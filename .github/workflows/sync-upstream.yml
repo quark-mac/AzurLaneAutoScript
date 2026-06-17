@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
       issues: write
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
       - name: Checkout
@@ -48,32 +46,18 @@ jobs:
             echo "has_updates=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Merge upstream into sync branch
+      - name: Merge upstream into master
         id: merge
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          git checkout -B sync/upstream-main origin/master
+          git checkout -B master origin/master
           git merge --no-ff upstream/main -m "Merge upstream main"
         continue-on-error: true
 
-      - name: Push sync branch
+      - name: Push clean sync to master
         if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success'
         run: |
-          git push origin sync/upstream-main --force-with-lease
-
-      - name: Create or update sync PR
-        if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success'
-        run: |
-          PR_NUMBER=$(gh pr list --head sync/upstream-main --base master --json number --jq '.[0].number')
-          if [ -z "$PR_NUMBER" ]; then
-            gh pr create \
-              --base master \
-              --head sync/upstream-main \
-              --title "Sync upstream/main" \
-              --body "This PR merges the latest upstream/main into master. Review and merge manually to keep master protected from automatic conflict resolution."
-          else
-            gh pr comment "$PR_NUMBER" --body "Updated sync branch with latest upstream/main. Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          fi
+          git push origin master
 
       - name: Abort failed merge
         if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'failure'
