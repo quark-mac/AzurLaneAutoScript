@@ -44,6 +44,7 @@ if ($upstreamAlreadyIncluded -and -not $Force) {
 
 $originalBranch = (Invoke-Git rev-parse --abbrev-ref HEAD).Trim()
 $commits = @(Invoke-Git rev-list --reverse --no-merges --author=$Author 'upstream/main..origin/master')
+$patchDir = Join-Path ([System.IO.Path]::GetTempPath()) 'alas-overlay-patches'
 
 if ($commits.Count -eq 0) {
     Write-Host "No local overlay commits found for author '$Author', nothing to apply."
@@ -51,12 +52,15 @@ if ($commits.Count -eq 0) {
 }
 
 try {
+    if (Test-Path -LiteralPath $patchDir) {
+        Remove-Item -LiteralPath $patchDir -Recurse -Force
+    }
+    New-Item -ItemType Directory -Path $patchDir | Out-Null
+
     Invoke-Git checkout -B sync/overlay upstream/main
     foreach ($commit in $commits) {
-        Invoke-Git format-patch -1 --stdout --binary $commit | git am -3
-        if ($LASTEXITCODE -ne 0) {
-            throw "Applying overlay patch $commit failed."
-        }
+        $patchPath = (Invoke-Git format-patch -1 --binary --output-directory $patchDir $commit | Select-Object -Last 1).Trim()
+        Invoke-Git am -3 $patchPath
     }
 
     if ($Push) {
@@ -70,6 +74,10 @@ catch {
     throw
 }
 finally {
+    if (Test-Path -LiteralPath $patchDir) {
+        Remove-Item -LiteralPath $patchDir -Recurse -Force
+    }
+
     if ($originalBranch -and $originalBranch -ne 'HEAD') {
         Invoke-Git checkout $originalBranch | Out-Null
     }
