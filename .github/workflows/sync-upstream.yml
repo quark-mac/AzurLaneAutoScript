@@ -11,9 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
       issues: write
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
       - name: Checkout
@@ -36,9 +38,9 @@ jobs:
         id: check
         run: |
           UPSTREAM_SHA=$(git rev-parse upstream/main)
-          # Check if upstream/main is already an ancestor of master
+          # Check if upstream/main is already an ancestor of origin/master
           # i.e., master already contains upstream/main → no update needed
-          if git merge-base --is-ancestor upstream/main master; then
+          if git merge-base --is-ancestor upstream/main origin/master; then
             echo "upstream/main is already in master, skipping sync"
             echo "has_updates=false" >> $GITHUB_OUTPUT
           else
@@ -46,26 +48,37 @@ jobs:
             echo "has_updates=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Reset and cherry-pick
+      - name: Merge upstream into sync branch
         id: merge
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          # Get list of your commits (authored by quark-mac)
-          COMMITS=$(git log --oneline --no-merges --reverse --author="quark-mac" upstream/main..master | awk '{print $1}')
-
-          # Reset to upstream
-          git reset --hard upstream/main
-
-          # Cherry-pick your commits
-          for commit in $COMMITS; do
-            git cherry-pick $commit || exit 1
-          done
+          git checkout -B sync/upstream-main origin/master
+          git merge --no-ff upstream/main -m "Merge upstream main"
         continue-on-error: true
 
-      - name: Push changes
+      - name: Push sync branch
         if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success'
         run: |
-          git push origin master --force-with-lease
+          git push origin sync/upstream-main --force-with-lease
+
+      - name: Create or update sync PR
+        if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success'
+        run: |
+          PR_NUMBER=$(gh pr list --head sync/upstream-main --base master --json number --jq '.[0].number')
+          if [ -z "$PR_NUMBER" ]; then
+            gh pr create \
+              --base master \
+              --head sync/upstream-main \
+              --title "Sync upstream/main" \
+              --body "This PR merges the latest upstream/main into master. Review and merge manually to keep master protected from automatic conflict resolution."
+          else
+            gh pr comment "$PR_NUMBER" --body "Updated sync branch with latest upstream/main. Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+
+      - name: Abort failed merge
+        if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'failure'
+        run: |
+          git merge --abort || true
 
       - name: Create issue on conflict
         if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'failure'
@@ -86,7 +99,7 @@ jobs:
                 repo: context.repo.repo,
                 title: title,
                 labels: ['sync-conflict'],
-                body: 'The automatic upstream sync failed due to merge conflicts.\n\n**Please manually sync using:**\n\n```bash\ngit fetch upstream\ngit merge upstream/main\n# Resolve conflicts manually\ngit add <conflicted-files>\ngit commit\ngit push origin master\n```\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+                body: 'The upstream sync PR could not be prepared because merging upstream/main caused conflicts.\n\n**Please manually sync using:**\n\n```bash\ngit fetch upstream\ngit merge upstream/main\n# Resolve conflicts manually\ngit add <conflicted-files>\ngit commit\ngit push origin master\n```\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
               });
             } else {
               await github.rest.issues.createComment({

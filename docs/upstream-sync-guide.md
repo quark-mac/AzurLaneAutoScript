@@ -7,9 +7,10 @@
 ### 工作原理
 
 - **触发时间**：每天 UTC 00:00（北京时间 08:00）自动运行
-- **同步策略**：使用 `git merge` 合并上游更新
-- **成功时**：自动推送到你的 fork
+- **同步策略**：在 `sync/upstream-main` 分支上合并 `upstream/main`
+- **成功时**：创建或更新一个同步 PR，等待人工 review 后再合并到 `master`
 - **失败时**：创建 GitHub Issue 通知你需要手动处理冲突
+- **原则**：自动化不直接改写 `master`，避免冲突解决失败或错误 cherry-pick 污染主分支
 
 ### 手动触发
 
@@ -23,11 +24,34 @@
 
 访问：`https://github.com/quark-mac/AzurLaneAutoScript/actions/workflows/sync-upstream.yml`
 
+### 为什么不用全自动推送到 master
+
+本仓库长期维护自己的功能，且 ALAS 上游更新频繁。即使上游没有修改同一个函数，只要修改了同一文件，Git 也可能要求重新解决冲突。尤其是以下文件容易被放大：
+
+- `module/config/argument/*.yaml` 和生成的 `args.json`、`menu.json`
+- `module/config/i18n/*.json`
+- `config/template.json`
+- 上游大功能新增时的 assets 和模块文件
+
+因此当前策略改为：自动准备同步 PR，但不自动合并。这样 `master` 始终保持可控状态，冲突集中在 PR 中处理。
+
 ---
 
 ## 手动同步
 
-### 方法 1：使用 Git 别名（推荐）
+### 方法 1：通过同步 PR（推荐）
+
+1. 访问：`https://github.com/quark-mac/AzurLaneAutoScript/actions/workflows/sync-upstream.yml`
+2. 手动运行 `Sync Upstream`
+3. 等待 workflow 创建或更新 `sync/upstream-main` → `master` 的 PR
+4. 如果 PR 可自动合并，review 后手动 merge
+5. 如果 PR 有冲突，在本地 checkout `sync/upstream-main` 解决后推回该分支
+
+**使用场景**：日常同步，优先使用，避免自动化直接污染 `master`
+
+---
+
+### 方法 2：使用 Git 别名
 
 已配置两个便捷别名：
 
@@ -61,7 +85,7 @@ git push origin master --force-with-lease
 
 ---
 
-### 方法 2：完整命令
+### 方法 3：完整命令
 
 如果别名不可用，可以使用完整命令：
 
@@ -213,14 +237,15 @@ git push origin --delete feature/new-feature
 
 ```
 每周/每月：
-  1. 自动同步（GitHub Actions）
-     或手动执行：git sync
-     ↓
-  2. 如果有冲突，手动解决
-     ↓
-  3. 开发新功能
-     ↓
-  4. 提交并推送
+  1. 自动同步生成 PR（GitHub Actions）
+     或手动运行 Sync Upstream workflow
+      ↓
+  2. Review 同步 PR
+     如果有冲突，在 PR 分支解决
+      ↓
+  3. 合并同步 PR 到 master
+      ↓
+  4. 开发新功能并提交
 
 每季度（可选）：
   1. 清理提交历史
