@@ -56,26 +56,22 @@
 .\scripts\sync_overlay.ps1 -Push
 ```
 
-默认只重放作者名为 `quark-mac` 的本地 overlay 提交，避免把上游作者历史（例如 island 相关提交）误当成本地补丁重放。如果需要指定作者：
-
-```bash
-.\scripts\sync_overlay.ps1 -Author quark-mac -Push
-```
-
 如果 upstream 当前已经包含在 `origin/master` 中，但你想测试补丁重放流程，可以加 `-Force`：
 
 ```bash
-.\scripts\sync_overlay.ps1 -Author quark-mac -Force
+.\scripts\sync_overlay.ps1 -Force
 ```
 
 脚本会：
 
 1. 拉取 `origin` 和 `upstream`
-2. 检查 `upstream/main..origin/master` 中指定作者的本地 overlay 变更
-3. 在 `upstream/main` 上用 `git am -3` 重放这些补丁
-4. 成功后把结果推回 `master`
+2. 计算 `origin/master` 相对 `upstream/main` 的最终 overlay diff
+3. 在 `upstream/main` 上用 `git apply --3way --index` 套用这个最终差异
+4. 成功后提交一个新的 overlay commit，并把结果推回 `master`
 
 运行脚本前工作区必须是干净的；如果有未提交改动，脚本会直接退出，避免覆盖本地修改。
+
+注意：该脚本使用 `--force-with-lease` 推送，是有意把历史整理成“当前 upstream + 当前 overlay”的形态，而不是保留所有中间提交。这样冲突面比逐个 cherry-pick 或逐个 `git am` 小。当前仓库是个人 fork，适合这种维护方式。
 
 ---
 

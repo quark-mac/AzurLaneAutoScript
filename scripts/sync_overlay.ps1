@@ -1,5 +1,4 @@
 param(
-    [string]$Author = 'quark-mac',
     [switch]$Force,
     [switch]$Push
 )
@@ -43,13 +42,8 @@ if ($upstreamAlreadyIncluded -and -not $Force) {
 }
 
 $originalBranch = (Invoke-Git rev-parse --abbrev-ref HEAD).Trim()
-$commits = @(Invoke-Git rev-list --reverse --no-merges --author=$Author 'upstream/main..origin/master')
 $patchDir = Join-Path ([System.IO.Path]::GetTempPath()) 'alas-overlay-patches'
-
-if ($commits.Count -eq 0) {
-    Write-Host "No local overlay commits found for author '$Author', nothing to apply."
-    exit 0
-}
+$patchFile = Join-Path $patchDir 'overlay.patch'
 
 try {
     if (Test-Path -LiteralPath $patchDir) {
@@ -57,20 +51,24 @@ try {
     }
     New-Item -ItemType Directory -Path $patchDir | Out-Null
 
-    Invoke-Git checkout -B sync/overlay upstream/main
-    foreach ($commit in $commits) {
-        $patchPath = (Invoke-Git format-patch -1 --binary --output-directory $patchDir $commit | Select-Object -Last 1).Trim()
-        Invoke-Git am -3 $patchPath
+    Invoke-Git diff --binary upstream/main origin/master --output=$patchFile
+    if ((Get-Item -LiteralPath $patchFile).Length -eq 0) {
+        Write-Host 'No local overlay diff found, nothing to apply.'
+        exit 0
     }
+
+    Invoke-Git checkout -B sync/overlay upstream/main
+    Invoke-Git apply --3way --index $patchFile
+
+    $upstreamSha = (Invoke-Git rev-parse --short upstream/main).Trim()
+    Invoke-Git commit -m "Apply local overlay on upstream $upstreamSha"
 
     if ($Push) {
         Invoke-Git push origin HEAD:master --force-with-lease
     }
 }
 catch {
-    if (Test-Path .git\rebase-apply) {
-        git am --abort | Out-Null
-    }
+    Invoke-Git reset --hard upstream/main | Out-Null
     throw
 }
 finally {

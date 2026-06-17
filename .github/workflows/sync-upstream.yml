@@ -50,7 +50,7 @@ jobs:
         id: merge
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          pwsh -File ./scripts/sync_overlay.ps1 -Author quark-mac -Push
+          pwsh -File ./scripts/sync_overlay.ps1 -Push
         continue-on-error: true
 
       - name: Abort failed merge
