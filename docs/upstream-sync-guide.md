@@ -7,10 +7,10 @@
 ### 工作原理
 
 - **触发时间**：每天 UTC 00:00（北京时间 08:00）自动运行
-- **同步策略**：直接在 `master` 上尝试合并 `upstream/main`
+- **同步策略**：先用补丁层脚本重放 `origin/master` 上的本地 overlay，再把结果推回 `master`
 - **成功时**：自动推送到 `master`
 - **失败时**：创建 GitHub Issue 通知你需要手动处理冲突
-- **原则**：只有合并失败时才需要人工介入；平时自动更新 `master`
+- **原则**：平时自动更新 `master`；只有 overlay 补丁无法套用时才需要人工介入
 
 ### 手动触发
 
@@ -33,7 +33,7 @@
 - `config/template.json`
 - 上游大功能新增时的 assets 和模块文件
 
-因此当前策略是：自动尝试合并到 `master`，只有失败时才创建 Issue 让你手动处理冲突。这样平时可以全自动同步，只有真正有冲突时才需要人工介入。
+因此当前策略是：workflow 先把上游更新和你的 overlay 补丁串起来自动执行。只要补丁还能干净套用，就会自动更新 `master`；只有补丁层真的套不上时，才需要手动处理。
 
 ---
 
@@ -43,10 +43,33 @@
 
 1. 访问：`https://github.com/quark-mac/AzurLaneAutoScript/actions/workflows/sync-upstream.yml`
 2. 手动运行 `Sync Upstream`，或等待定时任务
-3. 如果无冲突，workflow 会自动把 upstream 合并到 `master` 并推送
+3. 如果无冲突，workflow 会自动把补丁层结果推送到 `master`
 4. 如果有冲突，workflow 会创建 Issue 通知你手动处理
 
 **使用场景**：日常同步，默认自动完成
+
+### 本地 overlay 脚本
+
+你也可以在本地直接运行补丁层同步：
+
+```bash
+.\scripts\sync_overlay.ps1 -Push
+```
+
+默认只重放作者名为 `quark-mac` 的本地 overlay 提交，避免把上游作者历史（例如 island 相关提交）误当成本地补丁重放。如果需要指定作者：
+
+```bash
+.\scripts\sync_overlay.ps1 -Author quark-mac -Push
+```
+
+脚本会：
+
+1. 拉取 `origin` 和 `upstream`
+2. 检查 `upstream/main..origin/master` 中指定作者的本地 overlay 变更
+3. 在 `upstream/main` 上用 `git am -3` 重放这些补丁
+4. 成功后把结果推回 `master`
+
+运行脚本前工作区必须是干净的；如果有未提交改动，脚本会直接退出，避免覆盖本地修改。
 
 ---
 

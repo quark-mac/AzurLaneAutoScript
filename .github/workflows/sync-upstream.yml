@@ -46,18 +46,12 @@ jobs:
             echo "has_updates=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Merge upstream into master
+      - name: Sync overlay patches
         id: merge
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          git checkout -B master origin/master
-          git merge --no-ff upstream/main -m "Merge upstream main"
+          pwsh -File ./scripts/sync_overlay.ps1 -Author quark-mac -Push
         continue-on-error: true
-
-      - name: Push clean sync to master
-        if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success'
-        run: |
-          git push origin master
 
       - name: Abort failed merge
         if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'failure'
