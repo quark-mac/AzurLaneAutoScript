@@ -1,5 +1,6 @@
 param(
     [string]$Author = 'quark-mac',
+    [switch]$Force,
     [switch]$Push
 )
 
@@ -36,7 +37,7 @@ catch {
     $upstreamAlreadyIncluded = $false
 }
 
-if ($upstreamAlreadyIncluded) {
+if ($upstreamAlreadyIncluded -and -not $Force) {
     Write-Host 'upstream/main is already included in origin/master, skipping sync.'
     exit 0
 }

@@ -62,6 +62,12 @@
 .\scripts\sync_overlay.ps1 -Author quark-mac -Push
 ```
 
+如果 upstream 当前已经包含在 `origin/master` 中，但你想测试补丁重放流程，可以加 `-Force`：
+
+```bash
+.\scripts\sync_overlay.ps1 -Author quark-mac -Force
+```
+
 脚本会：
 
 1. 拉取 `origin` 和 `upstream`
