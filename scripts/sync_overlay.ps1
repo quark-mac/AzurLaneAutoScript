@@ -15,7 +15,8 @@ function Invoke-Git {
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
-if ((git status --porcelain).Trim()) {
+$worktreeStatus = @(git status --porcelain)
+if ($worktreeStatus.Count -gt 0) {
     throw 'Working tree must be clean before running overlay sync.'
 }
 
