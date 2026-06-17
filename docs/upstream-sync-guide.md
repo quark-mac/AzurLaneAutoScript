@@ -65,9 +65,12 @@
 脚本会：
 
 1. 拉取 `origin` 和 `upstream`
-2. 计算 `origin/master` 相对 `upstream/main` 的最终 overlay diff
-3. 在 `upstream/main` 上用 `git apply --3way --index` 套用这个最终差异
-4. 成功后提交一个新的 overlay commit，并把结果推回 `master`
+2. 找到 `upstream/main` 和 `origin/master` 的共同祖先 `merge-base`
+3. 计算 `origin/master` 相对 `merge-base` 的最终 overlay diff
+4. 在新的 `upstream/main` 上用 `git apply --3way --index` 套用这个最终差异
+5. 成功后提交一个新的 overlay commit，并把结果推回 `master`
+
+这里不能直接计算 `git diff upstream/main origin/master`，否则新 upstream 里的新增内容会被误认为是本地 overlay 的反向差异。正确模型是：从旧共同祖先提取你的本地最终改动，再把它套到新 upstream 上。
 
 运行脚本前工作区必须是干净的；如果有未提交改动，脚本会直接退出，避免覆盖本地修改。
 

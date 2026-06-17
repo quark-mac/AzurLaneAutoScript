@@ -42,6 +42,7 @@ if ($upstreamAlreadyIncluded -and -not $Force) {
 }
 
 $originalBranch = (Invoke-Git rev-parse --abbrev-ref HEAD).Trim()
+$overlayBase = (Invoke-Git merge-base upstream/main origin/master).Trim()
 $patchDir = Join-Path ([System.IO.Path]::GetTempPath()) 'alas-overlay-patches'
 $patchFile = Join-Path $patchDir 'overlay.patch'
 
@@ -51,7 +52,8 @@ try {
     }
     New-Item -ItemType Directory -Path $patchDir | Out-Null
 
-    Invoke-Git diff --binary upstream/main origin/master --output=$patchFile
+    Write-Host "Overlay base: $overlayBase"
+    Invoke-Git diff --binary $overlayBase origin/master --output=$patchFile
     if ((Get-Item -LiteralPath $patchFile).Length -eq 0) {
         Write-Host 'No local overlay diff found, nothing to apply.'
         exit 0
