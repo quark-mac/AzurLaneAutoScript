@@ -2,7 +2,6 @@ from module.logger import logger
 from module.os.config import OSConfig
 from module.os.tasks.abyssal import OpsiAbyssal
 from module.os.tasks.archive import OpsiArchive
-from module.os.tasks.check_leveling import OpsiCheckLeveling
 from module.os.tasks.cross_month import OpsiCrossMonth
 from module.os.tasks.daily import OpsiDaily
 from module.os.tasks.explore import OpsiExplore
@@ -28,7 +27,6 @@ class OperationSiren(
     OpsiMonthBoss,
     OpsiExplore,
     OpsiCrossMonth,
-    OpsiCheckLeveling,
 ):
     """
     Operation Siren main class that combines all task modules.

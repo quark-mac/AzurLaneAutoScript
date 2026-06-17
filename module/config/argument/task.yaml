@@ -13,9 +13,9 @@ Alas:
       - EmulatorInfo
       - Error
       - Optimization
+      - DropRecord
       - AutoStart
       - LogCleaner
-      - DropRecord
     General:
       - Retirement
       - OneClickRetire
@@ -335,12 +335,10 @@ Opsi:
       - Scheduler
       - OpsiMeowfficerFarming
       - OpsiFleet
-      - OpsiCheckLeveling
     OpsiHazard1Leveling:
       - Scheduler
       - OpsiHazard1Leveling
       - OpsiFleet
-      - OpsiCheckLeveling
     OpsiCrossMonth:
       - Scheduler
 
@@ -349,9 +347,9 @@ Island:
   menu: 'collapse'
   page: 'setting'
   tasks:
-    IslandInfo:
-      - IslandSeasonTask
-      - IslandTechnology
+    IslandProduction:
+      - Scheduler
+      - IslandProduction
     IslandFreebie:
       - Scheduler
       - IslandFreebie
@@ -359,7 +357,10 @@ Island:
       - Scheduler
     IslandSeasonTask:
       - Scheduler
-
+      - IslandSeasonTask
+    IslandBusiness:
+      - Scheduler
+      - IslandRestaurant
 
 # ==================== Tool ====================
 
@@ -373,6 +374,8 @@ Tool:
       - OpsiDaemon
     EventStory:
       - EventStory
+    IslandProductionPlanner:
+      - IslandProductionPlanner
     Benchmark:
       - Benchmark
     AzurLaneUncensored:

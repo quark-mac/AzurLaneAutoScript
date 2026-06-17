@@ -1347,9 +1347,7 @@
     "Commission": {
       "PresetFilter": "cube",
       "CustomFilter": "DailyEvent > Gem-4 > Gem-2 > Gem-8 > ExtraCube-0:30\n> UrgentCube-1:30 > UrgentCube-1:45 > UrgentCube-3\n> ExtraDrill-5:20 > ExtraDrill-2 > ExtraDrill-3:20\n> UrgentCube-2:15 > UrgentCube-4\n> ExtraDrill-1 > UrgentCube-6 > ExtraCube-1:30\n> ExtraDrill-2:40 > ExtraDrill-0:20\n> Major > DailyChip > DailyResource\n> ExtraPart-0:30 > ExtraOil-1 > UrgentBox-6\n> ExtraCube-3 > ExtraPart-1 > UrgentBox-3\n> ExtraCube-4 > ExtraPart-1:30 > ExtraOil-4\n> UrgentBox-1 > ExtraCube-5 > UrgentBox-1\n> ExtraCube-8 > ExtraOil-8\n> UrgentDrill-4 > UrgentDrill-2:40 > UrgentDrill-2\n> UrgentDrill-1 > UrgentDrill-1:30 > UrgentDrill-1:10\n> Extra-0:20 > Extra-0:30 > Extra-1:00 > Extra-1:30 > Extra-2:00\n> shortest",
-      "DoMajorCommission": false,
-      "EnableShipCheck": true,
-      "ShipCheckTimeout": 15
+      "DoMajorCommission": false
     },
     "Storage": {
       "Storage": {}
@@ -1357,7 +1355,7 @@
   },
   "Tactical": {
     "Scheduler": {
-      "Enable": false,
+      "Enable": true,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Tactical",
       "SuccessInterval": "30-60",
@@ -1407,7 +1405,7 @@
   },
   "Dorm": {
     "Scheduler": {
-      "Enable": false,
+      "Enable": true,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Dorm",
       "SuccessInterval": 278,
@@ -1430,7 +1428,7 @@
   },
   "Meowfficer": {
     "Scheduler": {
-      "Enable": false,
+      "Enable": true,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Meowfficer",
       "SuccessInterval": 30,
@@ -1455,7 +1453,7 @@
   },
   "Guild": {
     "Scheduler": {
-      "Enable": false,
+      "Enable": true,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Guild",
       "SuccessInterval": 30,
@@ -1695,7 +1693,7 @@
   },
   "Freebies": {
     "Scheduler": {
-      "Enable": false,
+      "Enable": true,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Freebies",
       "SuccessInterval": 30,
@@ -1995,11 +1993,6 @@
       "Fleet": 1,
       "Submarine": false
     },
-    "OpsiCheckLeveling": {
-      "TargetLevel": 0,
-      "LastRun": "2020-01-01 00:00:00",
-      "DelayAfterFull": false
-    },
     "Storage": {
       "Storage": {}
     }
@@ -2020,11 +2013,6 @@
       "Fleet": 1,
       "Submarine": false
     },
-    "OpsiCheckLeveling": {
-      "TargetLevel": 0,
-      "LastRun": "2020-01-01 00:00:00",
-      "DelayAfterFull": false
-    },
     "Storage": {
       "Storage": {}
     }
@@ -2042,12 +2030,19 @@
       "Storage": {}
     }
   },
-  "IslandInfo": {
-    "IslandSeasonTask": {
-      "TaskDict": null
+  "IslandProduction": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "IslandProduction",
+      "SuccessInterval": 0,
+      "FailureInterval": 120,
+      "ServerUpdate": "00:00"
     },
-    "IslandTechnology": {
-      "TechnologyStatus": null
+    "IslandProduction": {
+      "PreservedItems": "{}",
+      "MinStockItems": "{}",
+      "AccumulatingItems": "{}"
     },
     "Storage": {
       "Storage": {}
@@ -2091,6 +2086,39 @@
       "FailureInterval": 120,
       "ServerUpdate": "00:00"
     },
+    "IslandSeasonTask": {
+      "TaskTarget": "{}"
+    },
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "IslandBusiness": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "IslandBusiness",
+      "SuccessInterval": 0,
+      "FailureInterval": 120,
+      "ServerUpdate": "00:00"
+    },
+    "IslandRestaurant": {
+      "KoiGrade": "bronze",
+      "KoiWaitress": "any",
+      "KoiMenu": "{}",
+      "BearGrade": "bronze",
+      "BearWaitress": "any",
+      "BearMenu": "{}",
+      "EateryGrade": "bronze",
+      "EateryWaitress": "any",
+      "EateryMenu": "{}",
+      "GrillGrade": "bronze",
+      "GrillWaitress": "any",
+      "GrillMenu": "{}",
+      "CafeGrade": "bronze",
+      "CafeWaitress": "any",
+      "CafeMenu": "{}"
+    },
     "Storage": {
       "Storage": {}
     }
@@ -2115,6 +2143,19 @@
   "EventStory": {
     "EventStory": {
       "SkipBattle": true
+    },
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "IslandProductionPlanner": {
+    "IslandProductionPlanner": {
+      "RescanIslandTechnology": false,
+      "DailyProfitLowerLimit": 50000,
+      "MinStockSafetyMargin": 0,
+      "FieldsEfficiency": 0,
+      "OrchardEfficiency": 0,
+      "NurseryEfficiency": 0
     },
     "Storage": {
       "Storage": {}

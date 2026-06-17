@@ -102,10 +102,11 @@
     "menu": "collapse",
     "page": "setting",
     "tasks": [
-      "IslandInfo",
+      "IslandProduction",
       "IslandFreebie",
       "IslandCollect",
-      "IslandSeasonTask"
+      "IslandSeasonTask",
+      "IslandBusiness"
     ]
   },
   "Tool": {
@@ -115,6 +116,7 @@
       "Daemon",
       "OpsiDaemon",
       "EventStory",
+      "IslandProductionPlanner",
       "Benchmark",
       "AzurLaneUncensored",
       "GameManager"

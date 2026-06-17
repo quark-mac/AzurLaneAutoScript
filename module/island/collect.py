@@ -1,9 +1,9 @@
 from module.base.button import ButtonGrid
 from module.base.timer import Timer
 from module.exception import GameStuckError
-from module.island_handler.assets import *
+from module.island.assets import *
 from module.island_handler.dock import IslandDock
-from module.island_handler.scanner import CharacterScanner
+from module.island_handler.dock_scanner import CharacterScanner
 from module.logger import logger
 from module.ui.page import page_island_manage, page_island_phone
 
@@ -71,17 +71,20 @@ class IslandCollect(IslandDock):
 
     def collect_execute(self):
         for workslot, button in enumerate(ISLAND_COLLECT_WORKSLOT_GRID.buttons):
+            click_timer = Timer(1, count=3)
             for _ in self.loop(timeout=10):
                 # End
-                if self.appear(ISLAND_DOCK_CHECK, offset=(20, 20)):
+                if self.is_in_island_dock():
                     break
-
-                self.device.click(button)
+                if click_timer.reached():
+                    self.device.click(button)
+                    click_timer.reset()
             else:
                 logger.warning(f'Failed to click workslot button for workslot {workslot}')
                 return False
             self.island_dock_sort_method_dsc_set(enable=False)
-            scanner = CharacterScanner(emotion=(80, 150), status='free')
+            dock_grid = super().dock_grid
+            scanner = CharacterScanner(dock_grid, emotion=(80, 150), status='free')
             scanner.disable('emotion_limit')
             candidates = scanner.scan(self.device.image)
             if not candidates:

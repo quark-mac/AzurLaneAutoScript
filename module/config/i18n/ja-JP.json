@@ -29,8 +29,8 @@
       "help": ""
     },
     "Island": {
-      "name": "Menu.Island.name",
-      "help": "Menu.Island.help"
+      "name": "離島開発",
+      "help": ""
     },
     "Tool": {
       "name": "ツール",
@@ -266,21 +266,25 @@
       "name": "Cross Month Daily",
       "help": "    ALAS will enter OpSi 10min before OpSi reset, wait until OpSi reset but not exit OpSi. Then do the daily, obscure, abyssal and meowfficer farming to get extra gold plates. When running dailies, settings in task \"OpSiDaily\" are used, the rest function are the same.\n    IMPORTANT: Please do not touch the game while ALAS is waiting for OpSi reset."
     },
-    "IslandInfo": {
-      "name": "Task.IslandInfo.name",
-      "help": "Task.IslandInfo.help"
+    "IslandProduction": {
+      "name": "離島生産",
+      "help": ""
     },
     "IslandFreebie": {
-      "name": "Task.IslandFreebie.name",
-      "help": "Task.IslandFreebie.help"
+      "name": "デイリー補給",
+      "help": ""
     },
     "IslandCollect": {
-      "name": "Task.IslandCollect.name",
-      "help": "Task.IslandCollect.help"
+      "name": "デイリー採集",
+      "help": "管理パネルを使用して、季節の特産品や石炭/木材を収集します。\nスタミナ要件が満たされるまで、レベルの最も低い複数のキャラクターを使用します。"
     },
     "IslandSeasonTask": {
-      "name": "Task.IslandSeasonTask.name",
-      "help": "Task.IslandSeasonTask.help"
+      "name": "開発計画",
+      "help": ""
+    },
+    "IslandBusiness": {
+      "name": "店舗経営",
+      "help": ""
     },
     "Daemon": {
       "name": "半自動クリック",
@@ -293,6 +297,10 @@
     "EventStory": {
       "name": "Event Story",
       "help": ""
+    },
+    "IslandProductionPlanner": {
+      "name": "離島生産ソルバー",
+      "help": "線形計画法を使用して、指定した日次利益を満たしつつ ポイントを獲得します。\n実行後、ブートストラップの在庫数量と累積アイテム数量をコンフィグに出力します。これは、再度技術をスキャンしなくても将来の生産計画に使用できます。\n注意: 生産計画はスキャン時点の技術状況に基づいて最適化されるため、技術状況に変更がある場合は、更新された生産計画を得るために再度プランナーを実行することを推奨します。"
     },
     "Benchmark": {
       "name": "機能テスト",
@@ -424,6 +432,7 @@
       "cn_channel-2": "[国服] 十字军行动",
       "cn_channel-3": "[国服] 龙骑兵行动",
       "cn_channel-4": "[国服] 冥王星行动",
+      "cn_channel-5": "[国服] 群岛计划",
       "en-0": "[EN] Avrora",
       "en-1": "[EN] Lexington",
       "en-2": "[EN] Sandy",
@@ -564,43 +573,43 @@
   "AutoStart": {
     "_info": {
       "name": "自動起動",
-      "help": "GUI起動後にスケジューラーを自動的に起動する"
+      "help": "WebUI 起動後に指定した設定を自動実行します"
     },
     "Enable": {
-      "name": "自動起動を有効にする",
-      "help": "有効にすると、GUI起動完了後にこの設定のスケジューラーが自動的に起動します"
+      "name": "自動起動を有効化",
+      "help": "WebUI 初期化後に現在の設定を自動実行します"
     },
     "Delay": {
-      "name": "遅延起動",
-      "help": "GUI起動後、スケジューラーを起動するまでの遅延時間（秒）",
+      "name": "起動遅延",
+      "help": "WebUI 起動後、設定を開始するまで X 秒待機します。範囲は 0-600 秒です",
       "invalid_feedback": "0-600の整数を入力してください（秒）"
     }
   },
   "LogCleaner": {
     "_info": {
       "name": "ログクリーナー",
-      "help": "期限切れのログファイルを自動的にクリーンアップし、指定された日数内のログを保持します"
+      "help": "期限切れのログファイルを自動的に削除します"
     },
     "Enable": {
-      "name": "ログクリーナーを有効にする",
-      "help": "有効にすると、以下の設定に基づいて期限切れのログファイルが自動的にクリーンアップされます"
+      "name": "ログクリーナーを有効化",
+      "help": "設定に従って古いログを自動的に削除します"
     },
     "CleanOnStartup": {
-      "name": "起動時にクリーン",
-      "help": "有効にすると、Alas起動時に一度ログクリーニングが実行されます"
+      "name": "起動時に削除",
+      "help": "ALAS 起動時にログ削除を一度実行します"
     },
     "ScheduledClean": {
-      "name": "スケジュールクリーンを有効にする",
-      "help": "有効にすると、毎日指定した時刻に自動的にログクリーニングが実行されます"
+      "name": "定期削除を有効化",
+      "help": "指定時刻に毎日ログ削除を実行します"
     },
     "ScheduledTime": {
-      "name": "定期クリーン時刻",
-      "help": "ログクリーニングを実行する時刻（HH:MM形式、例: 03:00）、無効な入力はデフォルト値 00:00 にリセットされます",
+      "name": "定期削除時刻",
+      "help": "毎日のログ削除時刻。形式は HH:MM（例：03:00）。無効な入力は既定値 00:00 にリセットされます",
       "invalid_feedback": "正しい時刻形式（HH:MM）を入力してください。例：08:30"
     },
     "KeepDays": {
-      "name": "ログ保存日数",
-      "help": "直近 N 日間のログファイルを保持し、それより古いものは削除されます（範囲 1-365）、無効な入力はデフォルト値 7 にリセットされます",
+      "name": "ログ保持日数",
+      "help": "直近 N 日分のログファイルを保持し、それより古いものを削除します（範囲 1-365）。無効な入力は既定値 7 にリセットされます",
       "invalid_feedback": "1-365の整数を入力してください"
     }
   },
@@ -2707,29 +2716,155 @@
       "22": "22"
     }
   },
-  "OpsiCheckLeveling": {
+  "IslandProduction": {
     "_info": {
-      "name": "OpsiCheckLeveling._info.name",
-      "help": "OpsiCheckLeveling._info.help"
+      "name": "離島生産",
+      "help": ""
     },
-    "TargetLevel": {
-      "name": "OpsiCheckLeveling.TargetLevel.name",
-      "help": "OpsiCheckLeveling.TargetLevel.help"
+    "PreservedItems": {
+      "name": "要望品目",
+      "help": "ユーザーが保持する品目をカスタム設定し、各品目をいくつ備蓄するかを指定します。\nAlas は最低在庫品目以外でこれらの品目を優先して生産し、十分な在庫があることを確保します。\n形式例：\n(現在のサーバーでの品目名): (数量)"
     },
-    "LastRun": {
-      "name": "OpsiCheckLeveling.LastRun.name",
-      "help": "OpsiCheckLeveling.LastRun.help",
-      "invalid_feedback": "OpsiCheckLeveling.LastRun.invalid_feedback"
+    "MinStockItems": {
+      "name": "最低在庫品目",
+      "help": "在庫が少なくなったときに生産する品目と、各品目ごとに維持する在庫数です。\n在庫が少ない品目はAlasが優先して生産し、アイドル時には他の品目を生産します。\nこれはツール内の島生産プランナーで自動生成できます。"
     },
-    "DelayAfterFull": {
-      "name": "OpsiCheckLeveling.DelayAfterFull.name",
-      "help": "OpsiCheckLeveling.DelayAfterFull.help"
+    "AccumulatingItems": {
+      "name": "累積品目",
+      "help": "過剰生産分を無視し、各品目の在庫増加率を設定します。\nAlas はこれらの品目を過剰生産として扱わず、アイドル時には現在の在庫を増加率で割った値に基づいて生産します。\nこれはツール内の島生産プランナーで自動生成できます。"
+    }
+  },
+  "IslandFreebie": {
+    "_info": {
+      "name": "デイリー補給",
+      "help": ""
+    },
+    "Share": {
+      "name": "補給を友達とシェアする",
+      "help": ""
+    }
+  },
+  "IslandRestaurant": {
+    "_info": {
+      "name": "グルメ運営",
+      "help": ""
+    },
+    "KoiGrade": {
+      "name": "有魚飯店のランク",
+      "help": "",
+      "bronze": "ブロンズ",
+      "silver": "シルバー",
+      "gold": "ゴールド",
+      "diamond": "ダイヤモンド"
+    },
+    "KoiWaitress": {
+      "name": "有魚飯店のウェイトレス",
+      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
+      "none": "なし",
+      "any": "任意",
+      "Chao_Ho": "肇和",
+      "any+any": "任意 + 任意",
+      "Chao_Ho+any": "肇和 + 任意"
+    },
+    "KoiMenu": {
+      "name": "有魚飯店のメニュー",
+      "help": "メニュー以外のものは販売されません。\nツールの離島生産ソルバーで自動生成されます。"
+    },
+    "BearGrade": {
+      "name": "白クマ茶房のランク",
+      "help": "",
+      "bronze": "ブロンズ",
+      "silver": "シルバー",
+      "gold": "ゴールド",
+      "diamond": "ダイヤモンド"
+    },
+    "BearWaitress": {
+      "name": "白クマ茶房のウェイトレス",
+      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
+      "none": "なし",
+      "any": "任意",
+      "Cheshire": "チェシャー",
+      "any+any": "任意 + 任意",
+      "Cheshire+any": "チェシャー + 任意"
+    },
+    "BearMenu": {
+      "name": "白クマ茶房のメニュー",
+      "help": "メニュー以外のものは販売されません。\nツールの離島生産ソルバーで自動生成されます。"
+    },
+    "EateryGrade": {
+      "name": "饅頭軽食のランク",
+      "help": "",
+      "bronze": "ブロンズ",
+      "silver": "シルバー",
+      "gold": "ゴールド",
+      "diamond": "ダイヤモンド"
+    },
+    "EateryWaitress": {
+      "name": "饅頭軽食のウェイトレス",
+      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
+      "none": "なし",
+      "any": "任意",
+      "Helena": "ヘレナ",
+      "Prinz_Eugen": "プリンツ・オイゲン",
+      "any+any": "任意 + 任意",
+      "Helena+any": "ヘレナ + 任意",
+      "Prinz_Eugen+any": "プリンツ・オイゲン + 任意",
+      "Helena+Prinz_Eugen": "ヘレナ + プリンツ・オイゲン"
+    },
+    "EateryMenu": {
+      "name": "饅頭軽食のメニュー",
+      "help": "メニュー以外のものは販売されません。\nツールの離島生産ソルバーで自動生成されます。"
+    },
+    "GrillGrade": {
+      "name": "烏魚焼肉のランク",
+      "help": "",
+      "bronze": "ブロンズ",
+      "silver": "シルバー",
+      "gold": "ゴールド",
+      "diamond": "ダイヤモンド"
+    },
+    "GrillWaitress": {
+      "name": "烏魚焼肉のウェイトレス",
+      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
+      "none": "なし",
+      "any": "任意",
+      "August_von_Parseval": "アウグスト·フォン·パーセヴァル",
+      "Prinz_Eugen": "プリンツ・オイゲン",
+      "any+any": "任意 + 任意",
+      "August_von_Parseval+any": "アウグスト·フォン·パーセヴァル + 任意",
+      "Prinz_Eugen+any": "プリンツ・オイゲン + 任意",
+      "August_von_Parseval+Prinz_Eugen": "アウグスト·フォン·パーセヴァル + プリンツ・オイゲン"
+    },
+    "GrillMenu": {
+      "name": "烏魚焼肉のメニュー",
+      "help": "メニュー以外のものは販売されません。\nツールの離島生産ソルバーで自動生成されます。"
+    },
+    "CafeGrade": {
+      "name": "饅頭カフェのランク",
+      "help": "",
+      "bronze": "ブロンズ",
+      "silver": "シルバー",
+      "gold": "ゴールド",
+      "diamond": "ダイヤモンド"
+    },
+    "CafeWaitress": {
+      "name": "饅頭カフェのウェイトレス",
+      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
+      "none": "なし",
+      "any": "任意",
+      "Cheshire": "チェシャー",
+      "any+any": "任意 + 任意",
+      "Cheshire+any": "チェシャー + 任意"
+    },
+    "CafeMenu": {
+      "name": "饅頭カフェのメニュー",
+      "help": "メニュー以外のものは販売されません。\nツールの離島生産ソルバーで自動生成されます。"
     }
   },
   "IslandSeasonTask": {
     "_info": {
-      "name": "IslandSeasonTask._info.name",
-      "help": "IslandSeasonTask._info.help"
+      "name": "開発計画",
+      "help": ""
     },
     "TaskDict": {
       "name": "IslandSeasonTask.TaskDict.name",
@@ -2744,16 +2879,6 @@
     "TechnologyStatus": {
       "name": "IslandTechnology.TechnologyStatus.name",
       "help": "IslandTechnology.TechnologyStatus.help"
-    }
-  },
-  "IslandFreebie": {
-    "_info": {
-      "name": "IslandFreebie._info.name",
-      "help": "IslandFreebie._info.help"
-    },
-    "Share": {
-      "name": "IslandFreebie.Share.name",
-      "help": "IslandFreebie.Share.help"
     }
   },
   "Daemon": {
@@ -2790,6 +2915,45 @@
       "help": "EventStory.SkipBattle.help",
       "True": "True",
       "False": "False"
+    }
+  },
+  "IslandProductionPlanner": {
+    "_info": {
+      "name": "離島生産ソルバー",
+      "help": "設定したパラメータに基づいて線形計画法で離島の生産計画を最適化し、離島生産モジュール用の設定を生成します。\nグルメ運営と離島生産の要望品目のコンフィグ設定を先に行ってください。\n任務状態を初期化すれば、離島技術を再度スキャンできます。"
+    },
+    "RescanIslandTechnology": {
+      "name": "離島技術を再スキャン",
+      "help": "離島技術のスキャンをやり直し、離島生産プランナーの設定を更新します。"
+    },
+    "DailyProfitLowerLimit": {
+      "name": "日次利益下限",
+      "help": "負の値は日次損失を許容、0は収支トントン、正の値は利益を意味します。"
+    },
+    "MinStockSafetyMargin": {
+      "name": "最低在庫安全マージン",
+      "help": "生産プランナーが生成する最低在庫に適用する倍率マージンです。0.2 は計算在庫の 120% を出力します。レストラン料理は少なくとも容量分を保持します。"
+    },
+    "FieldsEfficiency": {
+      "name": "豊穣の畑の効率",
+      "help": "キャラの収集報酬を参照してください",
+      "0": "0",
+      "0.04": "0.04",
+      "0.12": "0.12"
+    },
+    "OrchardEfficiency": {
+      "name": "薫る果樹園の効率",
+      "help": "キャラの収集報酬を参照してください",
+      "0": "0",
+      "0.04": "0.04",
+      "0.12": "0.12"
+    },
+    "NurseryEfficiency": {
+      "name": "青々苗場の効率",
+      "help": "キャラの収集報酬を参照してください",
+      "0": "0",
+      "0.04": "0.04",
+      "0.12": "0.12"
     }
   },
   "Benchmark": {
