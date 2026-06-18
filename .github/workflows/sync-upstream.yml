@@ -46,12 +46,18 @@ jobs:
             echo "has_updates=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Sync overlay patches
+      - name: Merge upstream into master
         id: merge
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          pwsh -File ./scripts/sync_overlay.ps1 -Push
+          git checkout -B master origin/master
+          git merge --no-ff upstream/main -m "Merge upstream main"
         continue-on-error: true
+
+      - name: Push clean merge
+        if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success'
+        run: |
+          git push origin master
 
       - name: Abort failed merge
         if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'failure'
@@ -77,7 +83,7 @@ jobs:
                 repo: context.repo.repo,
                 title: title,
                 labels: ['sync-conflict'],
-                body: 'The upstream sync PR could not be prepared because merging upstream/main caused conflicts.\n\n**Please manually sync using:**\n\n```bash\ngit fetch upstream\ngit merge upstream/main\n# Resolve conflicts manually\ngit add <conflicted-files>\ngit commit\ngit push origin master\n```\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+                body: 'The automatic upstream merge failed due to conflicts.\n\n**Please manually sync using:**\n\n```bash\ngit fetch upstream\ngit merge upstream/main\n# Resolve conflicts manually\ngit add <conflicted-files>\ngit commit\ngit push origin master\n```\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
               });
             } else {
               await github.rest.issues.createComment({
