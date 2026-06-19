@@ -88,7 +88,7 @@ class EventShopUI(UI):
 
     @cached_property
     def event_shop_has_urpt(self):
-        if self.image_color_count(SHOP_OCR_BALANCE_SECOND, OCR_EVENT_SHOP_URPT.letter, count=15):
+        if self.image_color_count(SHOP_OCR_BALANCE_SECOND, OCR_EVENT_SHOP_URPT.letter, threshold=160, count=30):
             logger.info("Event shop has urpt.")
             return True
         else:
@@ -113,19 +113,32 @@ class EventShopUI(UI):
     def event_shop_load_ensure(self):
         ensure_timeout = Timer(3, count=6).start()
         for _ in self.loop():
-            if self.image_color_count(SHOP_OCR_BALANCE, OCR_EVENT_SHOP_PT.letter, count=15):
+            if self.image_color_count(SHOP_OCR_BALANCE, OCR_EVENT_SHOP_PT.letter, threshold=160, count=30):
                 logger.info("Event shop loaded.")
                 break
             if ensure_timeout.reached():
                 raise GameStuckError('Waiting too long for EventShop to appear.')
         return True
+    
+    @cached_property
+    def is_pt_reversed(self):
+        return self.config.cross_get('Event.Campaign.Event') in [
+            'event_20231221_cn',
+            'event_20240521_cn',
+        ]
 
     def event_shop_get_pt(self):
-        pt = OCR_EVENT_SHOP_PT.ocr(self.device.image)
+        if self.is_pt_reversed:
+            pt = OCR_EVENT_SHOP_URPT.ocr(self.device.image)
+        else:
+            pt = OCR_EVENT_SHOP_PT.ocr(self.device.image)
         return pt
 
     def event_shop_get_urpt(self):
-        urpt = OCR_EVENT_SHOP_URPT.ocr(self.device.image)
+        if self.is_pt_reversed:
+            urpt = OCR_EVENT_SHOP_PT.ocr(self.device.image)
+        else:
+            urpt = OCR_EVENT_SHOP_URPT.ocr(self.device.image)
         return urpt
 
     def get_oil(self, skip_first_screenshot=True):
