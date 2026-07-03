@@ -1,333 +1,35 @@
-import re
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict
 
 import numpy as np
 from scipy.optimize import linprog
-from yaml import safe_dump, safe_load
 
 import module.config.server as server
 from module.base.decorator import cached_property
 from module.config.utils import server_time_offset
 from module.daemon.daemon_base import DaemonBase
 from module.island.data import *
+from module.island.utils import (
+    ceil_with_epsilon,
+    count_level,
+    format_item_need_data,
+    get_stuck_season_order_requirements,
+    get_sub_dict,
+    item_mapping_to_yaml,
+    item_name,
+    load_hard_floor_items,
+    load_item_mapping,
+    load_request_buffer_items,
+    load_reserve_items,
+    load_technology_status,
+    merge_item_needs,
+    normalize_item_keys,
+    normalize_item_needs,
+    normalize_stuck_season_order_id,
+)
 from module.island_handler.technology_scanner import IslandTechnologyScanner
 from module.logger import logger
-
-
-def normalize_item_name(name):
-    return str(name).strip()
-
-
-def normalize_item_id(item_id):
-    if isinstance(item_id, (int, np.integer)):
-        normalized_id = int(item_id)
-        if normalized_id in DIC_ISLAND_ITEM:
-            return normalized_id
-        raise ValueError(f'Unknown item id: {item_id}')
-
-    item_text = normalize_item_name(item_id)
-    if not item_text:
-        raise ValueError('Empty item key')
-
-    if item_text.isdigit():
-        normalized_id = int(item_text)
-        if normalized_id in DIC_ISLAND_ITEM:
-            return normalized_id
-        raise ValueError(f'Unknown item id: {item_text}')
-
-    match = re.match(r'^(.*)\((\d+)\)$', item_text)
-    if match:
-        normalized_id = int(match.group(2))
-        if normalized_id in DIC_ISLAND_ITEM:
-            return normalized_id
-        raise ValueError(f'Unknown item id: {item_text}')
-
-    for normalized_id, item_data in DIC_ISLAND_ITEM.items():
-        if item_data['name'][server.server] == item_text:
-            return normalized_id
-
-    raise ValueError(f'Unknown item key: {item_text}')
-
-
-def normalize_item_keys(items=None):
-    if not items:
-        return {}
-    normalized = {}
-    for raw_item_id, raw_value in items.items():
-        item_id = normalize_item_id(raw_item_id)
-        normalized[item_id] = raw_value
-    return normalized
-
-
-def item_name(item_id):
-    return DIC_ISLAND_ITEM[item_id]['name'][server.server]
-
-
-def item_export_key(item_id, use_item_name=False):
-    if use_item_name:
-        return f'{item_name(item_id)} ({item_id})'
-    return item_id
-
-
-def item_mapping_to_yaml(items, use_item_name=False):
-    payload = {
-        item_export_key(item_id, use_item_name=use_item_name): value
-        for item_id, value in sorted(items.items())
-    }
-    return safe_dump(payload, allow_unicode=True, sort_keys=False)
-
-
-def load_item_mapping(yaml_text=None, config_name='Items'):
-    if not yaml_text:
-        return {}
-    items = safe_load(yaml_text)
-    if not items:
-        return {}
-    if not isinstance(items, dict):
-        raise ValueError(f'{config_name} must be a YAML mapping')
-    return items
-
-
-def load_preserved_items(preserved_items_yaml=None):
-    return load_item_mapping(preserved_items_yaml, config_name='PreservedItems')
-
-
-def normalize_item_needs(items=None, default_period=1):
-    if not items:
-        return {}
-    requirements = defaultdict(list)
-    for raw_item_id, raw_value in items.items():
-        item_id = normalize_item_id(raw_item_id)
-        if isinstance(raw_value, (list, tuple)) or (isinstance(raw_value, dict) and 'deadlines' in raw_value):
-            requirements[item_id].extend(item_need_input_to_requirements(raw_value, default_period=default_period))
-            continue
-        elif isinstance(raw_value, dict):
-            total_need_count = raw_value.get('count', 0)
-            rate_per_day = raw_value.get('rate_per_day', 0)
-            if rate_per_day:
-                period = float(total_need_count) / float(rate_per_day)
-            else:
-                period = raw_value.get('period', raw_value.get('days', default_period))
-        else:
-            total_need_count = raw_value
-            period = default_period
-        total_need_count = int(total_need_count)
-        period = float(period)
-        if total_need_count <= 0 or period <= 0:
-            continue
-        requirements[item_id].append((total_need_count, period))
-    return {
-        item_id: build_item_need_data(item_requirements)
-        for item_id, item_requirements in requirements.items()
-    }
-
-
-def normalize_preserved_items(preserved_items=None):
-    return normalize_item_needs(preserved_items, default_period=1)
-
-
-def merge_item_needs(*item_needs):
-    requirements = defaultdict(list)
-    for needs in item_needs:
-        for item_id, data in needs.items():
-            requirements[item_id].extend(item_need_data_to_requirements(data))
-    return {
-        item_id: build_item_need_data(item_requirements)
-        for item_id, item_requirements in requirements.items()
-    }
-
-
-def build_item_need_data(requirements):
-    period_counts = defaultdict(int)
-    for count, period in requirements:
-        count = int(count)
-        period = float(period)
-        if count <= 0 or period <= 0:
-            continue
-        period_counts[period] += count
-
-    deadlines = []
-    total_need_count = 0
-    rate_per_day = 0.0
-    for period, count in sorted(period_counts.items()):
-        total_need_count += count
-        rate_per_day = max(rate_per_day, total_need_count / period)
-        deadlines.append({
-            'count': total_need_count,
-            'period': period,
-        })
-
-    if not deadlines:
-        return {
-            'total_need_count': 0,
-            'period': 1,
-            'rate_per_day': 0.0,
-        }
-
-    return {
-        'total_need_count': total_need_count,
-        'period': deadlines[-1]['period'],
-        'rate_per_day': rate_per_day,
-        'deadlines': deadlines,
-    }
-
-
-def item_need_data_to_requirements(data):
-    deadlines = data.get('deadlines')
-    if not deadlines:
-        return [(data['total_need_count'], data['period'])]
-
-    requirements = []
-    previous_count = 0
-    for deadline in sorted(deadlines, key=lambda x: x['period']):
-        count = int(deadline.get('count', deadline.get('total_need_count', 0)))
-        period = float(deadline.get('period', deadline.get('days', data['period'])))
-        marginal_count = count - previous_count
-        if marginal_count > 0:
-            requirements.append((marginal_count, period))
-        previous_count = max(previous_count, count)
-    return requirements
-
-
-def item_need_input_to_requirements(data, default_period=1):
-    if isinstance(data, dict):
-        entries = data.get('deadlines', [])
-    else:
-        entries = data
-    requirements = []
-    for deadline in entries:
-        if isinstance(deadline, dict):
-            count = deadline.get('count', deadline.get('total_need_count', 0))
-            period = deadline.get('period', deadline.get('days', default_period))
-        else:
-            count = deadline
-            period = default_period
-        count = int(count)
-        period = float(period)
-        if count > 0 and period > 0:
-            requirements.append((count, period))
-    return requirements
-
-
-def parse_item_need_deadlines(item_need, default_period=1):
-    if not item_need:
-        return []
-    if isinstance(item_need, dict) and item_need.get('deadlines') and (
-        'total_need_count' in item_need or 'rate_per_day' in item_need
-    ):
-        return [
-            (
-                int(deadline.get('count', deadline.get('total_need_count', 0))),
-                float(deadline.get('period', deadline.get('days', item_need['period']))),
-            )
-            for deadline in sorted(item_need['deadlines'], key=lambda x: x['period'])
-            if int(deadline.get('count', deadline.get('total_need_count', 0))) > 0
-        ]
-
-    if isinstance(item_need, (list, tuple)) or (isinstance(item_need, dict) and 'deadlines' in item_need):
-        data = build_item_need_data(item_need_input_to_requirements(item_need, default_period=default_period))
-        return [
-            (deadline['count'], deadline['period'])
-            for deadline in data.get('deadlines', [])
-        ]
-
-    if isinstance(item_need, dict):
-        total_need_count = item_need.get('count', item_need.get('total_need_count', 0))
-        period = item_need.get('period', item_need.get('days', default_period))
-        rate_per_day = item_need.get('rate_per_day', 0)
-        if rate_per_day:
-            period = float(total_need_count) / float(rate_per_day)
-    else:
-        total_need_count = item_need
-        period = default_period
-    total_need_count = int(total_need_count)
-    period = float(period)
-    if total_need_count <= 0 or period <= 0:
-        return []
-    return [(total_need_count, period)]
-
-
-def merge_task_target_preserved_items(preserved_items, task_target_items):
-    return merge_item_needs(
-        normalize_item_needs(preserved_items),
-        normalize_item_needs(task_target_items, default_period=10),
-    )
-
-
-def get_preserved_level_load_rate(stock, min_stock, preserved_deadlines):
-    effective_stock = max(stock - min_stock, 0)
-    rate_per_day = 0
-    target_stock = 0
-    for preserved_stock, preserved_period in preserved_deadlines:
-        deadline_rate = preserved_stock / preserved_period
-        if deadline_rate > rate_per_day + 1e-9:
-            rate_per_day = deadline_rate
-            target_stock = preserved_stock
-        elif abs(deadline_rate - rate_per_day) <= 1e-9:
-            target_stock = max(target_stock, preserved_stock)
-    if effective_stock >= target_stock:
-        return 0
-    return rate_per_day
-
-
-def is_integer_value(value):
-    if isinstance(value, (int, np.integer)):
-        return True
-    if isinstance(value, (float, np.floating)):
-        return float(value).is_integer()
-    return False
-
-
-def ceil_div_or_ceil(numerator, denominator):
-    if is_integer_value(numerator) and is_integer_value(denominator):
-        numerator = int(numerator)
-        denominator = int(denominator)
-        return (numerator + denominator - 1) // denominator
-    return ceil_with_epsilon(numerator / denominator)
-
-
-def ceil_with_epsilon(amount, epsilon=1e-9):
-    from math import ceil
-    return int(ceil(float(amount) - epsilon))
-
-
-def format_item_need_data(data, format_amount):
-    deadlines = data.get('deadlines')
-    if not deadlines:
-        return f'{format_amount(data["total_need_count"])} in {format_amount(data["period"])} day(s)'
-    return ', '.join(
-        f'{format_amount(deadline["count"])} in {format_amount(deadline["period"])} day(s)'
-        for deadline in deadlines
-    )
-
-
-def item_need_data_to_yaml_entry(data, round_up_int):
-    deadlines = data.get('deadlines')
-    if deadlines and len(deadlines) > 1:
-        previous_count = 0
-        entries = []
-        for deadline in deadlines:
-            count = round_up_int(deadline['count'])
-            period = round_up_int(deadline['period'])
-            entries.append({
-                'count': count - previous_count,
-                'period': period,
-            })
-            previous_count = count
-        return entries
-    return {
-        'count': round_up_int(data['total_need_count']),
-        'period': round_up_int(data['period']),
-    }
-
-
-def get_sub_dict(raw_dict: Dict[int, bool], keys: list) -> Dict[int, bool]:
-    return {key: raw_dict.get(key, False) for key in keys}
-
-def count_level(substatus: Dict[int, bool]):
-    return sum(1 for status in substatus.values() if status)
 
 
 class IslandProductionPlanner(DaemonBase):
@@ -733,12 +435,14 @@ class IslandProductionPlanner(DaemonBase):
         self.exchange_plan = {}
         self.sell_plan = {}
         self.net_items = {}
-        self.net_accumulating_items = {}
-        self.product_min_stock_items = {}
-        self.accumulating_rate_per_day = {}
+        self.net_idle_accumulating_items = {}
+        self.product_daily_buffer_items = {}
+        self.idle_accumulating_items_per_day = {}
         self.inventory_levels_yaml_text = ''
-        self.accumulating_rate_yaml_text = ''
-        self.preserved_items_yaml_text = ''
+        self.idle_accumulating_items_yaml_text = ''
+        self.hard_floor_items_yaml_text = ''
+        self.reserve_items_yaml_text = ''
+        self.request_buffer_items_yaml_text = ''
         self.group_usage_summary = {}
         self.total_pt = 0
         self.daily_profit = 0
@@ -748,8 +452,12 @@ class IslandProductionPlanner(DaemonBase):
         self.mining_supply_plan = {}
         self.logging_supply_plan = {}
         self.demand_items = {}
-        self.preserved_items = {}
+        self.hard_floor_items = {}
+        self.reserve_items = {}
+        self.request_buffer_items = {}
         self.task_target_items = {}
+        self.stuck_season_order_id = 0
+        self.stuck_season_order_items = {}
 
     @staticmethod
     def _format_amount(amount):
@@ -766,16 +474,16 @@ class IslandProductionPlanner(DaemonBase):
     def _round_up_int(amount):
         return ceil_with_epsilon(amount)
 
-    def _get_natural_accumulating_amount(self, item_id, amount):
+    def _get_natural_idle_accumulating_amount(self, item_id, amount):
         if DIC_ISLAND_ITEM[item_id].get('pt_num', 0) <= 0:
             return 0
         reserved_rate = self.demand_items.get(item_id, {}).get('rate_per_day', 0)
-        accumulating_amount = amount - reserved_rate
-        if accumulating_amount <= self.NET_ACCUMULATING_EPSILON:
+        idle_accumulating_amount = amount - reserved_rate
+        if idle_accumulating_amount <= self.NET_ACCUMULATING_EPSILON:
             return 0
-        return accumulating_amount
+        return idle_accumulating_amount
 
-    def _redirect_exchange_accumulating_items(self):
+    def _redirect_exchange_idle_accumulating_items(self):
         if not self.EXCHANGE_REQUIRES_MANUAL_OPERATION or not self.exchange_plan:
             return
 
@@ -789,19 +497,19 @@ class IslandProductionPlanner(DaemonBase):
                 exchange_outputs[item_id] += output_amount * amount
 
         for item_id, amount in exchange_outputs.items():
-            current = self.net_accumulating_items.get(item_id, 0)
+            current = self.net_idle_accumulating_items.get(item_id, 0)
             if current <= self.NET_ACCUMULATING_EPSILON:
                 continue
             remaining = current - min(current, amount)
             if remaining > self.NET_ACCUMULATING_EPSILON:
-                self.net_accumulating_items[item_id] = remaining
+                self.net_idle_accumulating_items[item_id] = remaining
             else:
-                self.net_accumulating_items.pop(item_id, None)
+                self.net_idle_accumulating_items.pop(item_id, None)
 
         for item_id, amount in exchange_inputs.items():
             if amount <= self.NET_ACCUMULATING_EPSILON:
                 continue
-            self.net_accumulating_items[item_id] = self.net_accumulating_items.get(item_id, 0) + amount
+            self.net_idle_accumulating_items[item_id] = self.net_idle_accumulating_items.get(item_id, 0) + amount
 
     def _item_name(self, item_id):
         return item_name(item_id)
@@ -1037,8 +745,12 @@ class IslandProductionPlanner(DaemonBase):
             'mining_supply_plan': dict(mining_supply_plan),
             'logging_supply_plan': dict(logging_supply_plan),
             'demand_items': demand_items,
-            'preserved_items': getattr(self, 'preserved_items', {}),
+            'hard_floor_items': getattr(self, 'hard_floor_items', {}),
+            'reserve_items': getattr(self, 'reserve_items', {}),
+            'request_buffer_items': getattr(self, 'request_buffer_items', {}),
             'task_target_items': getattr(self, 'task_target_items', {}),
+            'stuck_season_order_id': getattr(self, 'stuck_season_order_id', 0),
+            'stuck_season_order_items': getattr(self, 'stuck_season_order_items', {}),
             'c': c,
             'A_ub': np.array(a_ub) if a_ub else None,
             'b_ub': np.array(b_ub) if b_ub else None,
@@ -1056,8 +768,12 @@ class IslandProductionPlanner(DaemonBase):
         self.mining_supply_plan = problem['mining_supply_plan']
         self.logging_supply_plan = problem['logging_supply_plan']
         self.demand_items = problem['demand_items']
-        self.preserved_items = problem['preserved_items']
+        self.hard_floor_items = problem['hard_floor_items']
+        self.reserve_items = problem['reserve_items']
+        self.request_buffer_items = problem['request_buffer_items']
         self.task_target_items = problem['task_target_items']
+        self.stuck_season_order_id = problem['stuck_season_order_id']
+        self.stuck_season_order_items = problem['stuck_season_order_items']
         if not result.success:
             return
 
@@ -1091,13 +807,13 @@ class IslandProductionPlanner(DaemonBase):
             amount = solution[end_offset + idx]
             if amount > 1e-6:
                 self.net_items[item_id] = amount
-                accumulating_amount = self._get_natural_accumulating_amount(item_id, amount)
-                if accumulating_amount > 0:
-                    self.net_accumulating_items[item_id] = accumulating_amount
-        self._redirect_exchange_accumulating_items()
+                idle_accumulating_amount = self._get_natural_idle_accumulating_amount(item_id, amount)
+                if idle_accumulating_amount > 0:
+                    self.net_idle_accumulating_items[item_id] = idle_accumulating_amount
+        self._redirect_exchange_idle_accumulating_items()
         self.total_pt = sum(
             DIC_ISLAND_ITEM[item_id].get('pt_num', 0) * amount
-            for item_id, amount in self.net_accumulating_items.items()
+            for item_id, amount in self.net_idle_accumulating_items.items()
         )
         self.daily_profit = self.net_items.get(1, 0)
         for col, activity in enumerate(activities):
@@ -1107,15 +823,15 @@ class IslandProductionPlanner(DaemonBase):
             coin_cost = activity['inputs'].get(1, 0)
             if coin_cost > 0:
                 self.daily_coin_cost += coin_cost * amount
-        self.product_min_stock_items = self._calculate_product_min_stock_items(
+        self.product_daily_buffer_items = self._calculate_product_daily_buffer_items(
             solution=solution,
             activities=activities,
             sale_entries=sale_entries,
             activity_count=activity_count,
         )
-        self.accumulating_rate_per_day = {
+        self.idle_accumulating_items_per_day = {
             item_id: self._round_output_amount(amount)
-            for item_id, amount in sorted(self.net_accumulating_items.items())
+            for item_id, amount in sorted(self.net_idle_accumulating_items.items())
             if self._round_output_amount(amount) > 0
         }
 
@@ -1144,9 +860,8 @@ class IslandProductionPlanner(DaemonBase):
                 }
             }
 
-    def _calculate_product_min_stock_items(self, solution, activities, sale_entries, activity_count):
+    def _calculate_product_daily_buffer_items(self, solution, activities, sale_entries, activity_count):
         daily_product_demand = defaultdict(float)
-        sold_recipe_product_capacity = {}
 
         for col, activity in enumerate(activities):
             amount = solution[col]
@@ -1164,24 +879,14 @@ class IslandProductionPlanner(DaemonBase):
                 continue
             if item_id in self.RECIPE_PRODUCT_IDS:
                 daily_product_demand[item_id] += amount
-                sold_recipe_product_capacity[item_id] = max(
-                    sold_recipe_product_capacity.get(item_id, 0),
-                    self.restaurant_capacity[slot],
-                )
 
-        for item_id, capacity in sold_recipe_product_capacity.items():
-            daily_product_demand[item_id] = max(daily_product_demand[item_id], capacity)
-
-        min_stock_items = {}
+        daily_buffer_items = {}
         for item_id, amount in sorted(daily_product_demand.items()):
             if amount <= self.NET_ACCUMULATING_EPSILON:
                 continue
-            min_stock = ceil_with_epsilon(amount * (1 + self.min_stock_safety_margin))
-            dish_slot = self.DISH_ITEM_TO_SLOT.get(item_id)
-            if dish_slot is not None:
-                min_stock = max(min_stock, self.restaurant_capacity[dish_slot])
-            min_stock_items[item_id] = min_stock
-        return min_stock_items
+            daily_buffer = ceil_with_epsilon(amount * (1 + self.daily_buffer_safety_margin))
+            daily_buffer_items[item_id] = daily_buffer
+        return daily_buffer_items
 
     def format_solved_production_plan(self):
         lines = [
@@ -1281,25 +986,48 @@ class IslandProductionPlanner(DaemonBase):
             lines.append('-')
 
         lines.append('')
-        lines.append('[preserved_items]')
-        if self.preserved_items:
-            for item_id, amount in sorted(self.preserved_items.items()):
+        lines.append('[stuck_season_order_items]')
+        if self.stuck_season_order_items:
+            lines.append(f'order id: {self.stuck_season_order_id}')
+            for item_id, data in sorted(self.stuck_season_order_items.items()):
+                need_text = format_item_need_data(data, self._format_amount)
+                lines.append(
+                    f'{self._item_name(item_id)} ({item_id}): '
+                    f'{need_text}, '
+                    f'{self._format_amount(data["rate_per_day"])} per day'
+                )
+        else:
+            lines.append('-')
+
+        lines.append('')
+        lines.append('[hard_floor_items]')
+        hard_floor_items = self._get_hard_floor_export_items()
+        if hard_floor_items:
+            for item_id, amount in sorted(hard_floor_items.items()):
                 lines.append(f'{self._item_name(item_id)} ({item_id}): {self._format_amount(amount)}')
         else:
             lines.append('-')
 
         lines.append('')
-        lines.append('[min_stock_products]')
-        if self.product_min_stock_items:
-            for item_id, amount in sorted(self.product_min_stock_items.items()):
+        lines.append('[reserve_items]')
+        if self.reserve_items:
+            for item_id, amount in sorted(self.reserve_items.items()):
                 lines.append(f'{self._item_name(item_id)} ({item_id}): {self._format_amount(amount)}')
         else:
             lines.append('-')
 
         lines.append('')
-        lines.append('[net_accumulating_items]')
-        if self.accumulating_rate_per_day:
-            for item_id, amount in sorted(self.accumulating_rate_per_day.items()):
+        lines.append('[daily_buffer_items]')
+        if self.product_daily_buffer_items:
+            for item_id, amount in sorted(self.product_daily_buffer_items.items()):
+                lines.append(f'{self._item_name(item_id)} ({item_id}): {self._format_amount(amount)}')
+        else:
+            lines.append('-')
+
+        lines.append('')
+        lines.append('[net_idle_accumulating_items]')
+        if self.idle_accumulating_items_per_day:
+            for item_id, amount in sorted(self.idle_accumulating_items_per_day.items()):
                 lines.append(f'{self._item_name(item_id)} ({item_id}): {self._format_amount(amount)}')
         else:
             lines.append('-')
@@ -1309,24 +1037,41 @@ class IslandProductionPlanner(DaemonBase):
         for line in self.format_solved_production_plan().split('\n'):
             logger.info(line)
 
-    def _get_min_stock_export_entry(self, item_id):
-        return self.product_min_stock_items.get(item_id, 0)
+    def _get_daily_buffer_export_entry(self, item_id):
+        return self.product_daily_buffer_items.get(item_id, 0)
 
-    def inventory_levels_to_yaml(self, use_item_name=False):
-        item_ids = sorted(self.product_min_stock_items)
+    def daily_buffer_items_to_yaml(self, use_item_name=False):
+        item_ids = sorted(self.product_daily_buffer_items)
         return item_mapping_to_yaml(
             {
-                item_id: self._get_min_stock_export_entry(item_id)
+                item_id: self._get_daily_buffer_export_entry(item_id)
                 for item_id in item_ids
             },
             use_item_name=use_item_name,
         )
 
-    def accumulating_rate_to_yaml(self, use_item_name=False):
-        return item_mapping_to_yaml(self.accumulating_rate_per_day, use_item_name=use_item_name)
+    def idle_accumulating_items_to_yaml(self, use_item_name=False):
+        return item_mapping_to_yaml(self.idle_accumulating_items_per_day, use_item_name=use_item_name)
 
-    def preserved_items_to_yaml(self, use_item_name=False):
-        return item_mapping_to_yaml(self.preserved_items, use_item_name=use_item_name)
+    def _get_hard_floor_export_items(self):
+        hard_floor_items = dict(self.hard_floor_items)
+        for (slot, item_id), amount in self.sell_plan.items():
+            if amount <= self.NET_ACCUMULATING_EPSILON:
+                continue
+            hard_floor_items[item_id] = max(
+                hard_floor_items.get(item_id, 0),
+                self.restaurant_capacity[slot],
+            )
+        return hard_floor_items
+
+    def hard_floor_items_to_yaml(self, use_item_name=False):
+        return item_mapping_to_yaml(self._get_hard_floor_export_items(), use_item_name=use_item_name)
+
+    def reserve_items_to_yaml(self, use_item_name=False):
+        return item_mapping_to_yaml(self.reserve_items, use_item_name=use_item_name)
+
+    def request_buffer_items_to_yaml(self, use_item_name=False):
+        return item_mapping_to_yaml(self.request_buffer_items, use_item_name=use_item_name)
 
     def restaurant_menus_to_yaml(self):
         menus = {slot: {} for slot in self.RESTAURANT_MENU_CONFIG}
@@ -1339,24 +1084,51 @@ class IslandProductionPlanner(DaemonBase):
             for slot, menu in menus.items()
         }
 
-    def solve_production_plan(self, preserved_items=None, task_target_items=None):
+    def solve_production_plan(
+            self,
+            hard_floor_items=None,
+            reserve_items=None,
+            request_buffer_items=None,
+            task_target_items=None,
+            stuck_season_order_id=None,
+    ):
         self.daily_profit_lower_limit = self.config.cross_get("IslandProductionPlanner.IslandProductionPlanner.DailyProfitLowerLimit", 0)
-        self.min_stock_safety_margin = max(
-            float(self.config.cross_get("IslandProductionPlanner.IslandProductionPlanner.MinStockSafetyMargin", 0)),
+        self.daily_buffer_safety_margin = max(
+            float(self.config.cross_get("IslandProductionPlanner.IslandProductionPlanner.DailyBufferSafetyMargin", 0)),
             0,
         )
-        if preserved_items is None:
-            preserved_items = load_preserved_items(
-                self.config.cross_get("IslandProduction.IslandProduction.PreservedItems", "")
+        if hard_floor_items is None:
+            hard_floor_items = load_hard_floor_items(
+                self.config.cross_get("IslandProduction.IslandProduction.HardFloorItems", "")
+            )
+        if reserve_items is None:
+            reserve_items = load_reserve_items(
+                self.config.cross_get("IslandProduction.IslandProduction.ReserveItems", "")
+            )
+        if request_buffer_items is None:
+            request_buffer_items = load_request_buffer_items(
+                self.config.cross_get("IslandProduction.IslandProduction.RequestBufferItems", "")
             )
         if task_target_items is None:
             task_target_items = load_item_mapping(
                 self.config.cross_get("IslandSeasonTask.IslandSeasonTask.TaskTarget", "{}"),
                 config_name='TaskTarget',
             )
-        self.preserved_items = normalize_item_keys(preserved_items)
+        if stuck_season_order_id is None:
+            stuck_season_order_id = self.config.cross_get("IslandOrder.IslandOrder.StuckSeasonOrderId", 0)
+        stuck_season_order_items = get_stuck_season_order_requirements(stuck_season_order_id)
+        self.hard_floor_items = normalize_item_keys(hard_floor_items)
+        self.reserve_items = normalize_item_keys(reserve_items)
+        self.request_buffer_items = normalize_item_keys(request_buffer_items)
         self.task_target_items = normalize_item_needs(task_target_items, default_period=10)
-        demand_items = self.task_target_items
+        self.stuck_season_order_id = normalize_stuck_season_order_id(stuck_season_order_id)
+        self.stuck_season_order_items = normalize_item_needs(stuck_season_order_items, default_period=10)
+        if self.stuck_season_order_items:
+            logger.info(
+                f'Adding stuck season order {self.stuck_season_order_id} '
+                f'as 10-day production planner demand'
+            )
+        demand_items = merge_item_needs(self.task_target_items, self.stuck_season_order_items)
         problem = self._build_production_problem(demand_items=demand_items)
         self._reset_lp_result()
         result = None
@@ -1379,42 +1151,75 @@ class IslandProductionPlanner(DaemonBase):
                 break
         self._apply_production_lp_result(result, problem)
 
-    def run(self, tech_status_yaml=None, preserved_items_yaml=None, task_target_items=None, export=True, use_item_name_in_export=True):
+    def run(
+            self,
+            tech_status_yaml=None,
+            hard_floor_items_yaml=None,
+            reserve_items_yaml=None,
+            request_buffer_items_yaml=None,
+            task_target_items=None,
+            stuck_season_order_id=None,
+            export=True,
+            use_item_name_in_export=True,
+    ):
         if tech_status_yaml is not None:
-            technology_status = safe_load(tech_status_yaml) if tech_status_yaml else None
+            technology_status = tech_status_yaml
         else:
             technology_status = self.config.cross_get("IslandProductionPlanner.Storage.Storage.IslandTechnologyStatus", None)
             if technology_status is None or self.config.cross_get("IslandProductionPlanner.IslandProductionPlanner.RescanIslandTechnology", False):
                 technology_status = IslandTechnologyScanner(self.config).get_technology_status()
-            else:
-                technology_status = {int(k): v for k, v in technology_status.items()}
-        if preserved_items_yaml is None:
-            preserved_items = load_preserved_items(
-                self.config.cross_get("IslandProduction.IslandProduction.PreservedItems", "")
+        technology_status = load_technology_status(technology_status)
+        if hard_floor_items_yaml is None:
+            hard_floor_items = load_hard_floor_items(
+                self.config.cross_get("IslandProduction.IslandProduction.HardFloorItems", "")
             )
         else:
-            preserved_items = load_preserved_items(preserved_items_yaml)
+            hard_floor_items = load_hard_floor_items(hard_floor_items_yaml)
+        if reserve_items_yaml is None:
+            reserve_items = load_reserve_items(
+                self.config.cross_get("IslandProduction.IslandProduction.ReserveItems", "")
+            )
+        else:
+            reserve_items = load_reserve_items(reserve_items_yaml)
+        if request_buffer_items_yaml is None:
+            request_buffer_items = load_request_buffer_items(
+                self.config.cross_get("IslandProduction.IslandProduction.RequestBufferItems", "")
+            )
+        else:
+            request_buffer_items = load_request_buffer_items(request_buffer_items_yaml)
         if task_target_items is None:
             task_target_items = load_item_mapping(
                 self.config.cross_get("IslandSeasonTask.IslandSeasonTask.TaskTarget", "{}"),
                 config_name='TaskTarget',
             )
         self.analyze_technology_status(technology_status)
-        self.solve_production_plan(preserved_items=preserved_items, task_target_items=task_target_items)
+        self.solve_production_plan(
+            hard_floor_items=hard_floor_items,
+            reserve_items=reserve_items,
+            request_buffer_items=request_buffer_items,
+            task_target_items=task_target_items,
+            stuck_season_order_id=stuck_season_order_id,
+        )
         self.print_solved_production_plan()
         if export:
-            inventory_levels_yaml_text = self.inventory_levels_to_yaml(use_item_name=use_item_name_in_export)
-            accumulating_rate_yaml_text = self.accumulating_rate_to_yaml(use_item_name=use_item_name_in_export)
-            preserved_items_yaml_text = self.preserved_items_to_yaml(use_item_name=use_item_name_in_export)
+            inventory_levels_yaml_text = self.daily_buffer_items_to_yaml(use_item_name=use_item_name_in_export)
+            idle_accumulating_items_yaml_text = self.idle_accumulating_items_to_yaml(use_item_name=use_item_name_in_export)
+            hard_floor_items_yaml_text = self.hard_floor_items_to_yaml(use_item_name=use_item_name_in_export)
+            reserve_items_yaml_text = self.reserve_items_to_yaml(use_item_name=use_item_name_in_export)
+            request_buffer_items_yaml_text = self.request_buffer_items_to_yaml(use_item_name=use_item_name_in_export)
             restaurant_menu_yaml_texts = self.restaurant_menus_to_yaml()
             self.inventory_levels_yaml_text = inventory_levels_yaml_text
-            self.accumulating_rate_yaml_text = accumulating_rate_yaml_text
-            self.preserved_items_yaml_text = preserved_items_yaml_text
+            self.idle_accumulating_items_yaml_text = idle_accumulating_items_yaml_text
+            self.hard_floor_items_yaml_text = hard_floor_items_yaml_text
+            self.reserve_items_yaml_text = reserve_items_yaml_text
+            self.request_buffer_items_yaml_text = request_buffer_items_yaml_text
             with self.config.multi_set():
                 self.config.cross_set("IslandProductionPlanner.Storage.Storage.IslandTechnologyStatus", technology_status)
-                self.config.cross_set("IslandProduction.IslandProduction.MinStockItems", inventory_levels_yaml_text)
-                self.config.cross_set("IslandProduction.IslandProduction.AccumulatingItems", accumulating_rate_yaml_text)
-                self.config.cross_set("IslandProduction.IslandProduction.PreservedItems", preserved_items_yaml_text)
+                self.config.cross_set("IslandProduction.IslandProduction.DailyBufferItems", inventory_levels_yaml_text)
+                self.config.cross_set("IslandProduction.IslandProduction.IdleAccumulatingItems", idle_accumulating_items_yaml_text)
+                self.config.cross_set("IslandProduction.IslandProduction.HardFloorItems", hard_floor_items_yaml_text)
+                self.config.cross_set("IslandProduction.IslandProduction.ReserveItems", reserve_items_yaml_text)
+                self.config.cross_set("IslandProduction.IslandProduction.RequestBufferItems", request_buffer_items_yaml_text)
                 for slot, config_key in self.RESTAURANT_MENU_CONFIG.items():
                     self.config.cross_set(config_key, restaurant_menu_yaml_texts[slot])
                 self.config.cross_set("IslandProductionPlanner.IslandProductionPlanner.RescanIslandTechnology", False)

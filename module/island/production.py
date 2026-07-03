@@ -300,8 +300,7 @@ class IslandProduction(IslandRecipe, IslandDock):
         self.slot_finish_time = {int(k): datetime.fromisoformat(v) for k, v in slot_finish_time.items()}
         self.claim_all_rewards()
         self.dispatch_all()
-        next_run_time = min(self.slot_finish_time.values()) if self.slot_finish_time else None
-        logger.info(f'Next expected finish time: {next_run_time}')
+        next_run_time = list(self.slot_finish_time.values())
         with self.config.multi_set():
             sorted_items = sorted(self.slot_finish_time.items(), key=lambda kv: (kv[1], kv[0]))
             slot_finish_time = {k: v.isoformat(sep=' ') for k, v in sorted_items}

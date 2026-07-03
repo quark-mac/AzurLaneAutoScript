@@ -397,11 +397,6 @@ Commission:
     > Extra-0:20 > Extra-0:30 > Extra-1:00 > Extra-1:30 > Extra-2:00
     > shortest
   DoMajorCommission: false
-  EnableShipCheck:
-    type: checkbox
-    value: true
-    option: [ true, false ]
-  ShipCheckTimeout: 15
 Tactical:
   TacticalFilter: |-
     SameT4 > SameT3 > SameT2 > SameT1
@@ -649,7 +644,7 @@ PrivateQuarters:
     TargetInteract: true
     TargetShip:
       value: anchorage
-      option: [ anchorage, noshiro, sirius, new_jersey, taihou, aegir ]
+      option: [ anchorage, noshiro, sirius, new_jersey, taihou, aegir, nakhimov ]
 # ==================== Daily ====================
 
 Daily:
@@ -795,19 +790,30 @@ OpsiHazard1Leveling:
     option: [ 0, 44, 22 ]
 
 # =================== Island ====================
+
 IslandProduction:
-  PreservedItems:
+  HardFloorItems:
     type: textarea
     value: |-
       {}
-  MinStockItems:
+  ReserveItems:
     type: textarea
     value: |-
       {}
-  AccumulatingItems:
+  RequestBufferItems:
     type: textarea
     value: |-
       {}
+  DailyBufferItems:
+    type: textarea
+    value: |-
+      {}
+  IdleAccumulatingItems:
+    type: textarea
+    value: |-
+      {}
+IslandOrder:
+  StuckSeasonOrderId: 0
 IslandFreebie:
   Share: true
 IslandRestaurant:
@@ -867,18 +873,6 @@ IslandSeasonTask:
     value: |-
       {}
 
-# =================== Island ====================
-IslandSeasonTask:
-  TaskDict:
-    type: textarea
-    value: |-
-IslandTechnology:
-  TechnologyStatus:
-    type: textarea
-    value: |-
-IslandFreebie:
-  Share: true
-
 # ==================== Tools ====================
 
 Daemon:
@@ -894,7 +888,7 @@ EventStory:
 IslandProductionPlanner:
   RescanIslandTechnology: false
   DailyProfitLowerLimit: 50000
-  MinStockSafetyMargin: 0
+  DailyBufferSafetyMargin: 0
   FieldsEfficiency:
     value: 0
     option: [ 0, 0.04, 0.12 ]

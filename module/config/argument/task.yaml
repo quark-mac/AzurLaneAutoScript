@@ -350,6 +350,9 @@ Island:
     IslandProduction:
       - Scheduler
       - IslandProduction
+    IslandOrder:
+      - Scheduler
+      - IslandOrder
     IslandFreebie:
       - Scheduler
       - IslandFreebie

@@ -48,7 +48,7 @@ class IslandBusiness(IslandRestaurant):
 
     def handle_restaurant_popup(self):
         for _ in self.loop(timeout=5):
-            if self.appear(ISLAND_BUSINESS_EVENT_POPUP, offset=(20, 20), interval=1):
+            if self.appear(ISLAND_BUSINESS_EVENT_POPUP, offset=(50, 50), interval=1):
                 self.device.click(ISLAND_CLICK_SAFE_AREA)
                 continue
             if self.appear_then_click(ISLAND_BUSINESS_EVENT_POPUP_CANCEL, offset=(20, 20)):

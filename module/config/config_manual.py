@@ -24,6 +24,7 @@ class ManualConfig:
     > OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive
     > IslandFreebie > IslandCollect
     > IslandBusiness > IslandSeasonTask
+    > IslandOrder
     > IslandProduction
     > Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss
     > Sos > EventSp > EventA > EventB > EventC > EventD
@@ -124,7 +125,7 @@ class ManualConfig:
     MAP_CHAPTER_SWITCH_20241219_SPEX = False
     # Since event_20241219_cn chapter B unlocks event startup
     # which means chapter AB are continuous
-    STAGE_INCREASE_AB = False
+    STAGE_INCREASE_AB = True
     # Insert anything to STAGE_INCREASE
     STAGE_INCREASE_CUSTOM = ''
     MAP_HAS_CLEAR_PERCENTAGE = True

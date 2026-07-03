@@ -122,10 +122,10 @@ class EventShopUI(UI):
     
     @cached_property
     def is_pt_reversed(self):
-        return self.config.cross_get('Event.Campaign.Event') in [
-            'event_20231221_cn',
-            'event_20240521_cn',
+        blacklist = [
+            SHOP_EVENT_20240521
         ]
+        return self.ui_process_check_button(check_button=blacklist)
 
     def event_shop_get_pt(self):
         if self.is_pt_reversed:

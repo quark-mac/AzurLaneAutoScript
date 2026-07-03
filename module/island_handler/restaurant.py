@@ -11,10 +11,16 @@ from module.base.utils import color_similar, color_similarity_2d, load_image
 from module.config.utils import get_server_next_update
 from module.island.assets import ISLAND_CLICK_SAFE_AREA
 from module.island.data import DIC_ISLAND_ITEM, DIC_ISLAND_RESTAURANT_MENU_TO_RECIPE
+from module.island.utils import (
+    load_hard_floor_items,
+    load_item_mapping,
+    load_request_buffer_items,
+    load_reserve_items,
+    normalize_item_keys,
+)
 from module.island_handler.assets import *
 from module.island_handler.dock import IslandDock
 from module.island_handler.dock_scanner import CharacterScanner
-from module.island_handler.production_planner import normalize_item_keys
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.statistics.item import Item, ItemGrid
@@ -55,7 +61,7 @@ class RestaurantItemGrid(ItemGrid):
             grid,
             templates={},
             template_area=(12, 21, 72, 67),
-            amount_area=(38, 65, 83, 87),
+            amount_area=(38, 67, 83, 86),
             tag_area=(66, 2, 72, 5)
         )
         self.amount_ocr = Digit([], threshold=160, name='Amount_ocr')
@@ -250,21 +256,65 @@ class IslandRestaurant(IslandDock):
             604: self.config.cross_get("IslandBusiness.IslandRestaurant.GrillMenu", default="{}"),
             901: self.config.cross_get("IslandBusiness.IslandRestaurant.CafeMenu", default="{}"),
         }[self.working_restaurant_id]
-        menu = safe_load(menu_text)
+        menu = normalize_item_keys(safe_load(menu_text))
+        protected_items = self.restaurant_protected_items
         def total_revenue_estimate(item):
             amount = min(item.amount, capacity)
             if item.tag == 'bonus':
                 return item.price * amount * (1 + self.event_buff / 100)
             return item.price * amount
+        def sell_amount(item):
+            return min(item.amount, capacity)
+        def is_sellable_surplus(item):
+            return item.amount - sell_amount(item) >= protected_items.get(item.id, 0)
         items = self.scan_all_items()
-        menu_items = [item for item in items if item.id in normalize_item_keys(menu).keys()]
+        menu_items = [
+            item for item in items
+            if item.id in menu
+            and item.amount >= capacity
+        ]
+        surplus_items = [
+            item for item in items
+            if item.id not in menu
+            and is_sellable_surplus(item)
+        ]
+        sellable_items = menu_items + surplus_items
         quantity = self.restaurant_quantity[self.working_restaurant_id]
-        items = sorted(menu_items, key=total_revenue_estimate, reverse=True)
+        items = sorted(sellable_items, key=total_revenue_estimate, reverse=True)
         if len(items) < quantity:
             quantity = len(items)
         plan = items[:quantity]
         logger.info(f'Sell plan: {[str(item) for item in plan]}')
         return plan
+
+    @cached_property
+    def restaurant_protected_items(self):
+        hard_floor_items = normalize_item_keys(load_hard_floor_items(
+            self.config.cross_get("IslandProduction.IslandProduction.HardFloorItems", "")
+        ))
+        reserve_items = normalize_item_keys(load_reserve_items(
+            self.config.cross_get("IslandProduction.IslandProduction.ReserveItems", "")
+        ))
+        request_buffer_items = normalize_item_keys(load_request_buffer_items(
+            self.config.cross_get("IslandProduction.IslandProduction.RequestBufferItems", "")
+        ))
+        daily_buffer_items = normalize_item_keys(load_item_mapping(
+            self.config.cross_get("IslandProduction.IslandProduction.DailyBufferItems", ""),
+            config_name='DailyBufferItems',
+        ))
+        item_ids = set()
+        item_ids.update(hard_floor_items)
+        item_ids.update(reserve_items)
+        item_ids.update(request_buffer_items)
+        item_ids.update(daily_buffer_items)
+        return {
+            item_id: (
+                hard_floor_items.get(item_id, 0)
+                + reserve_items.get(item_id, 0)
+                + max(request_buffer_items.get(item_id, 0), daily_buffer_items.get(item_id, 0))
+            )
+            for item_id in item_ids
+        }
 
     @cached_property
     def waitress_lists(self):
@@ -395,4 +445,3 @@ class IslandRestaurant(IslandDock):
             logger.warning("Failed to start restaurant, skip this round")
             return False
         return True
-        

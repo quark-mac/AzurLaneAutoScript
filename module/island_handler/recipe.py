@@ -1,5 +1,6 @@
 from datetime import datetime
 import re
+import os
 
 import cv2
 from jellyfish import levenshtein_distance
@@ -10,23 +11,26 @@ import module.config.server as server
 from module.base.button import ButtonGrid
 from module.base.decorator import cached_property, del_cached_property
 from module.base.timer import Timer
-from module.base.utils import color_similarity_2d, extract_letters, random_rectangle_vector_opted
+from module.base.utils import color_similarity_2d, extract_letters, random_rectangle_vector_opted, save_image
 from module.exception import GameTooManyClickError
 from module.island.data import DIC_ISLAND_ITEM, DIC_ISLAND_RECIPE, DIC_ISLAND_SHOP_ITEM_TO_RECIPE, DIC_ISLAND_SLOT
-from module.island_handler.assets import *
-from module.island_handler.production_planner import (
+from module.island.utils import (
     ceil_div_or_ceil,
-    get_preserved_level_load_rate,
+    get_target_stock_load_rate,
+    load_hard_floor_items,
     load_item_mapping,
-    load_preserved_items,
+    load_request_buffer_items,
+    load_reserve_items,
     normalize_item_keys,
     normalize_item_needs,
     parse_item_need_deadlines,
 )
+from module.island_handler.assets import *
 from module.island_handler.shop import IslandShop
 from module.logger import logger
 from module.map_detection.utils import Points
 from module.ocr.ocr import Digit, Duration, Ocr
+from module.statistics.item import Item, ItemGrid
 from module.ui.page import page_island, page_island_manage, page_island_shop
 
 
@@ -38,10 +42,8 @@ RECIPE_SIZE = (280, 134)
 RECIPE_DELTA = (0, 149)
 RECIPE_DETECT_AREA = (181, 55, 460, 668)
 RECIPE_DRAG_AREA = (300, 55, 350, 668)
-if server.server == 'jp':
-    RECIPE_ANCHOR_AREA = (58, 97, 96, 115)
-else:
-    RECIPE_ANCHOR_AREA = (58, 97, 96, 115)
+RECIPE_ANCHOR_AREA = (58, 97, 96, 115)
+RECIPE_TEMPLATE_AREA = (36, 33, 36 + 64, 33 + 64)
 RECIPE_PRODUCT_NAME_AREA = (123, 23, 269, 46)
 RECIPE_PRODUCT_STOCK_AREA = (212, 92, 275, 110)
 if server.server == 'jp':
@@ -85,6 +87,10 @@ class IslandReversedDigitCounter(Ocr):
         result = super().after_process(result)
         result = result.replace('I', '1').replace('D', '0').replace('S', '5')
         result = result.replace('B', '8')
+        if re.fullmatch(r'\d+/?', result):
+            normalized = f'{result.rstrip("/")}/0'
+            logger.warning(f'Unexpected ocr result: {result}, normalized to {normalized}')
+            result = normalized
         result = re.search(r'(\d+)/([\d+\-\*\(\)]+)', result)
         if result:
             numerator = int(result.group(1))
@@ -107,53 +113,134 @@ RECIPE_INGREDIENT_COUNTER_OCR = IslandReversedDigitCounter(
 )
 
 
-def get_min_stock_weight(stock, min_stock):
-    if stock >= min_stock or min_stock <= 0:
+def get_recipe_product_id(recipe_id):
+    return next(iter(DIC_ISLAND_RECIPE[recipe_id]['commission_product']))
+
+
+def get_target_stock_weight(stock, target_stock):
+    if stock >= target_stock or target_stock <= 0:
         return 0
     else:
-        return (min_stock - stock) / min_stock
+        return (target_stock - stock) / target_stock
 
 
-def get_min_stock_batch_weight(stock, min_stock, batch_size):
-    if stock >= min_stock:
+def get_target_stock_batch_weight(stock, target_stock, batch_size):
+    if stock >= target_stock:
         return 0
     else:
-        return (min_stock - stock) / batch_size
+        return (target_stock - stock) / batch_size
 
 
-def get_demand_weight(stock, min_stock, batch_size, demand):
+def get_demand_weight(stock, target_stock, batch_size, demand):
     demand_deadlines = demand
     if len(demand_deadlines) == 2 and isinstance(demand_deadlines[0], (int, float, np.integer, np.floating)):
         demand_deadlines = [demand_deadlines]
-    rate_per_day = get_preserved_level_load_rate(stock, min_stock, demand_deadlines)
+    rate_per_day = get_target_stock_load_rate(stock, target_stock, demand_deadlines)
     if rate_per_day <= 0:
         return 0
     else:
         return rate_per_day / batch_size
 
 
-def get_accumulating_weight(stock, min_stock, demand, accumulating):
-    if accumulating <= 0:
+def get_idle_accumulating_weight(stock, target_stock, demand, idle_accumulating):
+    if idle_accumulating <= 0:
         return float('inf')
     else:
         if len(demand) == 2 and isinstance(demand[0], (int, float, np.integer, np.floating)):
             demand_stock, _ = demand
         else:
             demand_stock = demand[-1][0] if demand else 0
-        effective_stock = max(stock - min_stock - demand_stock, 0)
-        return effective_stock / accumulating
+        effective_stock = max(stock - target_stock - demand_stock, 0)
+        return effective_stock / idle_accumulating
 
 
 def get_recipe_entry_weight(entry):
-    _, (stock, min_stock, batch_size, demand, accumulating) = entry
+    _, (stock, target_stock, _hard_floor, _reserve, batch_size, demand, idle_accumulating) = entry
     return (
-        get_demand_weight(stock, min_stock, batch_size, demand),
-        get_min_stock_weight(stock, min_stock),
-        get_min_stock_batch_weight(stock, min_stock, batch_size),
-        -get_accumulating_weight(stock, min_stock, demand, accumulating),
+        get_demand_weight(stock, target_stock, batch_size, demand),
+        get_target_stock_weight(stock, target_stock),
+        get_target_stock_batch_weight(stock, target_stock, batch_size),
+        -get_idle_accumulating_weight(stock, target_stock, demand, idle_accumulating),
         -stock
     )
 
+
+def recipe_product_name_to_recipe_id(name, slotcode=None):
+    if server.server == 'jp':
+        # While we have 果樹園二重奏 and 朝光活力コンビ, the problem of カニ as 力二 is worse,
+        # so we replace 力 with カ before matching,
+        # which can fix most of the misrecognition without causing new issues.
+        name = name.replace('二', 'ニ').replace('力', 'カ')
+    min_distance = float('inf')
+    min_real_distance = float('inf')
+    corrected_name = None
+    corrected_id = None
+    if isinstance(slotcode, int):
+        recipe_lists = DIC_ISLAND_SLOT[slotcode]['formula'] + DIC_ISLAND_SLOT[slotcode]['activity_formula']
+    else:
+        recipe_lists = DIC_ISLAND_RECIPE.keys()
+
+    for recipe_id in recipe_lists:
+        product_id = get_recipe_product_id(recipe_id)
+        product_name = DIC_ISLAND_ITEM[product_id]['name'][server.server]
+
+        # If product_name is longer than OCR result name, try matching any substring
+        # of product_name with the same length as name and take the minimal distance.
+        if isinstance(name, str) and isinstance(product_name, str) and len(product_name) >= len(name) and len(name) > 0:
+            best_sub_distance = float('inf')
+            L = len(name)
+            for i in range(len(product_name) - L + 1):
+                sub = product_name[i:i+L]
+                d = levenshtein_distance(name, sub)
+                if d < best_sub_distance:
+                    best_sub_distance = d
+            distance = best_sub_distance
+            real_distance = levenshtein_distance(name, product_name)
+        else:
+            distance = levenshtein_distance(name, product_name)
+            real_distance = distance
+        if distance < min_distance or (distance == min_distance and real_distance < min_real_distance):
+            min_distance = distance
+            min_real_distance = real_distance
+            corrected_name = product_name
+            corrected_id = recipe_id
+
+    if name != corrected_name:
+        logger.info(f'Recipe product name OCR result "{name}" corrected to "{corrected_name}" with distance {min_distance} and real distance {min_real_distance}')
+    return corrected_id
+
+
+class IslandRecipeItem(Item):
+    IMAGE_SHAPE = RECIPE_SIZE
+
+
+class IslandRecipeGrid(ItemGrid):
+    item_class = IslandRecipeItem
+
+    def __init__(self, grid: ButtonGrid):
+        super().__init__(
+            grids = grid,
+            templates = {},
+            template_area = RECIPE_TEMPLATE_AREA,
+            # amount_area = RECIPE_PRODUCT_STOCK_AREA
+        )
+        # self.amount_ocr = RECIPE_PRODUCT_STOCK_OCR
+        if not os.path.exists('./assets/island/recipe'):
+            os.makedirs('./assets/island/recipe')
+        self.load_template_folder('./assets/island/recipe')
+
+    def predict(self, image, name=True, amount=False, cost=False, price=False, tag=False):
+        super().predict(image, name=True, amount=False, cost=False, price=False, tag=False)
+        # product_name_grid = self.grids.crop(RECIPE_PRODUCT_NAME_AREA, name='RECIPE_PRODUCT_NAME_GRID')
+        # product_name_images = [self.image_crop(button.area, copy=True) for button in product_name_grid.buttons]
+        # product_names = RECIPE_PRODUCT_NAME_OCR.ocr(product_name_images, direct_ocr=True)
+        # corrected_ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in product_names]
+        # for item, corrected_id in zip(self.items, corrected_ids):
+        #     if item.name.isdigit() and corrected_id is not None:
+        #         logger.info(f'Corrected recipe item id from {item.id} to {corrected_id}')
+        #         item.id = corrected_id
+        #         item.name = DIC_ISLAND_ITEM[get_recipe_product_id(corrected_id)]['name']['en'].replace(' ', '_')
+        #         save_image(self.image_crop(item.area, copy=True), f'./assets/island/recipe/{item.name}.png')
 
 class IslandRecipe(IslandShop):
     working_slot_id = None
@@ -210,52 +297,11 @@ class IslandRecipe(IslandShop):
         product_name_grid = self.recipe_grid.crop(RECIPE_PRODUCT_NAME_AREA, name='RECIPE_PRODUCT_NAME_GRID')
         product_name_images = [self.image_crop(button.area, copy=True) for button in product_name_grid.buttons]
         product_names = RECIPE_PRODUCT_NAME_OCR.ocr(product_name_images, direct_ocr=True)
-        corrected_ids = [self.recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in product_names]
+        corrected_ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in product_names]
+        item_grid = IslandRecipeGrid(self.recipe_grid)
+        item_grid.extract_template(self.device.image, folder='./assets/island/recipe')
+        
         return corrected_ids
-
-    def recipe_product_name_to_recipe_id(self, name, slotcode=None):
-        if server.server == 'jp':
-            # While we have 果樹園二重奏 and 朝光活力コンビ, the problem of カニ as 力二 is worse,
-            # so we replace 力 with カ before matching,
-            # which can fix most of the misrecognition without causing new issues.
-            name = name.replace('二', 'ニ').replace('力', 'カ')
-        min_distance = float('inf')
-        min_real_distance = float('inf')
-        corrected_name = None
-        corrected_id = None
-        if isinstance(slotcode, int):
-            recipe_lists = DIC_ISLAND_SLOT[slotcode]['formula'] + DIC_ISLAND_SLOT[slotcode]['activity_formula']
-        else:
-            recipe_lists = DIC_ISLAND_RECIPE.keys()
-
-        for recipe_id in recipe_lists:
-            product_id = list(DIC_ISLAND_RECIPE[recipe_id]['commission_product'].keys())[0]
-            product_name = DIC_ISLAND_ITEM[product_id]['name'][server.server]
-
-            # If product_name is longer than OCR result name, try matching any substring
-            # of product_name with the same length as name and take the minimal distance.
-            if isinstance(name, str) and isinstance(product_name, str) and len(product_name) >= len(name) and len(name) > 0:
-                best_sub_distance = float('inf')
-                L = len(name)
-                for i in range(len(product_name) - L + 1):
-                    sub = product_name[i:i+L]
-                    d = levenshtein_distance(name, sub)
-                    if d < best_sub_distance:
-                        best_sub_distance = d
-                distance = best_sub_distance
-                real_distance = levenshtein_distance(name, product_name)
-            else:
-                distance = levenshtein_distance(name, product_name)
-                real_distance = distance
-            if distance < min_distance or (distance == min_distance and real_distance < min_real_distance):
-                min_distance = distance
-                min_real_distance = real_distance
-                corrected_name = product_name
-                corrected_id = recipe_id
-
-        if name != corrected_name:
-            logger.info(f'Recipe product name OCR result "{name}" corrected to "{corrected_name}" with distance {min_distance} and real distance {min_real_distance}')
-        return corrected_id
 
     def get_recipe_product_stocks(self):
         stock_grid = self.recipe_grid.crop(RECIPE_PRODUCT_STOCK_AREA, name='RECIPE_PRODUCT_STOCK_GRID')
@@ -268,7 +314,7 @@ class IslandRecipe(IslandShop):
             logger.info('Less than 3 recipes in current page, no need to swipe to next page')
             return
         else:
-            p1, p2 = random_rectangle_vector_opted((0, -300), box=RECIPE_DRAG_AREA, padding=0)
+            p1, p2 = random_rectangle_vector_opted((0, -250), box=RECIPE_DRAG_AREA, padding=0)
             self.device.drag(p1, p2, hold_duration=0.1, name='RECIPE_NEXT_PAGE_SWIPE')
             del_cached_property(self, 'recipe_grid')
             del_cached_property(self, 'recipe_ids')
@@ -279,13 +325,17 @@ class IslandRecipe(IslandShop):
             logger.info('Less than 3 recipes in current page, no need to swipe to previous page')
             return
         else:
-            p1, p2 = random_rectangle_vector_opted((0, 300), box=RECIPE_DRAG_AREA, padding=0)
+            p1, p2 = random_rectangle_vector_opted((0, 250), box=RECIPE_DRAG_AREA, padding=0)
             self.device.drag(p1, p2, hold_duration=0.1, name='RECIPE_PREV_PAGE_SWIPE')
             del_cached_property(self, 'recipe_grid')
             del_cached_property(self, 'recipe_ids')
             self.device.screenshot()
 
     def scan_all_recipe_stocks(self):
+        for _ in self.loop(timeout=3):
+            # use ISLAND_RECIPE_AMOUNT_MAX as a check to ensure the recipe page is fully loaded
+            if self.appear(ISLAND_RECIPE_AMOUNT_MAX, offset=(0, 20)):
+                break
         all_stocks = {}
         drag_count = 0
         for _ in self.loop(timeout=30):
@@ -311,56 +361,84 @@ class IslandRecipe(IslandShop):
     def recipe_id_sequence(self):
         return self.get_recipe_id_sequence_to_run()
 
+    @cached_property
+    def hard_floor_items(self):
+        yaml_text = self.config.cross_get("IslandProduction.IslandProduction.HardFloorItems", "")
+        return normalize_item_keys(load_hard_floor_items(yaml_text))
+
+    @cached_property
+    def reserve_items(self):
+        yaml_text = self.config.cross_get("IslandProduction.IslandProduction.ReserveItems", "")
+        return normalize_item_keys(load_reserve_items(yaml_text))
+
     def get_recipe_id_sequence_to_run(
             self,
-            min_stock_items_dict=None,
-            preserved_items_dict=None,
-            accumulating_items_dict=None,
+            daily_buffer_items_dict=None,
+            request_buffer_items_dict=None,
+            hard_floor_items_dict=None,
+            reserve_items_dict=None,
+            idle_accumulating_items_dict=None,
             task_target_items_dict=None,
     ):
         stocks_dict = self.all_recipe_stocks
-        if min_stock_items_dict is None:
-            yaml_text = self.config.cross_get("IslandProduction.IslandProduction.MinStockItems", "")
+        if daily_buffer_items_dict is None:
+            yaml_text = self.config.cross_get("IslandProduction.IslandProduction.DailyBufferItems", "")
             if yaml_text is None:
                 yaml_text = ""
-            min_stock_items_dict = safe_load(yaml_text) or {}
-        min_stock_items_dict = normalize_item_keys(min_stock_items_dict)
-        if preserved_items_dict is None:
-            yaml_text = self.config.cross_get("IslandProduction.IslandProduction.PreservedItems", "")
-            preserved_items_dict = load_preserved_items(yaml_text)
-        preserved_items_dict = normalize_item_keys(preserved_items_dict)
+            daily_buffer_items_dict = safe_load(yaml_text) or {}
+        daily_buffer_items_dict = normalize_item_keys(daily_buffer_items_dict)
+        if request_buffer_items_dict is None:
+            yaml_text = self.config.cross_get("IslandProduction.IslandProduction.RequestBufferItems", "")
+            request_buffer_items_dict = load_request_buffer_items(yaml_text)
+        request_buffer_items_dict = normalize_item_keys(request_buffer_items_dict)
+        if hard_floor_items_dict is None:
+            hard_floor_items_dict = self.hard_floor_items
+        else:
+            hard_floor_items_dict = normalize_item_keys(hard_floor_items_dict)
+        if reserve_items_dict is None:
+            reserve_items_dict = self.reserve_items
+        else:
+            reserve_items_dict = normalize_item_keys(reserve_items_dict)
         if task_target_items_dict is None:
             yaml_text = self.config.cross_get("IslandSeasonTask.IslandSeasonTask.TaskTarget", "{}")
             task_target_items_dict = load_item_mapping(yaml_text, config_name='TaskTarget')
         task_target_items_dict = normalize_item_needs(task_target_items_dict, default_period=10)
-        if accumulating_items_dict is None:
-            yaml_text = self.config.cross_get("IslandProduction.IslandProduction.AccumulatingItems", "")
+        if idle_accumulating_items_dict is None:
+            yaml_text = self.config.cross_get("IslandProduction.IslandProduction.IdleAccumulatingItems", "")
             if yaml_text is None:
                 yaml_text = ""
-            accumulating_items_dict = safe_load(yaml_text) or {}
-        accumulating_items_dict = normalize_item_keys(accumulating_items_dict)
+            idle_accumulating_items_dict = safe_load(yaml_text) or {}
+        idle_accumulating_items_dict = normalize_item_keys(idle_accumulating_items_dict)
         recipe_entry_sequence = []
         for recipe_id, stock in stocks_dict.items():
-            product_id = list(DIC_ISLAND_RECIPE[recipe_id]['commission_product'].keys())[0]
-            batch_size = DIC_ISLAND_RECIPE[recipe_id]['commission_product'][product_id]
-            planner_min_stock = min_stock_items_dict.get(product_id, 0)
-            preserved_floor = preserved_items_dict.get(product_id, 0)
-            min_stock = max(planner_min_stock, preserved_floor)
+            recipe_product = DIC_ISLAND_RECIPE[recipe_id]['commission_product']
+            product_id = get_recipe_product_id(recipe_id)
+            batch_size = recipe_product[product_id]
+            daily_consumed_stock = daily_buffer_items_dict.get(product_id, 0)
+            request_buffer = request_buffer_items_dict.get(product_id, 0)
+            hard_floor = hard_floor_items_dict.get(product_id, 0)
+            reserve = reserve_items_dict.get(product_id, 0)
+            target_stock = hard_floor + reserve + max(daily_consumed_stock, request_buffer)
             demand = task_target_items_dict.get(product_id, {})
             demand = parse_item_need_deadlines(demand)
             demand_text = ', '.join(
                 f'{count} items in {period:g} days'
                 for count, period in demand
             ) or '0 items in 1 days'
-            accumulating = accumulating_items_dict.get(product_id, 0)
-            recipe_entry_sequence.append((recipe_id, (stock, min_stock, batch_size, demand, accumulating)))
+            idle_accumulating = idle_accumulating_items_dict.get(product_id, 0)
+            recipe_entry_sequence.append((
+                recipe_id,
+                (stock, target_stock, hard_floor, reserve, batch_size, demand, idle_accumulating)
+            ))
             logger.info(
                 f'Recipe {recipe_id} stock: {stock}, '
-                f'planner_min_stock: {planner_min_stock}, '
-                f'preserved_floor: {preserved_floor}, '
-                f'effective_min_stock: {min_stock}, '
+                f'daily_consumed_stock: {daily_consumed_stock}, '
+                f'request_buffer: {request_buffer}, '
+                f'hard_floor: {hard_floor}, '
+                f'reserve: {reserve}, '
+                f'target_stock: {target_stock}, '
                 f'batch_size: {batch_size}, task_target: {demand_text}, '
-                f'accumulating rate: {accumulating}'
+                f'idle accumulating rate: {idle_accumulating}'
             )
             logger.info(f'Recipe {recipe_id} weight: {get_recipe_entry_weight(recipe_entry_sequence[-1])}')
         recipe_entry_sequence.sort(key=lambda x: get_recipe_entry_weight(x), reverse=True)
@@ -370,20 +448,21 @@ class IslandRecipe(IslandShop):
 
     @staticmethod
     def calculate_recipe_run_count(info):
-        stock, min_stock, batch_size, demand, accumulating = info
-        rate_per_day = get_preserved_level_load_rate(stock, min_stock, demand)
+        stock, target_stock, _hard_floor, _reserve, batch_size, demand, idle_accumulating = info
+        rate_per_day = get_target_stock_load_rate(stock, target_stock, demand)
         if rate_per_day > 0:
             return ceil_div_or_ceil(rate_per_day, batch_size)
-        if stock < min_stock:
-            return (min_stock - stock - 1) // batch_size + 1
-        if accumulating <= 0:
+        if stock < target_stock:
+            return (target_stock - stock - 1) // batch_size + 1
+        if idle_accumulating <= 0:
             return 0
         return float('inf')
 
     def get_active_recipe_id(self):
         for recipe_id, button in zip(self.recipe_ids, self.recipe_grid.buttons):
             if self.is_button_selected(button):
-                product_name = DIC_ISLAND_ITEM[list(DIC_ISLAND_RECIPE[recipe_id]['commission_product'].keys())[0]]['name'][server.server]
+                product_id = get_recipe_product_id(recipe_id)
+                product_name = DIC_ISLAND_ITEM[product_id]['name'][server.server]
                 logger.info(f'Selected recipe id: {recipe_id}, product name: {product_name}')
                 return recipe_id
         logger.warning('Unable to determine selected recipe, assume no active recipe')
@@ -395,7 +474,8 @@ class IslandRecipe(IslandShop):
         if recipe_id is None:
             return None
 
-        count = len(DIC_ISLAND_RECIPE[recipe_id]['commission_cost'])
+        recipe_cost = DIC_ISLAND_RECIPE[recipe_id]['commission_cost']
+        count = len(recipe_cost)
         logger.attr('Ingredient_count', count)
         if count == 0:
             return ButtonGrid(
@@ -424,8 +504,11 @@ class IslandRecipe(IslandShop):
             return None
 
         counter_grids = ingredient_grids.crop((-10, 66, 92, 83), name='counter_grids')
-        counter_images = [self.image_crop(button.area, copy=True) for button in counter_grids.buttons]
-        counters = RECIPE_INGREDIENT_COUNTER_OCR.ocr(counter_images, direct_ocr=True)
+        for _ in self.loop(timeout=3):
+            counter_images = [self.image_crop(button.area, copy=True) for button in counter_grids.buttons]
+            counters = RECIPE_INGREDIENT_COUNTER_OCR.ocr(counter_images, direct_ocr=True)
+            if (0, 0, 0) not in counters:
+                break
         return counters
 
     def set_recipe(self, recipe_id):
@@ -475,20 +558,25 @@ class IslandRecipe(IslandShop):
         # use this before setting recipe batch count to read out current ingredient need per batch,
         # since ranch recipes may have boosted ingredient requirement for higher batch production.
         counters = self.get_recipe_ingredient_counters()
+        recipe_cost = DIC_ISLAND_RECIPE[recipe_id]['commission_cost']
         if batch_count == float('inf'):
             max_count = DIC_ISLAND_RECIPE[recipe_id]['production_limit']
-            for ingredient_key, counter in zip(DIC_ISLAND_RECIPE[recipe_id]['commission_cost'], counters):
+            for ingredient_key, counter in zip(recipe_cost, counters):
                 if ingredient_key in DIC_ISLAND_SHOP_ITEM_TO_RECIPE:
                     continue
-                count = max(counter[0] // counter[1], 0) if counter[1] > 0 else float('inf')
+                available_stock = max(counter[0] - self.hard_floor_items.get(ingredient_key, 0), 0)
+                count = available_stock // counter[1] if counter[1] > 0 else float('inf')
                 if count < max_count:
                     max_count = count
             batch_count = max_count
             logger.info(f'Calculated max batch count to produce with current ingredient stock: {batch_count}')
         success = True
         real_count = batch_count
-        for ingredient_key, counter, button in zip(DIC_ISLAND_RECIPE[recipe_id]['commission_cost'], counters, self.get_recipe_ingredient_grids(recipe_id).buttons):
-            if counter[0] < real_count * counter[1]:
+        ingredient_buttons = self.get_recipe_ingredient_grids(recipe_id).buttons
+        for ingredient_key, counter, button in zip(recipe_cost, counters, ingredient_buttons):
+            hard_floor = self.hard_floor_items.get(ingredient_key, 0)
+            available_stock = max(counter[0] - hard_floor, 0)
+            if available_stock < real_count * counter[1]:
                 if ingredient_key in DIC_ISLAND_SHOP_ITEM_TO_RECIPE:
                     if ingredient_key == 3004:  # flour cannot be bought via jumping page, need to go to shop page to buy
                         self.ui_back(check_button=page_island_manage.check_button)
@@ -497,7 +585,7 @@ class IslandRecipe(IslandShop):
                     else:
                         self.goto_ingredient_shop_page(entrance_button=button)
                         isolated = True
-                    delta = real_count * counter[1] - counter[0]
+                    delta = real_count * counter[1] - available_stock
                     success = super().island_shop_buy({ingredient_key: delta}, isolated=isolated) and success
                     if not isolated:
                         # We need an exception for inherited class to handle ui switch
@@ -511,10 +599,13 @@ class IslandRecipe(IslandShop):
                         self.ui_back(check_button=self.is_in_recipe_menu)
                     if not success:
                         logger.warning(f'Failed to buy ingredient {ingredient_key} from shop, insufficient ingredient for recipe production')
-                        real_count = min(real_count, counter[0] // counter[1]) if counter[1] > 0 else 0
+                        real_count = min(real_count, available_stock // counter[1]) if counter[1] > 0 else 0
                 else:
-                    logger.warning(f'Ingredient {ingredient_key} cannot be bought from shop, insufficient ingredient for recipe production')
-                    real_count = min(real_count, counter[0] // counter[1]) if counter[1] > 0 else 0
+                    logger.warning(
+                        f'Ingredient {ingredient_key} cannot be bought from shop, '
+                        f'insufficient ingredient for recipe production after hard floor {hard_floor}'
+                    )
+                    real_count = min(real_count, available_stock // counter[1]) if counter[1] > 0 else 0
                     success = False
         return success, real_count
 
@@ -559,6 +650,7 @@ class IslandRecipe(IslandShop):
             tuple[timedelta, int | float]: remain time and actual batch count after starting,
                 or None if failed to start recipe
         """
+        self.last_unavailable_product = None
         if not self.is_in_recipe_menu():
             logger.warning('Not in recipe menu, cannot run recipe')
             return None
@@ -570,6 +662,7 @@ class IslandRecipe(IslandShop):
             logger.warning(f'Failed to prepare enough ingredient for {batch_count} batch(es) production')
             if real_count == 0:
                 logger.warning('No batch can be produced with current ingredient stock, cannot run recipe')
+                self.last_unavailable_product = get_recipe_product_id(recipe_id)
                 return None
             else:
                 logger.info(f'Can only produce {real_count} batch(es) with current ingredient stock, will try to run with this amount')
@@ -593,21 +686,26 @@ class IslandRecipe(IslandShop):
     def update_recipe_id_sequence_and_stock(self, recipe_id, batch_count):
         old_list = self.recipe_id_sequence
         new_list = []
+        recipe_cost = DIC_ISLAND_RECIPE[recipe_id]['commission_cost']
         consumed_items = {
             item_id: amount * batch_count
-            for item_id, amount in DIC_ISLAND_RECIPE[recipe_id]['commission_cost'].items()
+            for item_id, amount in recipe_cost.items()
         }
         for old_recipe_id, info in old_list:
-            product_id = list(DIC_ISLAND_RECIPE[old_recipe_id]['commission_product'].keys())[0]
+            product_id = get_recipe_product_id(old_recipe_id)
             if old_recipe_id == recipe_id:
-                stock, min_stock, batch_size, demand, accumulating = info
+                stock, target_stock, hard_floor, reserve, batch_size, demand, idle_accumulating = info
                 new_stock = stock + batch_size * batch_count
-                new_list.append((old_recipe_id, (new_stock, min_stock, batch_size, demand, accumulating)))
+                new_list.append((old_recipe_id, (
+                    new_stock, target_stock, hard_floor, reserve, batch_size, demand, idle_accumulating
+                )))
                 logger.info(f'Updated recipe {recipe_id} stock from {stock} to {new_stock} after running recipe for {batch_count} batch(es)')
             elif product_id in consumed_items:
-                stock, min_stock, batch_size, demand, accumulating = info
+                stock, target_stock, hard_floor, reserve, batch_size, demand, idle_accumulating = info
                 new_stock = stock - consumed_items[product_id]
-                new_list.append((old_recipe_id, (new_stock, min_stock, batch_size, demand, accumulating)))
+                new_list.append((old_recipe_id, (
+                    new_stock, target_stock, hard_floor, reserve, batch_size, demand, idle_accumulating
+                )))
                 logger.info(
                     f'Updated recipe {old_recipe_id} stock from {stock} to {new_stock} '
                     f'after consuming {consumed_items[product_id]} item(s) for recipe {recipe_id}'
@@ -619,7 +717,7 @@ class IslandRecipe(IslandShop):
         self.recipe_id_sequence = new_recipe_entry_sequence
         self.all_recipe_stocks[recipe_id] += batch_size * batch_count
         for old_recipe_id, info in old_list:
-            product_id = list(DIC_ISLAND_RECIPE[old_recipe_id]['commission_product'].keys())[0]
+            product_id = get_recipe_product_id(old_recipe_id)
             if product_id in consumed_items:
                 self.all_recipe_stocks[old_recipe_id] -= consumed_items[product_id]
 
@@ -651,6 +749,11 @@ class IslandRecipe(IslandShop):
                 self.update_recipe_id_sequence_and_stock(recipe_id, real_count)
                 return target_time
             else:
+                unavailable_product = getattr(self, 'last_unavailable_product', None)
+                if unavailable_product is not None:
+                    logger.info(
+                        f'Product {unavailable_product} is unavailable after recipe {recipe_id} failed'
+                    )
                 self.recipe_id_sequence.pop(0)
         logger.info('No recipe to run or failed to run any recipe')
         return None

@@ -26,17 +26,6 @@
       "TaskHoardingDuration": 0,
       "WhenTaskQueueEmpty": "goto_main"
     },
-    "AutoStart": {
-      "Enable": false,
-      "Delay": 10
-    },
-    "LogCleaner": {
-      "Enable": false,
-      "CleanOnStartup": true,
-      "ScheduledClean": false,
-      "ScheduledTime": "00:00",
-      "KeepDays": 7
-    },
     "DropRecord": {
       "SaveFolder": "./screenshots",
       "AzurStatsID": null,
@@ -50,6 +39,17 @@
     },
     "Storage": {
       "Storage": {}
+    },
+    "AutoStart": {
+      "Enable": false,
+      "Delay": 10
+    },
+    "LogCleaner": {
+      "Enable": false,
+      "CleanOnStartup": true,
+      "ScheduledClean": false,
+      "ScheduledTime": "00:00",
+      "KeepDays": 7
     }
   },
   "General": {
@@ -2040,9 +2040,27 @@
       "ServerUpdate": "00:00"
     },
     "IslandProduction": {
-      "PreservedItems": "{}",
-      "MinStockItems": "{}",
-      "AccumulatingItems": "{}"
+      "HardFloorItems": "{}",
+      "ReserveItems": "{}",
+      "RequestBufferItems": "{}",
+      "DailyBufferItems": "{}",
+      "IdleAccumulatingItems": "{}"
+    },
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "IslandOrder": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "IslandOrder",
+      "SuccessInterval": 0,
+      "FailureInterval": 120,
+      "ServerUpdate": "00:00"
+    },
+    "IslandOrder": {
+      "StuckSeasonOrderId": 0
     },
     "Storage": {
       "Storage": {}
@@ -2152,7 +2170,7 @@
     "IslandProductionPlanner": {
       "RescanIslandTechnology": false,
       "DailyProfitLowerLimit": 50000,
-      "MinStockSafetyMargin": 0,
+      "DailyBufferSafetyMargin": 0,
       "FieldsEfficiency": 0,
       "OrchardEfficiency": 0,
       "NurseryEfficiency": 0

@@ -270,6 +270,10 @@
       "name": "Island Production",
       "help": ""
     },
+    "IslandOrder": {
+      "name": "Island Request",
+      "help": ""
+    },
     "IslandFreebie": {
       "name": "Daily Supplies",
       "help": ""
@@ -572,45 +576,45 @@
   },
   "AutoStart": {
     "_info": {
-      "name": "Auto Start",
-      "help": "Automatically start a selected config after WebUI launches"
+      "name": "AutoStart._info.name",
+      "help": "AutoStart._info.help"
     },
     "Enable": {
-      "name": "Enable Auto Start",
-      "help": "Automatically run the current config after WebUI initialization"
+      "name": "AutoStart.Enable.name",
+      "help": "AutoStart.Enable.help"
     },
     "Delay": {
-      "name": "Startup Delay",
-      "help": "Wait X seconds after WebUI launch before starting the config, range 0-600 seconds",
-      "invalid_feedback": "Please enter an integer between 0-600 (seconds)"
+      "name": "AutoStart.Delay.name",
+      "help": "AutoStart.Delay.help",
+      "invalid_feedback": "AutoStart.Delay.invalid_feedback"
     }
   },
   "LogCleaner": {
     "_info": {
-      "name": "Log Cleaner",
-      "help": "Automatically clean expired log files"
+      "name": "LogCleaner._info.name",
+      "help": "LogCleaner._info.help"
     },
     "Enable": {
-      "name": "Enable Log Cleaner",
-      "help": "Automatically clean old logs according to settings"
+      "name": "LogCleaner.Enable.name",
+      "help": "LogCleaner.Enable.help"
     },
     "CleanOnStartup": {
-      "name": "Clean On Startup",
-      "help": "Run log cleanup once when ALAS starts"
+      "name": "LogCleaner.CleanOnStartup.name",
+      "help": "LogCleaner.CleanOnStartup.help"
     },
     "ScheduledClean": {
-      "name": "Enable Scheduled Clean",
-      "help": "Run log cleanup daily at the specified time"
+      "name": "LogCleaner.ScheduledClean.name",
+      "help": "LogCleaner.ScheduledClean.help"
     },
     "ScheduledTime": {
-      "name": "Scheduled Clean Time",
-      "help": "Daily log cleanup time in HH:MM format, e.g. 03:00. Invalid input will reset to default 00:00",
-      "invalid_feedback": "Please enter correct time format (HH:MM), e.g.: 08:30"
+      "name": "LogCleaner.ScheduledTime.name",
+      "help": "LogCleaner.ScheduledTime.help",
+      "invalid_feedback": "LogCleaner.ScheduledTime.invalid_feedback"
     },
     "KeepDays": {
-      "name": "Log Retention Days",
-      "help": "Keep log files from the latest N days and delete older ones (range 1-365). Invalid input will reset to default 7",
-      "invalid_feedback": "Please enter an integer between 1-365"
+      "name": "LogCleaner.KeepDays.name",
+      "help": "LogCleaner.KeepDays.help",
+      "invalid_feedback": "LogCleaner.KeepDays.invalid_feedback"
     }
   },
   "DropRecord": {
@@ -852,6 +856,7 @@
       "event_20260326_cn": "The Vagabond’s Recruitment Plan",
       "event_20260417_cn": "Vacation Lane – Beachside Brilliance",
       "event_20260520_cn": "Alliance Before the Hagiobull",
+      "event_20260625_cn": "Miracle by Midnight",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -1509,16 +1514,6 @@
     "DoMajorCommission": {
       "name": "Do Major Commissions",
       "help": "1200 oil commission is now outdated, the yield is very low, it is recommended to disable"
-    },
-    "EnableShipCheck": {
-      "name": "Commission.EnableShipCheck.name",
-      "help": "Commission.EnableShipCheck.help",
-      "True": "True",
-      "False": "False"
-    },
-    "ShipCheckTimeout": {
-      "name": "Commission.ShipCheckTimeout.name",
-      "help": "Commission.ShipCheckTimeout.help"
     }
   },
   "Tactical": {
@@ -1576,7 +1571,7 @@
       "help": ""
     },
     "Favorite": {
-      "name": "Use Favorite Filter",
+      "name": "Only Favorite Ships",
       "help": "During student selection apply the favorite filter\nThereby, giving priority to certain ship girls\nApply the favorite status to a ship girl in-game"
     },
     "MinLevel": {
@@ -2257,7 +2252,8 @@
       "sirius": "Sirius",
       "new_jersey": "New Jersey",
       "taihou": "Taihou",
-      "aegir": "Aegir"
+      "aegir": "Aegir",
+      "nakhimov": "Nakhimov"
     }
   },
   "Daily": {
@@ -2723,17 +2719,35 @@
       "name": "Island Production",
       "help": ""
     },
-    "PreservedItems": {
-      "name": "Preserved Items",
-      "help": "User-defined items to keep in reserve\nAlas will prioritize producing these items after the minimum stock items to ensure enough inventory\nExample format:\n(item name on the current server): (quantity)"
+    "HardFloorItems": {
+      "name": "Hard Floor Items",
+      "help": "Stock protected from orders, transport, and production recipes\nBusiness modules may consume this stock\nUse this for dishes or materials reserved for business module operation\nPlanner-exported business items are kept at least at their business capacity here\nExample format:\n(item name on the current server): (quantity)"
     },
-    "MinStockItems": {
-      "name": "Minimum Stock Items",
-      "help": "Items that need to be produced when stock is low, and the stock level to maintain for each item\nAlas will prioritize producing these items when stock is low and will produce other items when idle\nThis can be automatically generated by Island Production Planner in Tools."
+    "ReserveItems": {
+      "name": "Reserve Items",
+      "help": "Stock reserved from external consumers such as island requests and transport\nProduction recipes and business modules may consume reserved stock, and recipes will replenish it\nExample format:\n(item name on the current server): (quantity)"
     },
-    "AccumulatingItems": {
-      "name": "Accumulating Items",
-      "help": "Items whose exceeding production should be ignored, and the rate of stock level increasing for each item\nAlas will not view these items as overproduced and will produce them according to current stock divided by the rate when idle.\nThis can be automatically generated by Island Production Planner in Tools."
+    "RequestBufferItems": {
+      "name": "Request Buffer Items",
+      "help": "User-defined consumable buffer for island request items\nRecipe production targets hard floor plus reserve plus the larger of request buffer and daily buffer\nUse this for request items that the planner does not otherwise keep in stock"
+    },
+    "DailyBufferItems": {
+      "name": "Daily Buffer Items",
+      "help": "Planner-generated working buffer for expected daily consumption\nRecipe production targets hard floor plus reserve plus the larger of request buffer and daily buffer\nThis can be automatically generated by Island Production Planner in Tools."
+    },
+    "IdleAccumulatingItems": {
+      "name": "Idle Accumulating Items",
+      "help": "Items that may accumulate when production is idle and ingredients are sufficient\nThe value is the expected daily accumulation rate used for idle recipe priority\nThis can be automatically generated by Island Production Planner in Tools."
+    }
+  },
+  "IslandOrder": {
+    "_info": {
+      "name": "Island Request",
+      "help": "For normal requests, will submit only if current stock minus hard floor and reserved quantity is sufficient.\nFor urgent requests, will submit as long as current stock is sufficient"
+    },
+    "StuckSeasonOrderId": {
+      "name": "Unfulfilled Season Request ID",
+      "help": "0 means no stuck request\nUsually do not need to modify it"
     }
   },
   "IslandFreebie": {
@@ -2868,19 +2882,9 @@
       "name": "Island Season Task",
       "help": ""
     },
-    "TaskDict": {
-      "name": "IslandSeasonTask.TaskDict.name",
-      "help": "IslandSeasonTask.TaskDict.help"
-    }
-  },
-  "IslandTechnology": {
-    "_info": {
-      "name": "IslandTechnology._info.name",
-      "help": "IslandTechnology._info.help"
-    },
-    "TechnologyStatus": {
-      "name": "IslandTechnology.TechnologyStatus.name",
-      "help": "IslandTechnology.TechnologyStatus.help"
+    "TaskTarget": {
+      "name": "Task Preserved Items",
+      "help": ""
     }
   },
   "Daemon": {
@@ -2932,9 +2936,9 @@
       "name": "Daily Profit Lower Limit",
       "help": "Negative value means accepting a daily loss, 0 means breaking even, and positive value means profit."
     },
-    "MinStockSafetyMargin": {
-      "name": "Minimum Stock Safety Margin",
-      "help": "Multiplier margin applied to planner-generated minimum stock. 0.2 means exporting 120% of the calculated stock. Restaurant dishes are kept at least at capacity."
+    "DailyBufferSafetyMargin": {
+      "name": "Daily Buffer Safety Margin",
+      "help": "Multiplier margin applied to planner-generated daily buffer. 0.2 means exporting 120% of the calculated daily demand."
     },
     "FieldsEfficiency": {
       "name": "Faircrop Fields Efficiency",

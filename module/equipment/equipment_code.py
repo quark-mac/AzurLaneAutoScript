@@ -1,5 +1,8 @@
 import yaml
 
+from module.base.timer import Timer
+from module.base.utils import random_rectangle_point, point2str
+from module.device.method.utils import HierarchyButton
 from module.equipment.assets import *
 from module.logger import logger
 from module.retire.assets import TEMPLATE_BOGUE, TEMPLATE_HERMES, TEMPLATE_RANGER, TEMPLATE_LANGLEY
@@ -59,14 +62,19 @@ class EquipmentCodeHandler(StorageHandler):
             if not self.appear(EMPTY_SHIP_R):
                 break
         if TEMPLATE_BOGUE.match(self.device.image, scaling=1.46):  # image has rotation
+            logger.info("Bogue detected")
             return 'bogue'
         elif TEMPLATE_HERMES.match(self.device.image, scaling=124 / 89):
+            logger.info("Hermes detected")
             return 'hermes'
         elif TEMPLATE_RANGER.match(self.device.image, scaling=4 / 3):
+            logger.info("Ranger detected")
             return 'ranger'
         elif TEMPLATE_LANGLEY.match(self.device.image, scaling=25 / 21):
+            logger.info("Langley detected")
             return 'langley'
         else:
+            logger.warning("Unknown ship detected, assuming DD")
             return 'DD'
 
     def _code_enter(self):
@@ -79,7 +87,7 @@ class EquipmentCodeHandler(StorageHandler):
             if self.appear(EQUIPMENT_CODE_PAGE_CHECK, offset=(5, 5)):
                 break
 
-            if self.appear_then_click(EQUIPMENT_CODE_ENTRANCE, offset=(5, 5)):
+            if self.appear_then_click(EQUIPMENT_CODE_ENTRANCE, offset=(5, 5), interval=1):
                 continue
 
     def _code_exit(self):
@@ -106,19 +114,61 @@ class EquipmentCodeHandler(StorageHandler):
             if not self.is_code_preview_loaded():
                 return True
 
-            if self.appear_then_click(EQUIPMENT_CODE_CLEAR, offset=(5, 5)):
+            if self.appear_then_click(EQUIPMENT_CODE_CLEAR, offset=(5, 5), interval=1):
                 continue
         else:
             return False
 
+    def fastinput_ime_enable(self):
+        self.device.adb_shell(['am', 'start', '-a', 'android.settings.INPUT_METHOD_SETTINGS'])
+        while 1:
+            h = self.device.dump_hierarchy_adb()
+
+            def appear(xpath):
+                return bool(HierarchyButton(h, xpath))
+
+            def appear_then_click(xpath):
+                b = HierarchyButton(h, xpath)
+                if b:
+                    point = random_rectangle_point(b.button)
+                    logger.info(f'Click {point2str(*point)} @ {b}')
+                    self.device.click_adb(*point)
+                    return True
+                else:
+                    return False
+
+            if appear_then_click('//*[@resource-id="android:id/title" and @text="FastInputIME"]/following-sibling::*[@resource-id="android:id/switch_widget" and @checked="false"]'):
+                continue
+            if appear_then_click('//*[@resource-id="android:id/button1"]'):
+                continue
+            # Disable one other enabled IME at a time
+            if appear_then_click('(//*[@resource-id="android:id/title" and @text!="FastInputIME"]/following-sibling::*[@resource-id="android:id/switch_widget" and @enabled="true" and @checked="true"])[1]'):
+                continue
+            if appear('//*[@resource-id="android:id/title" and @text="FastInputIME"]/following-sibling::*[@resource-id="android:id/switch_widget" and @checked="true"]') \
+                    and not appear('//*[@resource-id="android:id/title" and @text!="FastInputIME"]/following-sibling::*[@resource-id="android:id/switch_widget" and @enabled="true" and @checked="true"]'):
+                break
+
+        self.device.adb_shell(['input', 'keyevent', '4'])
+
     def _code_input(self, code):
         logger.info(f"Code input: {code}")
         d = self.device.u2
-        for _ in self.loop(timeout=10):
-            _, shown = d.current_ime()
+        click_timer = Timer(1, count=3)
+        for _ in self.loop():
+            name, shown = d.current_ime()
             if shown:
-                break
-            self.device.click(EQUIPMENT_CODE_TEXTBOX)
+                if name != 'com.github.uiautomator/.FastInputIME':
+                    try:
+                        d.set_fastinput_ime(True)
+                        continue
+                    except Exception:
+                        logger.warning("FastInputIME not enabled, trying to enable it")
+                    self.fastinput_ime_enable()
+                    continue
+                else:
+                    break
+            if click_timer.reached_and_reset():
+                self.device.click(EQUIPMENT_CODE_TEXTBOX)
         else:
             logger.warning("Equipment code load failed")
             return False

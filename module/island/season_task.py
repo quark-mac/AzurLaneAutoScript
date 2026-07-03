@@ -8,7 +8,7 @@ from module.base.decorator import cached_property, del_cached_property
 from module.island.assets import *
 from module.island.data import DIC_ISLAND_TASK
 from module.island.ui import IslandUI
-from module.island_handler.production_planner import item_mapping_to_yaml, load_item_mapping, normalize_item_keys
+from module.island.utils import item_mapping_to_yaml, load_item_mapping, normalize_item_keys
 from module.logger import logger
 from module.map_detection.utils import Points
 from module.ocr.ocr import Ocr

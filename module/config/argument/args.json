@@ -1699,24 +1699,24 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ],
         "option_cn": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_en": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20260520_cn"
+          "event_20230223_cn"
         ],
         "option_bold": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ]
       },
       "Mode": {
@@ -2105,24 +2105,24 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ],
         "option_cn": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_en": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20260520_cn"
+          "event_20230223_cn"
         ],
         "option_bold": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ]
       },
       "Mode": {
@@ -2502,24 +2502,24 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ],
         "option_cn": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_en": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20260520_cn"
+          "event_20230223_cn"
         ],
         "option_bold": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ]
       },
       "Mode": {
@@ -4719,24 +4719,24 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ],
         "option_cn": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_en": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20260520_cn"
+          "event_20230223_cn"
         ],
         "option_bold": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ]
       },
       "Mode": {
@@ -5133,24 +5133,24 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ],
         "option_cn": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_en": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20260520_cn"
+          "event_20230223_cn"
         ],
         "option_bold": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ]
       },
       "Mode": {
@@ -5547,24 +5547,24 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ],
         "option_cn": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_en": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20260520_cn"
+          "event_20230223_cn"
         ],
         "option_bold": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ]
       },
       "Mode": {
@@ -5961,24 +5961,24 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ],
         "option_cn": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_en": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20260520_cn"
+          "event_20230223_cn"
         ],
         "option_bold": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ]
       },
       "Mode": {
@@ -6365,24 +6365,24 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ],
         "option_cn": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_en": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20260520_cn"
+          "event_20230223_cn"
         ],
         "option_bold": [
-          "event_20240521_cn",
-          "event_20260520_cn"
+          "event_20230223_cn",
+          "event_20260625_cn"
         ]
       },
       "Mode": {
@@ -7260,18 +7260,6 @@
       "DoMajorCommission": {
         "type": "checkbox",
         "value": false
-      },
-      "EnableShipCheck": {
-        "type": "checkbox",
-        "value": true,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "ShipCheckTimeout": {
-        "type": "input",
-        "value": 15
       }
     },
     "Storage": {
@@ -8939,7 +8927,8 @@
           "sirius",
           "new_jersey",
           "taihou",
-          "aegir"
+          "aegir",
+          "nakhimov"
         ]
       }
     },
@@ -9929,17 +9918,76 @@
       }
     },
     "IslandProduction": {
-      "PreservedItems": {
+      "HardFloorItems": {
         "type": "textarea",
         "value": "{}"
       },
-      "MinStockItems": {
+      "ReserveItems": {
         "type": "textarea",
         "value": "{}"
       },
-      "AccumulatingItems": {
+      "RequestBufferItems": {
         "type": "textarea",
         "value": "{}"
+      },
+      "DailyBufferItems": {
+        "type": "textarea",
+        "value": "{}"
+      },
+      "IdleAccumulatingItems": {
+        "type": "textarea",
+        "value": "{}"
+      }
+    },
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "IslandOrder": {
+    "Scheduler": {
+      "Enable": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "NextRun": {
+        "type": "datetime",
+        "value": "2020-01-01 00:00:00",
+        "validate": "datetime"
+      },
+      "Command": {
+        "type": "input",
+        "value": "IslandOrder",
+        "display": "hide"
+      },
+      "SuccessInterval": {
+        "type": "input",
+        "value": 0,
+        "display": "hide"
+      },
+      "FailureInterval": {
+        "type": "input",
+        "value": 120,
+        "display": "hide"
+      },
+      "ServerUpdate": {
+        "type": "input",
+        "value": "00:00",
+        "display": "hide"
+      }
+    },
+    "IslandOrder": {
+      "StuckSeasonOrderId": {
+        "type": "input",
+        "value": 0
       }
     },
     "Storage": {
@@ -10084,9 +10132,9 @@
       }
     },
     "IslandSeasonTask": {
-      "TaskDict": {
+      "TaskTarget": {
         "type": "textarea",
-        "value": ""
+        "value": "{}"
       }
     },
     "Storage": {
@@ -10344,7 +10392,7 @@
         "type": "input",
         "value": 50000
       },
-      "MinStockSafetyMargin": {
+      "DailyBufferSafetyMargin": {
         "type": "input",
         "value": 0
       },

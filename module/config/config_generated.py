@@ -212,8 +212,6 @@ class GeneratedConfig:
     Commission_PresetFilter = 'cube'  # cube, cube_24h, chip, chip_24h, oil, custom
     Commission_CustomFilter = 'DailyEvent > Gem-4 > Gem-2 > Gem-8 > ExtraCube-0:30\n> UrgentCube-1:30 > UrgentCube-1:45 > UrgentCube-3\n> ExtraDrill-5:20 > ExtraDrill-2 > ExtraDrill-3:20\n> UrgentCube-2:15 > UrgentCube-4\n> ExtraDrill-1 > UrgentCube-6 > ExtraCube-1:30\n> ExtraDrill-2:40 > ExtraDrill-0:20\n> Major > DailyChip > DailyResource\n> ExtraPart-0:30 > ExtraOil-1 > UrgentBox-6\n> ExtraCube-3 > ExtraPart-1 > UrgentBox-3\n> ExtraCube-4 > ExtraPart-1:30 > ExtraOil-4\n> UrgentBox-1 > ExtraCube-5 > UrgentBox-1\n> ExtraCube-8 > ExtraOil-8\n> UrgentDrill-4 > UrgentDrill-2:40 > UrgentDrill-2\n> UrgentDrill-1 > UrgentDrill-1:30 > UrgentDrill-1:10\n> Extra-0:20 > Extra-0:30 > Extra-1:00 > Extra-1:30 > Extra-2:00\n> shortest'
     Commission_DoMajorCommission = False
-    Commission_EnableShipCheck = True  # True, False
-    Commission_ShipCheckTimeout = 15
 
     # Group `Tactical`
     Tactical_TacticalFilter = 'SameT4 > SameT3 > SameT2 > SameT1\n> BlueT2 > YellowT2 > RedT2\n> BlueT3 > YellowT3 > RedT3\n> BlueT4 > YellowT4 > RedT4\n> BlueT1 > YellowT1 > RedT1\n> first'
@@ -366,7 +364,7 @@ class GeneratedConfig:
     PrivateQuarters_BuyRoses = True
     PrivateQuarters_BuyCake = False
     PrivateQuarters_TargetInteract = True
-    PrivateQuarters_TargetShip = 'anchorage'  # anchorage, noshiro, sirius, new_jersey, taihou, aegir
+    PrivateQuarters_TargetShip = 'anchorage'  # anchorage, noshiro, sirius, new_jersey, taihou, aegir, nakhimov
 
     # Group `Daily`
     Daily_UseDailySkip = True
@@ -465,9 +463,14 @@ class GeneratedConfig:
     OpsiHazard1Leveling_TargetZone = 0  # 0, 44, 22
 
     # Group `IslandProduction`
-    IslandProduction_PreservedItems = '{}'
-    IslandProduction_MinStockItems = '{}'
-    IslandProduction_AccumulatingItems = '{}'
+    IslandProduction_HardFloorItems = '{}'
+    IslandProduction_ReserveItems = '{}'
+    IslandProduction_RequestBufferItems = '{}'
+    IslandProduction_DailyBufferItems = '{}'
+    IslandProduction_IdleAccumulatingItems = '{}'
+
+    # Group `IslandOrder`
+    IslandOrder_StuckSeasonOrderId = 0
 
     # Group `IslandFreebie`
     IslandFreebie_Share = True
@@ -490,10 +493,7 @@ class GeneratedConfig:
     IslandRestaurant_CafeMenu = '{}'
 
     # Group `IslandSeasonTask`
-    IslandSeasonTask_TaskDict = None
-
-    # Group `IslandTechnology`
-    IslandTechnology_TechnologyStatus = None
+    IslandSeasonTask_TaskTarget = '{}'
 
     # Group `Daemon`
     Daemon_EnterMap = True
@@ -508,7 +508,7 @@ class GeneratedConfig:
     # Group `IslandProductionPlanner`
     IslandProductionPlanner_RescanIslandTechnology = False
     IslandProductionPlanner_DailyProfitLowerLimit = 50000
-    IslandProductionPlanner_MinStockSafetyMargin = 0
+    IslandProductionPlanner_DailyBufferSafetyMargin = 0
     IslandProductionPlanner_FieldsEfficiency = 0  # 0, 0.04, 0.12
     IslandProductionPlanner_OrchardEfficiency = 0  # 0, 0.04, 0.12
     IslandProductionPlanner_NurseryEfficiency = 0  # 0, 0.04, 0.12
