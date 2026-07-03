@@ -576,45 +576,45 @@
   },
   "AutoStart": {
     "_info": {
-      "name": "AutoStart._info.name",
-      "help": "AutoStart._info.help"
+      "name": "自動啟動",
+      "help": "WebUI 啟動後自動啟動指定配置"
     },
     "Enable": {
-      "name": "AutoStart.Enable.name",
-      "help": "AutoStart.Enable.help"
+      "name": "啟用自動啟動",
+      "help": "開啟後，WebUI 初始化完成後自動執行目前配置"
     },
     "Delay": {
-      "name": "AutoStart.Delay.name",
-      "help": "AutoStart.Delay.help",
-      "invalid_feedback": "AutoStart.Delay.invalid_feedback"
+      "name": "啟動延遲",
+      "help": "WebUI 啟動後等待 X 秒再啟動配置，範圍 0-600 秒",
+      "invalid_feedback": "請輸入 0-600 之間的整數（秒）"
     }
   },
   "LogCleaner": {
     "_info": {
-      "name": "LogCleaner._info.name",
-      "help": "LogCleaner._info.help"
+      "name": "日誌清理",
+      "help": "自動清理過期日誌檔案"
     },
     "Enable": {
-      "name": "LogCleaner.Enable.name",
-      "help": "LogCleaner.Enable.help"
+      "name": "啟用日誌清理",
+      "help": "開啟後按設定自動清理舊日誌"
     },
     "CleanOnStartup": {
-      "name": "LogCleaner.CleanOnStartup.name",
-      "help": "LogCleaner.CleanOnStartup.help"
+      "name": "啟動時清理",
+      "help": "啟動 ALAS 時立即執行一次日誌清理"
     },
     "ScheduledClean": {
-      "name": "LogCleaner.ScheduledClean.name",
-      "help": "LogCleaner.ScheduledClean.help"
+      "name": "啟用定時清理",
+      "help": "每天在指定時間自動執行日誌清理"
     },
     "ScheduledTime": {
-      "name": "LogCleaner.ScheduledTime.name",
-      "help": "LogCleaner.ScheduledTime.help",
-      "invalid_feedback": "LogCleaner.ScheduledTime.invalid_feedback"
+      "name": "定時清理時間",
+      "help": "每天執行日誌清理的時間，格式為 HH:MM（例如 03:00），輸入不合法時將重置為預設值 00:00",
+      "invalid_feedback": "請輸入正確的時間格式（HH:MM），例如：08:30"
     },
     "KeepDays": {
-      "name": "LogCleaner.KeepDays.name",
-      "help": "LogCleaner.KeepDays.help",
-      "invalid_feedback": "LogCleaner.KeepDays.invalid_feedback"
+      "name": "保留日誌天數",
+      "help": "保留最近 N 天內的日誌檔案，更早的將被刪除（範圍 1-365），輸入不合法時將重置為預設值 7",
+      "invalid_feedback": "請輸入 1-365 之間的整數"
     }
   },
   "DropRecord": {

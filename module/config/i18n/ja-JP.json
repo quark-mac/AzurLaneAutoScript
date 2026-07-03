@@ -576,45 +576,45 @@
   },
   "AutoStart": {
     "_info": {
-      "name": "AutoStart._info.name",
-      "help": "AutoStart._info.help"
+      "name": "自動起動",
+      "help": "WebUI 起動後に指定した設定を自動実行します"
     },
     "Enable": {
-      "name": "AutoStart.Enable.name",
-      "help": "AutoStart.Enable.help"
+      "name": "自動起動を有効化",
+      "help": "WebUI 初期化後に現在の設定を自動実行します"
     },
     "Delay": {
-      "name": "AutoStart.Delay.name",
-      "help": "AutoStart.Delay.help",
-      "invalid_feedback": "AutoStart.Delay.invalid_feedback"
+      "name": "起動遅延",
+      "help": "WebUI 起動後、設定を開始するまで X 秒待機します。範囲は 0-600 秒です",
+      "invalid_feedback": "0-600の整数を入力してください（秒）"
     }
   },
   "LogCleaner": {
     "_info": {
-      "name": "LogCleaner._info.name",
-      "help": "LogCleaner._info.help"
+      "name": "ログクリーナー",
+      "help": "期限切れのログファイルを自動的に削除します"
     },
     "Enable": {
-      "name": "LogCleaner.Enable.name",
-      "help": "LogCleaner.Enable.help"
+      "name": "ログクリーナーを有効化",
+      "help": "設定に従って古いログを自動的に削除します"
     },
     "CleanOnStartup": {
-      "name": "LogCleaner.CleanOnStartup.name",
-      "help": "LogCleaner.CleanOnStartup.help"
+      "name": "起動時に削除",
+      "help": "ALAS 起動時にログ削除を一度実行します"
     },
     "ScheduledClean": {
-      "name": "LogCleaner.ScheduledClean.name",
-      "help": "LogCleaner.ScheduledClean.help"
+      "name": "定期削除を有効化",
+      "help": "指定時刻に毎日ログ削除を実行します"
     },
     "ScheduledTime": {
-      "name": "LogCleaner.ScheduledTime.name",
-      "help": "LogCleaner.ScheduledTime.help",
-      "invalid_feedback": "LogCleaner.ScheduledTime.invalid_feedback"
+      "name": "定期削除時刻",
+      "help": "毎日のログ削除時刻。形式は HH:MM（例：03:00）。無効な入力は既定値 00:00 にリセットされます",
+      "invalid_feedback": "正しい時刻形式（HH:MM）を入力してください。例：08:30"
     },
     "KeepDays": {
-      "name": "LogCleaner.KeepDays.name",
-      "help": "LogCleaner.KeepDays.help",
-      "invalid_feedback": "LogCleaner.KeepDays.invalid_feedback"
+      "name": "ログ保持日数",
+      "help": "直近 N 日分のログファイルを保持し、それより古いものを削除します（範囲 1-365）。無効な入力は既定値 7 にリセットされます",
+      "invalid_feedback": "1-365の整数を入力してください"
     }
   },
   "DropRecord": {

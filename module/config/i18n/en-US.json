@@ -576,45 +576,45 @@
   },
   "AutoStart": {
     "_info": {
-      "name": "AutoStart._info.name",
-      "help": "AutoStart._info.help"
+      "name": "Auto Start",
+      "help": "Automatically start a selected config after WebUI launches"
     },
     "Enable": {
-      "name": "AutoStart.Enable.name",
-      "help": "AutoStart.Enable.help"
+      "name": "Enable Auto Start",
+      "help": "Automatically run the current config after WebUI initialization"
     },
     "Delay": {
-      "name": "AutoStart.Delay.name",
-      "help": "AutoStart.Delay.help",
-      "invalid_feedback": "AutoStart.Delay.invalid_feedback"
+      "name": "Startup Delay",
+      "help": "Wait X seconds after WebUI launch before starting the config, range 0-600 seconds",
+      "invalid_feedback": "Please enter an integer between 0-600 (seconds)"
     }
   },
   "LogCleaner": {
     "_info": {
-      "name": "LogCleaner._info.name",
-      "help": "LogCleaner._info.help"
+      "name": "Log Cleaner",
+      "help": "Automatically clean expired log files"
     },
     "Enable": {
-      "name": "LogCleaner.Enable.name",
-      "help": "LogCleaner.Enable.help"
+      "name": "Enable Log Cleaner",
+      "help": "Automatically clean old logs according to settings"
     },
     "CleanOnStartup": {
-      "name": "LogCleaner.CleanOnStartup.name",
-      "help": "LogCleaner.CleanOnStartup.help"
+      "name": "Clean On Startup",
+      "help": "Run log cleanup once when ALAS starts"
     },
     "ScheduledClean": {
-      "name": "LogCleaner.ScheduledClean.name",
-      "help": "LogCleaner.ScheduledClean.help"
+      "name": "Enable Scheduled Clean",
+      "help": "Run log cleanup daily at the specified time"
     },
     "ScheduledTime": {
-      "name": "LogCleaner.ScheduledTime.name",
-      "help": "LogCleaner.ScheduledTime.help",
-      "invalid_feedback": "LogCleaner.ScheduledTime.invalid_feedback"
+      "name": "Scheduled Clean Time",
+      "help": "Daily log cleanup time in HH:MM format, e.g. 03:00. Invalid input will reset to default 00:00",
+      "invalid_feedback": "Please enter correct time format (HH:MM), e.g.: 08:30"
     },
     "KeepDays": {
-      "name": "LogCleaner.KeepDays.name",
-      "help": "LogCleaner.KeepDays.help",
-      "invalid_feedback": "LogCleaner.KeepDays.invalid_feedback"
+      "name": "Log Retention Days",
+      "help": "Keep log files from the latest N days and delete older ones (range 1-365). Invalid input will reset to default 7",
+      "invalid_feedback": "Please enter an integer between 1-365"
     }
   },
   "DropRecord": {
