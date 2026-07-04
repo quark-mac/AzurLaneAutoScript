@@ -3057,7 +3057,8 @@
       "Running": "Running",
       "Inactive": "Inactive",
       "Warning": "Warning",
-      "Updating": "Waiting Update"
+      "Updating": "Waiting Update",
+      "CommissionShipInsufficient": "Running (Commission ships insufficient)"
     },
     "MenuAlas": {
       "Overview": "Overview",

@@ -3057,7 +3057,8 @@
       "Running": "运行中",
       "Inactive": "闲置",
       "Warning": "发生错误",
-      "Updating": "等待更新"
+      "Updating": "等待更新",
+      "CommissionShipInsufficient": "运行中（委托舰船不足）"
     },
     "MenuAlas": {
       "Overview": "总览",

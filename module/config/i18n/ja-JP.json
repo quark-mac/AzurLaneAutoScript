@@ -3057,7 +3057,8 @@
       "Running": "実行中",
       "Inactive": "実行中止",
       "Warning": "エラー発生",
-      "Updating": "アップデータを待っています"
+      "Updating": "アップデータを待っています",
+      "CommissionShipInsufficient": "実行中（委託の艦船不足）"
     },
     "MenuAlas": {
       "Overview": "概要",
