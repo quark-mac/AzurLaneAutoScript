@@ -1514,6 +1514,16 @@
     "DoMajorCommission": {
       "name": "Commission.DoMajorCommission.name",
       "help": "Commission.DoMajorCommission.help"
+    },
+    "EnableShipCheck": {
+      "name": "艦船不足検出を有効化",
+      "help": "おすすめを押した後、開始ボタンが長時間表示されない場合、条件を満たす艦船がいないと判断してこの委託をスキップします",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "艦船不足検出タイムアウト",
+      "help": "おすすめを押した後、開始ボタンの表示を待つ最大時間（秒）。タイムアウト後は現在の委託をスキップします"
     }
   },
   "Tactical": {

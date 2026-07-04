@@ -1514,6 +1514,16 @@
     "DoMajorCommission": {
       "name": "Do Major Commissions",
       "help": "1200 oil commission is now outdated, the yield is very low, it is recommended to disable"
+    },
+    "EnableShipCheck": {
+      "name": "Enable Ship Insufficient Check",
+      "help": "After clicking Recommend, if the Start button does not appear for a long time, treat it as no eligible ships and skip this commission",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "Ship Check Timeout",
+      "help": "Maximum time to wait for the Start button after clicking Recommend (seconds). Skip the current commission after timeout"
     }
   },
   "Tactical": {
