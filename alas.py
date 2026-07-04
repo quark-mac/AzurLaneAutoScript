@@ -517,39 +517,6 @@ class AzurLaneAutoScript:
             mode=self.config.Campaign_Mode,
         )
 
-    def island_freebie(self):
-        from module.island.freebie import IslandFreebie
-        IslandFreebie(config=self.config, device=self.device).run()
-
-    def island_season_task(self):
-        from module.island.season_task import IslandSeasonTaskHandler
-
-        IslandSeasonTaskHandler(config=self.config, device=self.device).run()
-
-    def island_collect(self):
-        from module.island.collect import IslandCollect
-        IslandCollect(config=self.config, device=self.device).run()
-
-    def island_production(self):
-        from module.island.production import IslandProduction
-        IslandProduction(config=self.config, device=self.device).run()
-
-    def island_freebie(self):
-        from module.island.freebie import IslandFreebie
-        IslandFreebie(config=self.config, device=self.device).run()
-
-    def island_collect(self):
-        from module.island.collect import IslandCollect
-        IslandCollect(config=self.config, device=self.device).run()
-
-    def island_season_task(self):
-        from module.island.season_task import IslandSeasonTask
-        IslandSeasonTask(config=self.config, device=self.device).run()
-
-    def island_business(self):
-        from module.island.business import IslandBusiness
-        IslandBusiness(config=self.config, device=self.device).run()
-
     def island_production(self):
         from module.island.production import IslandProduction
         IslandProduction(config=self.config, device=self.device).run()

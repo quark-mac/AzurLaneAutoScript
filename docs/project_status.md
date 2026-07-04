@@ -1,15 +1,16 @@
 # 项目状态报告
 
-> 最后更新：2026-06-18
+> 最后更新：2026-07-04
 
 ---
 
 ## 当前状态
 
-这个 fork 目前采用保留 Git 历史的 upstream merge 模型：
+这个 fork 目前采用保留 Git 历史的 upstream merge 模型，并在自动推送前执行本地功能健康检查：
 
 - `master` 跟随 `upstream/main` 自动 merge 更新
-- 无冲突时 GitHub Actions 自动推送，失败时才人工介入
+- merge 成功后先验证配置生成、Python 编译和自定义功能入口
+- 无冲突且验证通过时 GitHub Actions 自动推送，失败时才人工介入
 
 换句话说，现在维护重点是尽量让普通 merge 自动通过；真正冲突时再手动处理。
 
@@ -35,8 +36,9 @@
 | 自动同步脚本 | `.github/workflows/sync-upstream.yml` |
 | GitHub Actions | `.github/workflows/sync-upstream.yml` |
 | 同步策略 | 普通 `git merge upstream/main` |
-| 成功行为 | 自动推送到 `master` |
-| 失败行为 | 创建 Issue，人工处理 |
+| 成功行为 | 验证通过后自动推送到 `master` |
+| 失败行为 | 创建/更新 Issue，人工处理 |
+| 健康检查 | `scripts/check_custom_features.py` |
 
 ---
 
@@ -45,6 +47,7 @@
 - 保留本地输入验证系统
 - 保留自动启动、日志清理、自定义状态等本地功能
 - 保留 Git 历史，兼容 ALAS 自带更新逻辑
+- 自动检查关键本地配置、i18n、任务入口和功能文件是否仍存在
 
 ---
 
@@ -67,6 +70,7 @@
 - 策略：普通 merge，保留历史
 - 文档：`docs/upstream-sync-guide.md`
 - 工作流：`.github/workflows/sync-upstream.yml`
+- 健康检查：`scripts/check_custom_features.py`
 
 ---
 
@@ -80,6 +84,7 @@
 | `module/config/i18n/*.json` | 多语言文案 |
 | `config/template.json` | 默认配置模板 |
 | `.github/workflows/sync-upstream.yml` | 自动同步工作流 |
+| `scripts/check_custom_features.py` | 自定义功能健康检查 |
 
 ---
 
@@ -87,7 +92,7 @@
 
 - 生成文件不要手改，优先改源 YAML / 代码后再生成
 - 不要使用会自动重写 `master` 历史的同步策略，否则 ALAS 自带更新可能失败
-- 如果自动 merge 失败，说明本地定制和 upstream 已经真的撞上了，需要人工判断
+- 如果自动 merge 或健康检查失败，说明本地定制和 upstream 已经真的撞上了，需要人工判断
 
 ---
 
@@ -103,5 +108,8 @@
 # 手动同步 upstream
 git fetch upstream
 git merge upstream/main
+./toolkit/python.exe -c "from module.config.config_updater import ConfigGenerator; ConfigGenerator().generate()"
+./toolkit/python.exe scripts/check_custom_features.py
+git diff --check
 git push origin master
 ```

@@ -27,6 +27,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install verification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cached-property pyyaml
+
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/guoh064/AzurLaneAutoScript.git || true
@@ -54,8 +64,19 @@ jobs:
           git merge --no-ff upstream/main -m "Merge upstream main"
         continue-on-error: true
 
-      - name: Push clean merge
+      - name: Verify merged tree
+        id: verify
         if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success'
+        run: |
+          python -m compileall -q gui.py alas.py module
+          python -c "from module.config.config_updater import ConfigGenerator; ConfigGenerator().generate()"
+          git diff --check
+          git diff --exit-code module/config/argument/args.json module/config/argument/menu.json module/config/config_generated.py module/config/i18n/zh-CN.json module/config/i18n/en-US.json module/config/i18n/ja-JP.json module/config/i18n/zh-TW.json
+          python scripts/check_custom_features.py
+        continue-on-error: true
+
+      - name: Push clean merge
+        if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success' && steps.verify.outcome == 'success'
         run: |
           git push origin master
 
@@ -64,12 +85,33 @@ jobs:
         run: |
           git merge --abort || true
 
-      - name: Create issue on conflict
-        if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'failure'
+      - name: Reset failed verification
+        if: steps.check.outputs.has_updates == 'true' && steps.merge.outcome == 'success' && steps.verify.outcome == 'failure'
+        run: |
+          git reset --hard origin/master
+
+      - name: Create issue on sync failure
+        if: steps.check.outputs.has_updates == 'true' && (steps.merge.outcome == 'failure' || steps.verify.outcome == 'failure')
         uses: actions/github-script@v7
         with:
           script: |
-            const title = '⚠️ Upstream sync failed - Manual intervention required';
+            const title = 'Upstream sync failed - Manual intervention required';
+            const reason = '${{ steps.merge.outcome }}' === 'failure'
+              ? 'The automatic upstream merge failed due to conflicts.'
+              : 'The automatic upstream merge succeeded, but verification failed.';
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'sync-conflict',
+                color: 'd73a4a',
+                description: 'Automatic upstream sync requires manual intervention'
+              });
+            } catch (error) {
+              if (error.status !== 422) {
+                throw error;
+              }
+            }
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -83,13 +125,13 @@ jobs:
                 repo: context.repo.repo,
                 title: title,
                 labels: ['sync-conflict'],
-                body: 'The automatic upstream merge failed due to conflicts.\n\n**Please manually sync using:**\n\n```bash\ngit fetch upstream\ngit merge upstream/main\n# Resolve conflicts manually\ngit add <conflicted-files>\ngit commit\ngit push origin master\n```\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+                body: `${reason}\n\n**Please manually sync using:**\n\n\`\`\`bash\ngit fetch upstream\ngit merge upstream/main\n# Resolve conflicts or verification failures\npython -c "from module.config.config_updater import ConfigGenerator; ConfigGenerator().generate()"\npython scripts/check_custom_features.py\ngit diff --check\ngit add <resolved-files>\ngit commit\ngit push origin master\n\`\`\`\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
               });
             } else {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: existingIssue.number,
-                body: 'Another sync attempt failed.\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+                body: `${reason}\n\n**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
               });
             }
