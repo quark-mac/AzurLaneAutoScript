@@ -1887,6 +1887,46 @@
         "display": "display"
       }
     },
+    "Submarine": {
+      "Fleet": {
+        "type": "select",
+        "value": 0,
+        "option": [
+          0,
+          1,
+          2
+        ]
+      },
+      "Mode": {
+        "type": "select",
+        "value": "do_not_use",
+        "option": [
+          "do_not_use",
+          "hunt_only"
+        ],
+        "display": "display"
+      },
+      "AutoSearchMode": {
+        "type": "select",
+        "value": "sub_standby",
+        "option": [
+          "sub_standby",
+          "sub_auto_call"
+        ],
+        "display": "hide"
+      },
+      "DistanceToBoss": {
+        "type": "select",
+        "value": "use_open_ocean_support",
+        "option": [
+          "to_boss_position",
+          "1_grid_to_boss",
+          "2_grid_to_boss",
+          "use_open_ocean_support"
+        ],
+        "display": "hide"
+      }
+    },
     "Emotion": {
       "Mode": {
         "type": "select",
@@ -1936,13 +1976,14 @@
       },
       "Fleet2Value": {
         "type": "input",
-        "value": 119
+        "value": 119,
+        "display": "hide"
       },
       "Fleet2Record": {
         "type": "datetime",
         "value": "2020-01-01 00:00:00",
         "validate": "datetime",
-        "display": "disabled"
+        "display": "hide"
       },
       "Fleet2Control": {
         "type": "select",
@@ -1968,46 +2009,6 @@
       "Fleet2Oath": {
         "type": "checkbox",
         "value": false,
-        "display": "hide"
-      }
-    },
-    "Submarine": {
-      "Fleet": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2
-        ]
-      },
-      "Mode": {
-        "type": "select",
-        "value": "do_not_use",
-        "option": [
-          "do_not_use",
-          "hunt_only"
-        ],
-        "display": "display"
-      },
-      "AutoSearchMode": {
-        "type": "select",
-        "value": "sub_standby",
-        "option": [
-          "sub_standby",
-          "sub_auto_call"
-        ],
-        "display": "hide"
-      },
-      "DistanceToBoss": {
-        "type": "select",
-        "value": "use_open_ocean_support",
-        "option": [
-          "to_boss_position",
-          "1_grid_to_boss",
-          "2_grid_to_boss",
-          "use_open_ocean_support"
-        ],
         "display": "hide"
       }
     },
@@ -3713,6 +3714,7 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
+          "coalition_20230323",
           "coalition_20260122"
         ],
         "option_cn": [
@@ -3725,9 +3727,10 @@
           "coalition_20260122"
         ],
         "option_tw": [
-          "coalition_20260122"
+          "coalition_20230323"
         ],
         "option_bold": [
+          "coalition_20230323",
           "coalition_20260122"
         ]
       },
@@ -3769,12 +3772,12 @@
     "Coalition": {
       "Mode": {
         "type": "select",
-        "value": "hard",
+        "value": "tc3",
         "option": [
-          "easy",
-          "normal",
-          "hard",
-          "sp"
+          "tc1",
+          "tc2",
+          "tc3",
+          "ex"
         ]
       },
       "Fleet": {
@@ -7003,6 +7006,7 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
+          "coalition_20230323",
           "coalition_20260122"
         ],
         "option_cn": [
@@ -7015,9 +7019,10 @@
           "coalition_20260122"
         ],
         "option_tw": [
-          "coalition_20260122"
+          "coalition_20230323"
         ],
         "option_bold": [
+          "coalition_20230323",
           "coalition_20260122"
         ]
       },
@@ -7061,10 +7066,11 @@
         "type": "select",
         "value": "sp",
         "option": [
-          "easy",
-          "normal",
-          "hard",
-          "sp"
+          "tc1",
+          "tc2",
+          "tc3",
+          "sp",
+          "ex"
         ],
         "display": "hide"
       },
@@ -7617,6 +7623,10 @@
       "FortChoreMeowfficer": {
         "type": "checkbox",
         "value": true
+      },
+      "OverflowCoins": {
+        "type": "input",
+        "value": -1
       }
     },
     "MeowfficerTrain": {
