@@ -43,17 +43,6 @@ class GeneratedConfig:
     Optimization_TaskHoardingDuration = 0
     Optimization_WhenTaskQueueEmpty = 'goto_main'  # stay_there, goto_main, close_game
 
-    # Group `AutoStart`
-    AutoStart_Enable = False
-    AutoStart_Delay = 10
-
-    # Group `LogCleaner`
-    LogCleaner_Enable = False
-    LogCleaner_CleanOnStartup = True
-    LogCleaner_ScheduledClean = False
-    LogCleaner_ScheduledTime = '00:00'
-    LogCleaner_KeepDays = 7
-
     # Group `DropRecord`
     DropRecord_SaveFolder = './screenshots'
     DropRecord_AzurStatsID = None
@@ -186,20 +175,17 @@ class GeneratedConfig:
     Raid_Mode = 'hard'  # easy, normal, hard, ex
     Raid_UseTicket = False
 
-    # Group `RaidScuttle`
-    RaidScuttle_Sacrifice = 'vanguard'  # vanguard, flagship
-
     # Group `RaidDaily`
     RaidDaily_StageFilter = 'hard > normal > easy'
 
     # Group `Hospital`
     Hospital_UseRecommendFleet = True
 
-    # Group `MaritimeEscort`
-    MaritimeEscort_Enable = True
+    # Group `Scuttle`
+    Scuttle_Sacrifice = 'vanguard'  # vanguard, flagship
 
     # Group `Coalition`
-    Coalition_Mode = 'tc3'  # tc1, tc2, tc3, sp, ex
+    Coalition_Mode = 'hard'  # easy, normal, hard, sp
     Coalition_Fleet = 'single'  # single, multi
 
     # Group `EventShop`
@@ -212,8 +198,6 @@ class GeneratedConfig:
     Commission_PresetFilter = 'cube'  # cube, cube_24h, chip, chip_24h, oil, custom
     Commission_CustomFilter = 'DailyEvent > Gem-4 > Gem-2 > Gem-8 > ExtraCube-0:30\n> UrgentCube-1:30 > UrgentCube-1:45 > UrgentCube-3\n> ExtraDrill-5:20 > ExtraDrill-2 > ExtraDrill-3:20\n> UrgentCube-2:15 > UrgentCube-4\n> ExtraDrill-1 > UrgentCube-6 > ExtraCube-1:30\n> ExtraDrill-2:40 > ExtraDrill-0:20\n> Major > DailyChip > DailyResource\n> ExtraPart-0:30 > ExtraOil-1 > UrgentBox-6\n> ExtraCube-3 > ExtraPart-1 > UrgentBox-3\n> ExtraCube-4 > ExtraPart-1:30 > ExtraOil-4\n> UrgentBox-1 > ExtraCube-5 > UrgentBox-1\n> ExtraCube-8 > ExtraOil-8\n> UrgentDrill-4 > UrgentDrill-2:40 > UrgentDrill-2\n> UrgentDrill-1 > UrgentDrill-1:30 > UrgentDrill-1:10\n> Extra-0:20 > Extra-0:30 > Extra-1:00 > Extra-1:30 > Extra-2:00\n> shortest'
     Commission_DoMajorCommission = False
-    Commission_EnableShipCheck = True  # True, False
-    Commission_ShipCheckTimeout = 15
 
     # Group `Tactical`
     Tactical_TacticalFilter = 'SameT4 > SameT3 > SameT2 > SameT1\n> BlueT2 > YellowT2 > RedT2\n> BlueT3 > YellowT3 > RedT3\n> BlueT4 > YellowT4 > RedT4\n> BlueT1 > YellowT1 > RedT1\n> first'
@@ -434,7 +418,7 @@ class GeneratedConfig:
 
     # Group `OpsiShop`
     OpsiShop_PresetFilter = 'max_benefit_meta'  # max_benefit, max_benefit_meta, no_meta, all, custom
-    OpsiShop_CustomFilter = 'LoggerAbyssalT6 > LoggerAbyssalT5 > LoggerObscure > LoggerAbyssalT4 > ActionPoint > PurpleCoins\n> GearDesignPlanT3 > PlateRandomT4 > DevelopmentMaterialT3 > GearDesignPlanT2 > GearPart\n> OrdnanceTestingReportT3 > OrdnanceTestingReportT2 > DevelopmentMaterialT2 > OrdnanceTestingReportT1\n> METARedBook > CrystallizedHeatResistantSteel > NanoceramicAlloy > NeuroplasticProstheticArm > SupercavitationGenerator'
+    OpsiShop_CustomFilter = 'LoggerAbyssalT6 > LoggerAbyssalT5 > LoggerAbyssalT4 > LoggerObscureT6 > LoggerObscureT5 > LoggerObscureT4 > LoggerObscureT3 > ActionPoint > PurpleCoins\n> GearDesignPlanT3 > PlateRandomT4 > DevelopmentMaterialT3 > GearDesignPlanT2 > GearPart\n> OrdnanceTestingReportT3 > OrdnanceTestingReportT2 > DevelopmentMaterialT2 > OrdnanceTestingReportT1\n> METARedBook > CrystallizedHeatResistantSteel > NanoceramicAlloy > NeuroplasticProstheticArm > SupercavitationGenerator'
 
     # Group `OpsiVoucher`
     OpsiVoucher_Filter = 'LoggerAbyssal > LoggerObscure > Book > Coin > Fragment'
@@ -480,19 +464,24 @@ class GeneratedConfig:
 
     # Group `IslandRestaurant`
     IslandRestaurant_KoiGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_KoiWaitress = 'any'  # none, any, Chao_Ho, any+any, Chao_Ho+any
+    IslandRestaurant_KoiWaitress1 = 'any'  # none, any, Chao_Ho
+    IslandRestaurant_KoiWaitress2 = 'none'  # none, any, Chao_Ho
     IslandRestaurant_KoiMenu = '{}'
     IslandRestaurant_BearGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_BearWaitress = 'any'  # none, any, Cheshire, any+any, Cheshire+any
+    IslandRestaurant_BearWaitress1 = 'any'  # none, any, Cheshire
+    IslandRestaurant_BearWaitress2 = 'none'  # none, any, Cheshire
     IslandRestaurant_BearMenu = '{}'
     IslandRestaurant_EateryGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_EateryWaitress = 'any'  # none, any, Helena, Prinz_Eugen, any+any, Helena+any, Prinz_Eugen+any, Helena+Prinz_Eugen
+    IslandRestaurant_EateryWaitress1 = 'any'  # none, any, Helena, Prinz_Eugen
+    IslandRestaurant_EateryWaitress2 = 'none'  # none, any, Helena, Prinz_Eugen
     IslandRestaurant_EateryMenu = '{}'
     IslandRestaurant_GrillGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_GrillWaitress = 'any'  # none, any, August_von_Parseval, Prinz_Eugen, any+any, August_von_Parseval+any, Prinz_Eugen+any, August_von_Parseval+Prinz_Eugen
+    IslandRestaurant_GrillWaitress1 = 'any'  # none, any, August_von_Parseval, Prinz_Eugen
+    IslandRestaurant_GrillWaitress2 = 'none'  # none, any, August_von_Parseval, Prinz_Eugen
     IslandRestaurant_GrillMenu = '{}'
     IslandRestaurant_CafeGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_CafeWaitress = 'any'  # none, any, Cheshire, any+any, Cheshire+any
+    IslandRestaurant_CafeWaitress1 = 'any'  # none, any, Cheshire
+    IslandRestaurant_CafeWaitress2 = 'none'  # none, any, Cheshire
     IslandRestaurant_CafeMenu = '{}'
 
     # Group `IslandSeasonTask`

@@ -193,10 +193,6 @@ RaidScuttle:
   Fleet:
     Fleet1: 1
     Fleet1Formation: double_line
-    Fleet1Mode:
-      display: display
-      value: combat_manual
-      option: [ combat_manual, stand_still_in_the_middle, hide_in_bottom_left, hide_in_upper_left ]
     Fleet1Step: 3
     Fleet2: 2
     Fleet2Formation: double_line
@@ -211,6 +207,11 @@ RaidScuttle:
     AutoSearchMode: sub_standby
     DistanceToBoss: 2_grid_to_boss
   Emotion:
+    Mode:
+      type: lock
+      value: calculate_ignore
+      option: [ calculate_ignore ]
+      option_bold: [ calculate_ignore ]  
     Fleet1Control: prevent_yellow_face
     Fleet2Value: 119
     Fleet2Record: 2020-01-01 00:00:00
@@ -258,11 +259,6 @@ RaidDaily:
     Fleet2Control: prevent_yellow_face
     Fleet2Recover: not_in_dormitory
     Fleet2Oath: false
-MaritimeEscort:
-  Scheduler:
-    SuccessInterval: 30
-    FailureInterval: 30
-    ServerUpdate: 00:00
 Coalition:
   Scheduler:
     SuccessInterval: 30
@@ -278,13 +274,65 @@ Coalition:
     AmbushEvade: true
   Coalition:
     Mode:
-      option: [ tc1, tc2, tc3, ex ]
+      option: [ easy, normal, hard, sp ]
   StopCondition:
     MapAchievement: non_stop
     StageIncrease: false
     GetNewShip: false
     ReachLevel: 0
   Emotion:
+    Fleet2Value: 119
+    Fleet2Record: 2020-01-01 00:00:00
+    Fleet2Control: prevent_yellow_face
+    Fleet2Recover: not_in_dormitory
+    Fleet2Oath: false
+CoalitionScuttle:
+  Scheduler:
+    SuccessInterval: 30
+    FailureInterval: 30
+    ServerUpdate: 00:00
+  Campaign:
+    Name: dynamic
+    Mode: normal
+    UseClearMode: true
+    UseFleetLock: true
+    UseAutoSearch: false
+    Use2xBook: false
+    AmbushEvade: true
+  Coalition:
+    Fleet:
+      type: lock
+      value: multi
+      option: [ multi, ]
+      option_bold: [ multi, ]
+  StopCondition:
+    MapAchievement: non_stop
+    StageIncrease: false
+    GetNewShip: false
+    ReachLevel: 0
+  Fleet:
+    Fleet1: 1
+    Fleet1Formation: double_line
+    Fleet1Step: 3
+    Fleet2: 2
+    Fleet2Formation: double_line
+    Fleet2Mode: combat_auto
+    Fleet2Step: 3
+    FleetOrder: fleet1_all_fleet2_standby
+  Submarine:
+    Mode:
+      display: display
+      value: do_not_use
+      option: [ do_not_use, every_combat ]
+    AutoSearchMode: sub_standby
+    DistanceToBoss: use_open_ocean_support
+  Emotion:
+    Mode:
+      type: lock
+      value: calculate_ignore
+      option: [ calculate_ignore ]
+      option_bold: [ calculate_ignore ] 
+    Fleet1Control: prevent_yellow_face
     Fleet2Value: 119
     Fleet2Record: 2020-01-01 00:00:00
     Fleet2Control: prevent_yellow_face
@@ -327,6 +375,11 @@ EventShop:
 
 Commission:
   Scheduler:
+    Enable:
+      type: lock
+      value: true
+      option: [ true, ]
+      option_bold: [ true, ]
     SuccessInterval: 30-60
     FailureInterval: 30-60
     ServerUpdate: 00:00
@@ -337,6 +390,11 @@ Tactical:
     ServerUpdate: 00:00
 Research:
   Scheduler:
+    Enable:
+      type: lock
+      value: true
+      option: [ true, ]
+      option_bold: [ true, ]
     SuccessInterval: 30-60
     FailureInterval: 30-60
     ServerUpdate: 00:00
@@ -357,6 +415,11 @@ Guild:
     ServerUpdate: 00:00, 06:00, 12:00, 18:00, 21:00
 Reward:
   Scheduler:
+    Enable:
+      type: lock
+      value: true
+      option: [ true, ]
+      option_bold: [ true, ]
     SuccessInterval: 120-240
     FailureInterval: 120-240
     ServerUpdate: 00:00

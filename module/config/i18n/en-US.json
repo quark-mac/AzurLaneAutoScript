@@ -70,6 +70,10 @@
       "name": "Event General",
       "help": ""
     },
+    "Coalition": {
+      "name": "Authentic Horror Story",
+      "help": ""
+    },
     "Event": {
       "name": "Event",
       "help": ""
@@ -83,19 +87,15 @@
       "help": ""
     },
     "RaidScuttle": {
-      "name": "Task.RaidScuttle.name",
-      "help": "Task.RaidScuttle.help"
+      "name": "Raid Scuttle",
+      "help": ""
+    },
+    "CoalitionScuttle": {
+      "name": "Coalition Scuttle",
+      "help": ""
     },
     "Hospital": {
       "name": "Valley Hospital",
-      "help": ""
-    },
-    "Coalition": {
-      "name": "Frostfall",
-      "help": ""
-    },
-    "MaritimeEscort": {
-      "name": "Maritime Escort",
       "help": ""
     },
     "EventShop": {
@@ -105,6 +105,10 @@
     "WarArchives": {
       "name": "War Archives",
       "help": "Due to the lack of maintenance of war archives, continuous clear may not work normally, if Alas runs abnormally, Please manually finish clearing and use auto search"
+    },
+    "CoalitionSp": {
+      "name": "Authentic Horror Story SP",
+      "help": ""
     },
     "EventA": {
       "name": "Event Daily A",
@@ -128,10 +132,6 @@
     },
     "RaidDaily": {
       "name": "Raid Daily",
-      "help": ""
-    },
-    "CoalitionSp": {
-      "name": "Frostfall SP",
       "help": ""
     },
     "Commission": {
@@ -332,8 +332,7 @@
     },
     "NextRun": {
       "name": "Next Run",
-      "help": "Updated automatically after completing the task to set next scheduled run, typically not manually modified\nHowever you can force immediate scheduling if text field cleared",
-      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
+      "help": "Updated automatically after completing the task to set next scheduled run, typically not manually modified\nHowever you can force immediate scheduling if text field cleared"
     },
     "Command": {
       "name": "Command",
@@ -575,49 +574,6 @@
       "close_game": "Close Game"
     }
   },
-  "AutoStart": {
-    "_info": {
-      "name": "Auto Start",
-      "help": "Automatically start a selected config after WebUI launches"
-    },
-    "Enable": {
-      "name": "Enable Auto Start",
-      "help": "Automatically run the current config after WebUI initialization"
-    },
-    "Delay": {
-      "name": "Startup Delay",
-      "help": "Wait X seconds after WebUI launch before starting the config, range 0-600 seconds",
-      "invalid_feedback": "Please enter an integer between 0-600 (seconds)"
-    }
-  },
-  "LogCleaner": {
-    "_info": {
-      "name": "Log Cleaner",
-      "help": "Automatically clean expired log files"
-    },
-    "Enable": {
-      "name": "Enable Log Cleaner",
-      "help": "Automatically clean old logs according to settings"
-    },
-    "CleanOnStartup": {
-      "name": "Clean On Startup",
-      "help": "Run log cleanup once when ALAS starts"
-    },
-    "ScheduledClean": {
-      "name": "Enable Scheduled Clean",
-      "help": "Run log cleanup daily at the specified time"
-    },
-    "ScheduledTime": {
-      "name": "Scheduled Clean Time",
-      "help": "Daily log cleanup time in HH:MM format, e.g. 03:00. Invalid input will reset to default 00:00",
-      "invalid_feedback": "Please enter correct time format (HH:MM), e.g.: 08:30"
-    },
-    "KeepDays": {
-      "name": "Log Retention Days",
-      "help": "Keep log files from the latest N days and delete older ones (range 1-365). Invalid input will reset to default 7",
-      "invalid_feedback": "Please enter an integer between 1-365"
-    }
-  },
   "DropRecord": {
     "_info": {
       "name": "Drop Record Settings",
@@ -773,6 +729,7 @@
       "coalition_20250626": "The Neon City Investigator",
       "coalition_20251120": "DATE A LANE",
       "coalition_20260122": "Light & Shadow Fashion Shoot!",
+      "coalition_20260723": "Authentic Horror Story",
       "event_20200227_cn": "Northern Overture",
       "event_20200312_cn": "The Solomon Ranger Rerun",
       "event_20200326_cn": "Microlayer Medley",
@@ -1117,8 +1074,7 @@
     },
     "Fleet1Record": {
       "name": "Fleet 1 Emotion Record",
-      "help": "",
-      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
+      "help": ""
     },
     "Fleet1Control": {
       "name": "Fleet 1 Emotion Control",
@@ -1145,8 +1101,7 @@
     },
     "Fleet2Record": {
       "name": "Fleet 2 Emotion Record",
-      "help": "",
-      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
+      "help": ""
     },
     "Fleet2Control": {
       "name": "Fleet 2 Emotion Control",
@@ -1347,8 +1302,7 @@
     },
     "TimeLimit": {
       "name": "Event Time Limit",
-      "help": "When the local time exceeds the given value, disable all event tasks. '2020-01-01 00:00:00' means no limit and the time will be reset once it's triggered\nThis can prevent the occurrence of forgetting to disable event tasks after the event ends",
-      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
+      "help": "When the local time exceeds the given value, disable all event tasks. '2020-01-01 00:00:00' means no limit and the time will be reset once it's triggered\nThis can prevent the occurrence of forgetting to disable event tasks after the event ends"
     }
   },
   "TaskBalancer": {
@@ -1404,18 +1358,6 @@
       "help": ""
     }
   },
-  "RaidScuttle": {
-    "_info": {
-      "name": "RaidScuttle._info.name",
-      "help": "RaidScuttle._info.help"
-    },
-    "Sacrifice": {
-      "name": "RaidScuttle.Sacrifice.name",
-      "help": "RaidScuttle.Sacrifice.help",
-      "vanguard": "vanguard",
-      "flagship": "flagship"
-    }
-  },
   "RaidDaily": {
     "_info": {
       "name": "Raid Daily Settings",
@@ -1436,14 +1378,16 @@
       "help": "If turned off, you need to manually prepare fleets of all 15 stages in advance"
     }
   },
-  "MaritimeEscort": {
+  "Scuttle": {
     "_info": {
-      "name": "Maritime Escort",
-      "help": "Enter then retreat, get about 70% of maximum rewards"
-    },
-    "Enable": {
-      "name": "Enable maritime Escort",
+      "name": "Scuttle Settings",
       "help": ""
+    },
+    "Sacrifice": {
+      "name": "Ship to sacrifice",
+      "help": "",
+      "vanguard": "Vanguard",
+      "flagship": "Flagship"
     }
   },
   "Coalition": {
@@ -1454,11 +1398,10 @@
     "Mode": {
       "name": "Mode",
       "help": "SP needs to use event daily SP to run",
-      "tc1": "tc1",
-      "tc2": "tc2",
-      "tc3": "tc3",
-      "sp": "sp",
-      "ex": "ex"
+      "easy": "EASY",
+      "normal": "NORMAL",
+      "hard": "HARD",
+      "sp": "SP"
     },
     "Fleet": {
       "name": "Fleet",
@@ -1516,16 +1459,6 @@
     "DoMajorCommission": {
       "name": "Do Major Commissions",
       "help": "1200 oil commission is now outdated, the yield is very low, it is recommended to disable"
-    },
-    "EnableShipCheck": {
-      "name": "Enable Ship Insufficient Check",
-      "help": "After clicking Recommend, if the Start button does not appear for a long time, treat it as no eligible ships and skip this commission",
-      "True": "True",
-      "False": "False"
-    },
-    "ShipCheckTimeout": {
-      "name": "Ship Check Timeout",
-      "help": "Maximum time to wait for the Start button after clicking Recommend (seconds). Skip the current commission after timeout"
     }
   },
   "Tactical": {
@@ -1694,8 +1627,7 @@
     },
     "LastRun": {
       "name": "Last Check Time",
-      "help": "The time of the last check is recorded here to prevent the task from running repeatedly. Check interval is 6 days. This value is automatically recorded and generally does not need to be modified.",
-      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
+      "help": "The time of the last check is recorded here to prevent the task from running repeatedly. Check interval is 6 days. This value is automatically recorded and generally does not need to be modified."
     }
   },
   "Meowfficer": {
@@ -2092,8 +2024,7 @@
     },
     "LastRun": {
       "name": "Last Purchase Time",
-      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified.",
-      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
+      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified."
     }
   },
   "Shipyard": {
@@ -2128,8 +2059,7 @@
     },
     "LastRun": {
       "name": "Last Purchase Time",
-      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified.",
-      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
+      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified."
     }
   },
   "Gacha": {
@@ -2458,8 +2388,7 @@
     },
     "OpponentRefreshRecord": {
       "name": "Last Refresh Record",
-      "help": "",
-      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
+      "help": ""
     }
   },
   "Sos": {
@@ -2736,7 +2665,7 @@
   "IslandProduction": {
     "_info": {
       "name": "Island Production",
-      "help": ""
+      "help": "Users need to config Island Business' restaurant level and waitress, then config and run Tools - Island Production Planner to generate the production plan.\nAfter that the Island Production will run normally."
     },
     "HardFloorItems": {
       "name": "Hard Floor Items",
@@ -2792,14 +2721,19 @@
       "gold": "Gold",
       "diamond": "Diamond"
     },
-    "KoiWaitress": {
-      "name": "Golden Koi Restaurant Waitress",
-      "help": "None means not running this restaurant and Any means not restricting the choice of waitress, in which case the character with the highest manage level will be chosen\nIf a specific character is chosen but not available, the restaurant will fallback to Any instead of skipping the restaurant",
+    "KoiWaitress1": {
+      "name": "Golden Koi Restaurant Waitress 1",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
       "none": "None",
       "any": "Any",
-      "Chao_Ho": "Chao Ho",
-      "any+any": "Any + Any",
-      "Chao_Ho+any": "Chao Ho + Any"
+      "Chao_Ho": "Chao Ho"
+    },
+    "KoiWaitress2": {
+      "name": "Golden Koi Restaurant Waitress 2",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
+      "none": "None",
+      "any": "Any",
+      "Chao_Ho": "Chao Ho"
     },
     "KoiMenu": {
       "name": "Golden Koi Restaurant Menu",
@@ -2813,14 +2747,19 @@
       "gold": "Gold",
       "diamond": "Diamond"
     },
-    "BearWaitress": {
-      "name": "Polar Bear Teahouse Waitress",
-      "help": "None means not running this restaurant and Any means not restricting the choice of waitress, in which case the character with the highest manage level will be chosen\nIf a specific character is chosen but not available, the restaurant will fallback to Any instead of skipping the restaurant",
+    "BearWaitress1": {
+      "name": "Polar Bear Teahouse Waitress 1",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
       "none": "None",
       "any": "Any",
-      "Cheshire": "HMS Cheshire",
-      "any+any": "Any + Any",
-      "Cheshire+any": "HMS Cheshire + Any"
+      "Cheshire": "HMS Cheshire"
+    },
+    "BearWaitress2": {
+      "name": "Polar Bear Teahouse Waitress 2",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
+      "none": "None",
+      "any": "Any",
+      "Cheshire": "HMS Cheshire"
     },
     "BearMenu": {
       "name": "Polar Bear Teahouse Menu",
@@ -2834,17 +2773,21 @@
       "gold": "Gold",
       "diamond": "Diamond"
     },
-    "EateryWaitress": {
-      "name": "Manjuu Eatery Waitress",
-      "help": "None means not running this restaurant and Any means not restricting the choice of waitress, in which case the character with the highest manage level will be chosen\nIf a specific character is chosen but not available, the restaurant will fallback to Any instead of skipping the restaurant",
+    "EateryWaitress1": {
+      "name": "Manjuu Eatery Waitress 1",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
       "none": "None",
       "any": "Any",
       "Helena": "USS Helena",
-      "Prinz_Eugen": "KMS Prinz Eugen",
-      "any+any": "Any + Any",
-      "Helena+any": "USS Helena + Any",
-      "Prinz_Eugen+any": "KMS Prinz Eugen + Any",
-      "Helena+Prinz_Eugen": "USS Helena + KMS Prinz Eugen"
+      "Prinz_Eugen": "KMS Prinz Eugen"
+    },
+    "EateryWaitress2": {
+      "name": "Manjuu Eatery Waitress 2",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
+      "none": "None",
+      "any": "Any",
+      "Helena": "USS Helena",
+      "Prinz_Eugen": "KMS Prinz Eugen"
     },
     "EateryMenu": {
       "name": "Manjuu Eatery Menu",
@@ -2858,17 +2801,21 @@
       "gold": "Gold",
       "diamond": "Diamond"
     },
-    "GrillWaitress": {
-      "name": "Fin-'n'-Feather Grill Waitress",
-      "help": "",
+    "GrillWaitress1": {
+      "name": "Fin-'n'-Feather Grill Waitress 1",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
       "none": "None",
       "any": "Any",
       "August_von_Parseval": "KMS August von Parseval",
-      "Prinz_Eugen": "KMS Prinz Eugen",
-      "any+any": "Any + Any",
-      "August_von_Parseval+any": "KMS August von Parseval + Any",
-      "Prinz_Eugen+any": "KMS Prinz Eugen + Any",
-      "August_von_Parseval+Prinz_Eugen": "KMS August von Parseval + KMS Prinz Eugen"
+      "Prinz_Eugen": "KMS Prinz Eugen"
+    },
+    "GrillWaitress2": {
+      "name": "Fin-'n'-Feather Grill Waitress 2",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
+      "none": "None",
+      "any": "Any",
+      "August_von_Parseval": "KMS August von Parseval",
+      "Prinz_Eugen": "KMS Prinz Eugen"
     },
     "GrillMenu": {
       "name": "Fin-'n'-Feather Grill Menu",
@@ -2882,14 +2829,19 @@
       "gold": "Gold",
       "diamond": "Diamond"
     },
-    "CafeWaitress": {
-      "name": "Café Manjuu Waitress",
-      "help": "",
+    "CafeWaitress1": {
+      "name": "Café Manjuu Waitress 1",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
       "none": "None",
       "any": "Any",
-      "Cheshire": "HMS Cheshire",
-      "any+any": "Any + Any",
-      "Cheshire+any": "HMS Cheshire + Any"
+      "Cheshire": "HMS Cheshire"
+    },
+    "CafeWaitress2": {
+      "name": "Café Manjuu Waitress 2",
+      "help": "Two waitress slots are unordered. None leaves this slot empty; both None disables the restaurant. Any chooses the highest-management free character. Named choices are processed first and duplicate named choices are cleared.",
+      "none": "None",
+      "any": "Any",
+      "Cheshire": "HMS Cheshire"
     },
     "CafeMenu": {
       "name": "Café Manjuu Menu",
@@ -3066,8 +3018,7 @@
       "Running": "Running",
       "Inactive": "Inactive",
       "Warning": "Warning",
-      "Updating": "Waiting Update",
-      "CommissionShipInsufficient": "Running (Commission ships insufficient)"
+      "Updating": "Waiting Update"
     },
     "MenuAlas": {
       "Overview": "Overview",

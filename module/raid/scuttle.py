@@ -71,11 +71,11 @@ class RaidScuttleRun(RaidRun, RaidScuttleCombat, Dock):
 
     @property
     def change_vanguard(self):
-        return 'vanguard' in self.config.RaidScuttle_Sacrifice
+        return 'vanguard' in self.config.Scuttle_Sacrifice
 
     @property
     def change_flagship(self):
-        return 'flagship' in self.config.RaidScuttle_Sacrifice
+        return 'flagship' in self.config.Scuttle_Sacrifice
 
     def triggered_stop_condition(self, oil_check=False, pt_check=False, coin_check=False):
         if self.triggered_normal_end:

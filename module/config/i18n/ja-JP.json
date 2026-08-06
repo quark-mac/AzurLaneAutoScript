@@ -70,6 +70,10 @@
       "name": "イベント共通設定",
       "help": ""
     },
+    "Coalition": {
+      "name": "怪談実録",
+      "help": ""
+    },
     "Event": {
       "name": "イベント海域",
       "help": ""
@@ -86,16 +90,12 @@
       "name": "Task.RaidScuttle.name",
       "help": "Task.RaidScuttle.help"
     },
+    "CoalitionScuttle": {
+      "name": "Task.CoalitionScuttle.name",
+      "help": "Task.CoalitionScuttle.help"
+    },
     "Hospital": {
       "name": "病院探訪",
-      "help": ""
-    },
-    "Coalition": {
-      "name": "星霜海嵐",
-      "help": ""
-    },
-    "MaritimeEscort": {
-      "name": "Maritime Escort",
       "help": ""
     },
     "EventShop": {
@@ -104,6 +104,10 @@
     },
     "WarArchives": {
       "name": "作戦履歴",
+      "help": ""
+    },
+    "CoalitionSp": {
+      "name": "怪談実録SP",
       "help": ""
     },
     "EventA": {
@@ -128,10 +132,6 @@
     },
     "RaidDaily": {
       "name": "Raid Daily",
-      "help": ""
-    },
-    "CoalitionSp": {
-      "name": "星霜海嵐SP",
       "help": ""
     },
     "Commission": {
@@ -332,8 +332,7 @@
     },
     "NextRun": {
       "name": "Scheduler.NextRun.name",
-      "help": "Scheduler.NextRun.help",
-      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
+      "help": "Scheduler.NextRun.help"
     },
     "Command": {
       "name": "Scheduler.Command.name",
@@ -575,49 +574,6 @@
       "close_game": "close_game"
     }
   },
-  "AutoStart": {
-    "_info": {
-      "name": "自動起動",
-      "help": "WebUI 起動後に指定した設定を自動実行します"
-    },
-    "Enable": {
-      "name": "自動起動を有効化",
-      "help": "WebUI 初期化後に現在の設定を自動実行します"
-    },
-    "Delay": {
-      "name": "起動遅延",
-      "help": "WebUI 起動後、設定を開始するまで X 秒待機します。範囲は 0-600 秒です",
-      "invalid_feedback": "0-600の整数を入力してください（秒）"
-    }
-  },
-  "LogCleaner": {
-    "_info": {
-      "name": "ログクリーナー",
-      "help": "期限切れのログファイルを自動的に削除します"
-    },
-    "Enable": {
-      "name": "ログクリーナーを有効化",
-      "help": "設定に従って古いログを自動的に削除します"
-    },
-    "CleanOnStartup": {
-      "name": "起動時に削除",
-      "help": "ALAS 起動時にログ削除を一度実行します"
-    },
-    "ScheduledClean": {
-      "name": "定期削除を有効化",
-      "help": "指定時刻に毎日ログ削除を実行します"
-    },
-    "ScheduledTime": {
-      "name": "定期削除時刻",
-      "help": "毎日のログ削除時刻。形式は HH:MM（例：03:00）。無効な入力は既定値 00:00 にリセットされます",
-      "invalid_feedback": "正しい時刻形式（HH:MM）を入力してください。例：08:30"
-    },
-    "KeepDays": {
-      "name": "ログ保持日数",
-      "help": "直近 N 日分のログファイルを保持し、それより古いものを削除します（範囲 1-365）。無効な入力は既定値 7 にリセットされます",
-      "invalid_feedback": "1-365の整数を入力してください"
-    }
-  },
   "DropRecord": {
     "_info": {
       "name": "DropRecord._info.name",
@@ -773,6 +729,7 @@
       "coalition_20250626": "ネオンシティの探索者",
       "coalition_20251120": "DATE A LANE",
       "coalition_20260122": "特集写真-撮影進行中",
+      "coalition_20260723": "怪談実録",
       "event_20200227_cn": "凍絶の北海",
       "event_20200312_cn": "南洋に靡く硝煙（復刻）",
       "event_20200326_cn": "闇靄払う銀翼",
@@ -1117,8 +1074,7 @@
     },
     "Fleet1Record": {
       "name": "Emotion.Fleet1Record.name",
-      "help": "Emotion.Fleet1Record.help",
-      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
+      "help": "Emotion.Fleet1Record.help"
     },
     "Fleet1Control": {
       "name": "Emotion.Fleet1Control.name",
@@ -1145,8 +1101,7 @@
     },
     "Fleet2Record": {
       "name": "Emotion.Fleet2Record.name",
-      "help": "Emotion.Fleet2Record.help",
-      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
+      "help": "Emotion.Fleet2Record.help"
     },
     "Fleet2Control": {
       "name": "Emotion.Fleet2Control.name",
@@ -1347,8 +1302,7 @@
     },
     "TimeLimit": {
       "name": "EventGeneral.TimeLimit.name",
-      "help": "EventGeneral.TimeLimit.help",
-      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
+      "help": "EventGeneral.TimeLimit.help"
     }
   },
   "TaskBalancer": {
@@ -1404,18 +1358,6 @@
       "help": "Raid.UseTicket.help"
     }
   },
-  "RaidScuttle": {
-    "_info": {
-      "name": "RaidScuttle._info.name",
-      "help": "RaidScuttle._info.help"
-    },
-    "Sacrifice": {
-      "name": "RaidScuttle.Sacrifice.name",
-      "help": "RaidScuttle.Sacrifice.help",
-      "vanguard": "vanguard",
-      "flagship": "flagship"
-    }
-  },
   "RaidDaily": {
     "_info": {
       "name": "RaidDaily._info.name",
@@ -1436,14 +1378,16 @@
       "help": "Hospital.UseRecommendFleet.help"
     }
   },
-  "MaritimeEscort": {
+  "Scuttle": {
     "_info": {
-      "name": "MaritimeEscort._info.name",
-      "help": "MaritimeEscort._info.help"
+      "name": "Scuttle._info.name",
+      "help": "Scuttle._info.help"
     },
-    "Enable": {
-      "name": "MaritimeEscort.Enable.name",
-      "help": "MaritimeEscort.Enable.help"
+    "Sacrifice": {
+      "name": "Scuttle.Sacrifice.name",
+      "help": "Scuttle.Sacrifice.help",
+      "vanguard": "vanguard",
+      "flagship": "flagship"
     }
   },
   "Coalition": {
@@ -1454,11 +1398,10 @@
     "Mode": {
       "name": "Coalition.Mode.name",
       "help": "Coalition.Mode.help",
-      "tc1": "tc1",
-      "tc2": "tc2",
-      "tc3": "tc3",
-      "sp": "sp",
-      "ex": "ex"
+      "easy": "easy",
+      "normal": "normal",
+      "hard": "hard",
+      "sp": "sp"
     },
     "Fleet": {
       "name": "Coalition.Fleet.name",
@@ -1516,16 +1459,6 @@
     "DoMajorCommission": {
       "name": "Commission.DoMajorCommission.name",
       "help": "Commission.DoMajorCommission.help"
-    },
-    "EnableShipCheck": {
-      "name": "艦船不足検出を有効化",
-      "help": "おすすめを押した後、開始ボタンが長時間表示されない場合、条件を満たす艦船がいないと判断してこの委託をスキップします",
-      "True": "True",
-      "False": "False"
-    },
-    "ShipCheckTimeout": {
-      "name": "艦船不足検出タイムアウト",
-      "help": "おすすめを押した後、開始ボタンの表示を待つ最大時間（秒）。タイムアウト後は現在の委託をスキップします"
     }
   },
   "Tactical": {
@@ -1694,8 +1627,7 @@
     },
     "LastRun": {
       "name": "BuyFurniture.LastRun.name",
-      "help": "BuyFurniture.LastRun.help",
-      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
+      "help": "BuyFurniture.LastRun.help"
     }
   },
   "Meowfficer": {
@@ -2092,8 +2024,7 @@
     },
     "LastRun": {
       "name": "ShipyardDr.LastRun.name",
-      "help": "ShipyardDr.LastRun.help",
-      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
+      "help": "ShipyardDr.LastRun.help"
     }
   },
   "Shipyard": {
@@ -2128,8 +2059,7 @@
     },
     "LastRun": {
       "name": "Shipyard.LastRun.name",
-      "help": "Shipyard.LastRun.help",
-      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
+      "help": "Shipyard.LastRun.help"
     }
   },
   "Gacha": {
@@ -2458,8 +2388,7 @@
     },
     "OpponentRefreshRecord": {
       "name": "Exercise.OpponentRefreshRecord.name",
-      "help": "Exercise.OpponentRefreshRecord.help",
-      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
+      "help": "Exercise.OpponentRefreshRecord.help"
     }
   },
   "Sos": {
@@ -2792,14 +2721,19 @@
       "gold": "ゴールド",
       "diamond": "ダイヤモンド"
     },
-    "KoiWaitress": {
-      "name": "有魚飯店のウェイトレス",
-      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
-      "none": "なし",
+    "KoiWaitress1": {
+      "name": "有魚飯店の給仕1",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
       "any": "任意",
-      "Chao_Ho": "肇和",
-      "any+any": "任意 + 任意",
-      "Chao_Ho+any": "肇和 + 任意"
+      "Chao_Ho": "肇和"
+    },
+    "KoiWaitress2": {
+      "name": "有魚飯店の給仕2",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
+      "any": "任意",
+      "Chao_Ho": "肇和"
     },
     "KoiMenu": {
       "name": "有魚飯店のメニュー",
@@ -2813,14 +2747,19 @@
       "gold": "ゴールド",
       "diamond": "ダイヤモンド"
     },
-    "BearWaitress": {
-      "name": "白クマ茶房のウェイトレス",
-      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
-      "none": "なし",
+    "BearWaitress1": {
+      "name": "白クマ茶房の給仕1",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
       "any": "任意",
-      "Cheshire": "チェシャー",
-      "any+any": "任意 + 任意",
-      "Cheshire+any": "チェシャー + 任意"
+      "Cheshire": "チェシャー"
+    },
+    "BearWaitress2": {
+      "name": "白クマ茶房の給仕2",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
+      "any": "任意",
+      "Cheshire": "チェシャー"
     },
     "BearMenu": {
       "name": "白クマ茶房のメニュー",
@@ -2834,17 +2773,21 @@
       "gold": "ゴールド",
       "diamond": "ダイヤモンド"
     },
-    "EateryWaitress": {
-      "name": "饅頭軽食のウェイトレス",
-      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
-      "none": "なし",
+    "EateryWaitress1": {
+      "name": "饅頭軽食の給仕1",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
       "any": "任意",
       "Helena": "ヘレナ",
-      "Prinz_Eugen": "プリンツ・オイゲン",
-      "any+any": "任意 + 任意",
-      "Helena+any": "ヘレナ + 任意",
-      "Prinz_Eugen+any": "プリンツ・オイゲン + 任意",
-      "Helena+Prinz_Eugen": "ヘレナ + プリンツ・オイゲン"
+      "Prinz_Eugen": "プリンツ・オイゲン"
+    },
+    "EateryWaitress2": {
+      "name": "饅頭軽食の給仕2",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
+      "any": "任意",
+      "Helena": "ヘレナ",
+      "Prinz_Eugen": "プリンツ・オイゲン"
     },
     "EateryMenu": {
       "name": "饅頭軽食のメニュー",
@@ -2858,17 +2801,21 @@
       "gold": "ゴールド",
       "diamond": "ダイヤモンド"
     },
-    "GrillWaitress": {
-      "name": "烏魚焼肉のウェイトレス",
-      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
-      "none": "なし",
+    "GrillWaitress1": {
+      "name": "烏魚焼肉の給仕1",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
       "any": "任意",
-      "August_von_Parseval": "アウグスト·フォン·パーセヴァル",
-      "Prinz_Eugen": "プリンツ・オイゲン",
-      "any+any": "任意 + 任意",
-      "August_von_Parseval+any": "アウグスト·フォン·パーセヴァル + 任意",
-      "Prinz_Eugen+any": "プリンツ・オイゲン + 任意",
-      "August_von_Parseval+Prinz_Eugen": "アウグスト·フォン·パーセヴァル + プリンツ・オイゲン"
+      "August_von_Parseval": "アウグスト・フォン・パーセヴァル",
+      "Prinz_Eugen": "プリンツ・オイゲン"
+    },
+    "GrillWaitress2": {
+      "name": "烏魚焼肉の給仕2",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
+      "any": "任意",
+      "August_von_Parseval": "アウグスト・フォン・パーセヴァル",
+      "Prinz_Eugen": "プリンツ・オイゲン"
     },
     "GrillMenu": {
       "name": "烏魚焼肉のメニュー",
@@ -2882,14 +2829,19 @@
       "gold": "ゴールド",
       "diamond": "ダイヤモンド"
     },
-    "CafeWaitress": {
-      "name": "饅頭カフェのウェイトレス",
-      "help": "任意の場合、最も管理レベルが高い艦船が選択される",
-      "none": "なし",
+    "CafeWaitress1": {
+      "name": "饅頭カフェの給仕1",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
       "any": "任意",
-      "Cheshire": "チェシャー",
-      "any+any": "任意 + 任意",
-      "Cheshire+any": "チェシャー + 任意"
+      "Cheshire": "チェシャー"
+    },
+    "CafeWaitress2": {
+      "name": "饅頭カフェの給仕2",
+      "help": "2つの給仕スロットに順序はありません。無は空きスロット、両方が無ならレストランを停止します。任意は管理レベルが最も高い空きキャラクターを選びます。指定キャラクターを優先し、重複した指定は消去します。",
+      "none": "無",
+      "any": "任意",
+      "Cheshire": "チェシャー"
     },
     "CafeMenu": {
       "name": "饅頭カフェのメニュー",
@@ -3066,8 +3018,7 @@
       "Running": "実行中",
       "Inactive": "実行中止",
       "Warning": "エラー発生",
-      "Updating": "アップデータを待っています",
-      "CommissionShipInsufficient": "実行中（委託の艦船不足）"
+      "Updating": "アップデータを待っています"
     },
     "MenuAlas": {
       "Overview": "概要",

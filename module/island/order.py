@@ -67,11 +67,6 @@ class IslandOrder(IslandUI):
         inner_radius = 44
         outer_radius = 52
         circles = get_circles(self.device.image, color, inner_radius, outer_radius)
-        image_copy = cv2.cvtColor(self.device.image.copy(), cv2.COLOR_BGR2RGB)
-        for circle in circles:
-            x, y, r = int(circle[0]), int(circle[1]), int(circle[2])
-            cv2.circle(image_copy, (x, y), r, (0, 255, 0), 2)
-        cv2.imwrite(f'test/island_order/detected_orders_{color}.png', image_copy)
         button_list = []
         for index, circle in enumerate(circles):
             x, y, _ = circle
@@ -79,7 +74,7 @@ class IslandOrder(IslandUI):
             y = int(y)
             detect_area = (x - outer_radius, y - outer_radius, x + outer_radius, y + outer_radius)
             click_area = (x - inner_radius, y - inner_radius, x + inner_radius, y + inner_radius)
-            button = Button(area=detect_area, color=(), button=click_area, name=f'ORDER_{index}')
+            button = Button(area=detect_area, color=(), button=click_area, name=f'ORDER_AT_{x}_{y}')
             button_list.append(button)
         return button_list
 
@@ -115,7 +110,10 @@ class IslandOrder(IslandUI):
 
     @cached_property
     def requirement_counter_ocr(self):
-        return IslandReversedDigitCounter(self.requirement_counter_grid.buttons, lang='cnocr', letter=(57, 59, 61), sub_letter=(253, 97, 96), name='REQUIREMENTS_COUNTER_OCR')
+        return IslandReversedDigitCounter(self.requirement_counter_grid.buttons, lang='cnocr', 
+                                          letter=(57, 59, 61), sub_letter=(253, 97, 96), 
+                                          threshold=160, sub_threshold=160, background_color=None,
+                                          name='REQUIREMENTS_COUNTER_OCR')
 
     def item_name_to_item_id(self, name):
         if name == '':
@@ -287,6 +285,8 @@ class IslandOrder(IslandUI):
         Returns:
             (bool): True if the order is dealt.
         """
+        self.handle_island_additional()
+        self.handle_info_bar()
         self.click_order(order_button)
         if self.appear(ISLAND_ORDER_COOLDOWN_SPEED_UP, offset=(20, 20)):
             logger.warning('Order is in cooldown, cannot submit')

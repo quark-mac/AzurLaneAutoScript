@@ -1,7 +1,22 @@
 import re
+from datetime import datetime, timedelta
 
 from dev_tools.slpp import slpp
 from dev_tools.utils import LuaLoader
+
+
+def dates_within_24_hours(date_str1, date_str2):
+    """
+    Judge if two date strings do not have an interval of more than 24 hours.
+    Returns True if the interval is <= 24 hours, False otherwise.
+    """
+    try:
+        dt1 = datetime.strptime(date_str1, '%Y-%m-%d %H:%M:%S')
+        dt2 = datetime.strptime(date_str2, '%Y-%m-%d %H:%M:%S')
+        diff = abs((dt1 - dt2).total_seconds())
+        return diff <= 86400  # 24 hours = 86400 seconds
+    except (ValueError, TypeError):
+        return False
 
 
 class IslandItem:
@@ -483,7 +498,8 @@ class IslandSeasonExtractor:
         for index, season in self.season.items():
             for activity_id, activity in activity_dict.items():
                 if season['start_time']['cn'] is not None and season['end_time']['cn'] is not None and activity['start_time']['cn'] is not None and activity['end_time']['cn'] is not None:
-                    if season['start_time']['cn'] == activity['start_time']['cn'] and season['end_time']['cn'] == activity['end_time']['cn']:
+                    if (dates_within_24_hours(season['start_time']['cn'], activity['start_time']['cn']) and
+                        dates_within_24_hours(season['end_time']['cn'], activity['end_time']['cn'])):
                         season.setdefault('activity', []).append(activity_id)
 
     def extract_item_name(self, server):

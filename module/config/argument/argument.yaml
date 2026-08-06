@@ -96,30 +96,6 @@ Optimization:
   WhenTaskQueueEmpty:
     value: goto_main
     option: [ stay_there, goto_main, close_game ]
-AutoStart:
-  Enable:
-    type: checkbox
-    value: false
-  Delay:
-    value: 10
-    validate: '^([0-9]|[1-9][0-9]|[1-5][0-9]{2}|600)$'
-LogCleaner:
-  Enable:
-    type: checkbox
-    value: false
-  CleanOnStartup:
-    type: checkbox
-    value: true
-  ScheduledClean:
-    type: checkbox
-    value: false
-  ScheduledTime:
-    value: '00:00'
-    valuetype: str
-    validate: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
-  KeepDays:
-    value: 7
-    validate: '^([1-9]|[1-9][0-9]|[12][0-9]{2}|3[0-5][0-9]|36[0-5])$'
 DropRecord:
   SaveFolder: ./screenshots
   AzurStatsID: null
@@ -330,21 +306,19 @@ Raid:
     value: hard
     option: [ easy, normal, hard, ex ]
   UseTicket: false
-RaidScuttle:
-  Sacrifice:
-    value: vanguard
-    option: [ vanguard, flagship ]
 RaidDaily:
   StageFilter: |-
     hard > normal > easy
 Hospital:
   UseRecommendFleet: true
-MaritimeEscort:
-  Enable: true
+Scuttle:
+  Sacrifice:
+    value: vanguard
+    option: [ vanguard, flagship ]
 Coalition:
   Mode:
-    value: tc3
-    option: [ tc1, tc2, tc3, sp, ex ]
+    value: hard
+    option: [ easy, normal, hard, sp ]
   Fleet:
     value: single
     option: [ single, multi ]
@@ -397,11 +371,6 @@ Commission:
     > Extra-0:20 > Extra-0:30 > Extra-1:00 > Extra-1:30 > Extra-2:00
     > shortest
   DoMajorCommission: false
-  EnableShipCheck:
-    type: checkbox
-    value: true
-    option: [ true, false ]
-  ShipCheckTimeout: 15
 Tactical:
   TacticalFilter: |-
     SameT4 > SameT3 > SameT2 > SameT1
@@ -764,7 +733,7 @@ OpsiShop:
       - all
       - custom
   CustomFilter: |-
-    LoggerAbyssalT6 > LoggerAbyssalT5 > LoggerObscure > LoggerAbyssalT4 > ActionPoint > PurpleCoins
+    LoggerAbyssalT6 > LoggerAbyssalT5 > LoggerAbyssalT4 > LoggerObscureT6 > LoggerObscureT5 > LoggerObscureT4 > LoggerObscureT3 > ActionPoint > PurpleCoins
     > GearDesignPlanT3 > PlateRandomT4 > DevelopmentMaterialT3 > GearDesignPlanT2 > GearPart
     > OrdnanceTestingReportT3 > OrdnanceTestingReportT2 > DevelopmentMaterialT2 > OrdnanceTestingReportT1
     > METARedBook > CrystallizedHeatResistantSteel > NanoceramicAlloy > NeuroplasticProstheticArm > SupercavitationGenerator
@@ -829,9 +798,12 @@ IslandRestaurant:
   KoiGrade:
     value: bronze
     option: [ bronze, silver, gold, diamond ]
-  KoiWaitress:
+  KoiWaitress1: &KoiWaitressSlot
     value: any
-    option: [ none, any, Chao_Ho, any+any, Chao_Ho+any ]
+    option: &KoiWaitressOptions [ none, any, Chao_Ho ]
+  KoiWaitress2:
+    <<: *KoiWaitressSlot
+    value: none
   KoiMenu:
     type: textarea
     value: |-
@@ -839,9 +811,12 @@ IslandRestaurant:
   BearGrade:
     value: bronze
     option: [ bronze, silver, gold, diamond ]
-  BearWaitress:
+  BearWaitress1: &BearWaitressSlot
     value: any
-    option: [ none, any, Cheshire, any+any, Cheshire+any ]
+    option: &BearWaitressOptions [ none, any, Cheshire ]
+  BearWaitress2:
+    <<: *BearWaitressSlot
+    value: none
   BearMenu:
     type: textarea
     value: |-
@@ -849,9 +824,12 @@ IslandRestaurant:
   EateryGrade:  
     value: bronze
     option: [ bronze, silver, gold, diamond ]
-  EateryWaitress:
+  EateryWaitress1: &EateryWaitressSlot
     value: any
-    option: [ none, any, Helena, Prinz_Eugen, any+any, Helena+any, Prinz_Eugen+any, Helena+Prinz_Eugen ]
+    option: &EateryWaitressOptions [ none, any, Helena, Prinz_Eugen ]
+  EateryWaitress2:
+    <<: *EateryWaitressSlot
+    value: none
   EateryMenu:
     type: textarea
     value: |-
@@ -859,9 +837,12 @@ IslandRestaurant:
   GrillGrade:
     value: bronze
     option: [ bronze, silver, gold, diamond ]
-  GrillWaitress:
+  GrillWaitress1: &GrillWaitressSlot
     value: any
-    option: [ none, any, August_von_Parseval, Prinz_Eugen, any+any, August_von_Parseval+any, Prinz_Eugen+any, August_von_Parseval+Prinz_Eugen ]
+    option: &GrillWaitressOptions [ none, any, August_von_Parseval, Prinz_Eugen ]
+  GrillWaitress2:
+    <<: *GrillWaitressSlot
+    value: none
   GrillMenu:
     type: textarea
     value: |-
@@ -869,9 +850,12 @@ IslandRestaurant:
   CafeGrade:
     value: bronze
     option: [ bronze, silver, gold, diamond ]
-  CafeWaitress:
+  CafeWaitress1: &CafeWaitressSlot
     value: any
-    option: [ none, any, Cheshire, any+any, Cheshire+any ]
+    option: &CafeWaitressOptions [ none, any, Cheshire ]
+  CafeWaitress2:
+    <<: *CafeWaitressSlot
+    value: none
   CafeMenu:
     type: textarea
     value: |-

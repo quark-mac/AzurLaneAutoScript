@@ -70,6 +70,10 @@
       "name": "活動通用",
       "help": ""
     },
+    "Coalition": {
+      "name": "極地風暴",
+      "help": ""
+    },
     "Event": {
       "name": "活動圖",
       "help": ""
@@ -83,19 +87,15 @@
       "help": ""
     },
     "RaidScuttle": {
-      "name": "Task.RaidScuttle.name",
-      "help": "Task.RaidScuttle.help"
+      "name": "共鬥鑿船",
+      "help": ""
+    },
+    "CoalitionScuttle": {
+      "name": "協鬥鑿船",
+      "help": ""
     },
     "Hospital": {
       "name": "深谷来信",
-      "help": ""
-    },
-    "Coalition": {
-      "name": "極地風暴",
-      "help": ""
-    },
-    "MaritimeEscort": {
-      "name": "商船護航",
       "help": ""
     },
     "EventShop": {
@@ -105,6 +105,10 @@
     "WarArchives": {
       "name": "作戰檔案",
       "help": "由於作戰檔案缺少維護，開荒功能不一定能正常使用，如果發現Alas運行異常，請手動完成開荒後使用自律尋敵功能"
+    },
+    "CoalitionSp": {
+      "name": "極地風暴SP",
+      "help": ""
     },
     "EventA": {
       "name": "活動每日A圖",
@@ -128,10 +132,6 @@
     },
     "RaidDaily": {
       "name": "共鬥活動每日",
-      "help": ""
-    },
-    "CoalitionSp": {
-      "name": "極地風暴SP",
       "help": ""
     },
     "Commission": {
@@ -332,8 +332,7 @@
     },
     "NextRun": {
       "name": "下一次執行時間",
-      "help": "自動計算的數值，不需要手動修改。清空後將立刻執行",
-      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
+      "help": "自動計算的數值，不需要手動修改。清空後將立刻執行"
     },
     "Command": {
       "name": "內部任務名稱",
@@ -575,49 +574,6 @@
       "close_game": "關閉遊戲"
     }
   },
-  "AutoStart": {
-    "_info": {
-      "name": "自動啟動",
-      "help": "WebUI 啟動後自動啟動指定配置"
-    },
-    "Enable": {
-      "name": "啟用自動啟動",
-      "help": "開啟後，WebUI 初始化完成後自動執行目前配置"
-    },
-    "Delay": {
-      "name": "啟動延遲",
-      "help": "WebUI 啟動後等待 X 秒再啟動配置，範圍 0-600 秒",
-      "invalid_feedback": "請輸入 0-600 之間的整數（秒）"
-    }
-  },
-  "LogCleaner": {
-    "_info": {
-      "name": "日誌清理",
-      "help": "自動清理過期日誌檔案"
-    },
-    "Enable": {
-      "name": "啟用日誌清理",
-      "help": "開啟後按設定自動清理舊日誌"
-    },
-    "CleanOnStartup": {
-      "name": "啟動時清理",
-      "help": "啟動 ALAS 時立即執行一次日誌清理"
-    },
-    "ScheduledClean": {
-      "name": "啟用定時清理",
-      "help": "每天在指定時間自動執行日誌清理"
-    },
-    "ScheduledTime": {
-      "name": "定時清理時間",
-      "help": "每天執行日誌清理的時間，格式為 HH:MM（例如 03:00），輸入不合法時將重置為預設值 00:00",
-      "invalid_feedback": "請輸入正確的時間格式（HH:MM），例如：08:30"
-    },
-    "KeepDays": {
-      "name": "保留日誌天數",
-      "help": "保留最近 N 天內的日誌檔案，更早的將被刪除（範圍 1-365），輸入不合法時將重置為預設值 7",
-      "invalid_feedback": "請輸入 1-365 之間的整數"
-    }
-  },
   "DropRecord": {
     "_info": {
       "name": "掉落紀錄",
@@ -773,6 +729,7 @@
       "coalition_20250626": "迷彩都市的尋蹤者",
       "coalition_20251120": "DATE A LANE",
       "coalition_20260122": "光影風尚-拍攝進行時",
+      "coalition_20260723": "Authentic Horror Story",
       "event_20200227_cn": "Northern Overture",
       "event_20200312_cn": "斯圖爾特的硝煙",
       "event_20200326_cn": "Microlayer Medley",
@@ -1117,8 +1074,7 @@
     },
     "Fleet1Record": {
       "name": "一隊心情紀錄時間",
-      "help": "",
-      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
+      "help": ""
     },
     "Fleet1Control": {
       "name": "一隊心情控制",
@@ -1145,8 +1101,7 @@
     },
     "Fleet2Record": {
       "name": "二隊心情紀錄時間",
-      "help": "",
-      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
+      "help": ""
     },
     "Fleet2Control": {
       "name": "二隊心情控制",
@@ -1347,8 +1302,7 @@
     },
     "TimeLimit": {
       "name": "活動時間限制",
-      "help": "當本地時間超過給定數值後，禁用所有活動任務，'2020-01-01 00:00:00' 表示不限制，觸發一次後時間將被重置\n設定後能防止活動結束後忘記關閉任務的事情發生",
-      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
+      "help": "當本地時間超過給定數值後，禁用所有活動任務，'2020-01-01 00:00:00' 表示不限制，觸發一次後時間將被重置\n設定後能防止活動結束後忘記關閉任務的事情發生"
     }
   },
   "TaskBalancer": {
@@ -1404,18 +1358,6 @@
       "help": ""
     }
   },
-  "RaidScuttle": {
-    "_info": {
-      "name": "RaidScuttle._info.name",
-      "help": "RaidScuttle._info.help"
-    },
-    "Sacrifice": {
-      "name": "RaidScuttle.Sacrifice.name",
-      "help": "RaidScuttle.Sacrifice.help",
-      "vanguard": "vanguard",
-      "flagship": "flagship"
-    }
-  },
   "RaidDaily": {
     "_info": {
       "name": "共鬥每日",
@@ -1436,14 +1378,16 @@
       "help": "如果關閉，需要事先手動為所有15個關卡配隊"
     }
   },
-  "MaritimeEscort": {
+  "Scuttle": {
     "_info": {
-      "name": "商船護航",
-      "help": "進一下就撤退，能拿約70%的獎勵"
-    },
-    "Enable": {
-      "name": "啟用商船護航",
+      "name": "鑿船設定",
       "help": ""
+    },
+    "Sacrifice": {
+      "name": "牺牲船位置",
+      "help": "",
+      "vanguard": "前排",
+      "flagship": "旗舰"
     }
   },
   "Coalition": {
@@ -1454,11 +1398,10 @@
     "Mode": {
       "name": "難度",
       "help": "SP圖需要使用活動每日SP運行",
-      "tc1": "tc1",
-      "tc2": "tc2",
-      "tc3": "tc3",
-      "sp": "sp",
-      "ex": "ex"
+      "easy": "簡單",
+      "normal": "普通",
+      "hard": "困難",
+      "sp": "SP"
     },
     "Fleet": {
       "name": "出擊隊伍",
@@ -1516,16 +1459,6 @@
     "DoMajorCommission": {
       "name": "做主要委託 (1200油/1000油委託)",
       "help": "1200油委託現在已經過時，收益很低，建議關閉"
-    },
-    "EnableShipCheck": {
-      "name": "啟用艦船不足檢測",
-      "help": "點擊推薦後，如果長時間沒有出現開始按鈕，則認為沒有滿足委託條件的艦船並跳過該委託",
-      "True": "True",
-      "False": "False"
-    },
-    "ShipCheckTimeout": {
-      "name": "艦船不足檢測逾時",
-      "help": "點擊推薦後等待開始按鈕出現的最長時間（秒）。超過該時間將跳過目前委託"
     }
   },
   "Tactical": {
@@ -1694,8 +1627,7 @@
     },
     "LastRun": {
       "name": "上次檢查時間",
-      "help": "記錄上一次檢查的時間以防止任務重複執行，檢查間隔為6天，這個數值是自動記錄的，一般不需要修改",
-      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
+      "help": "記錄上一次檢查的時間以防止任務重複執行，檢查間隔為6天，這個數值是自動記錄的，一般不需要修改"
     }
   },
   "Meowfficer": {
@@ -2092,8 +2024,7 @@
     },
     "LastRun": {
       "name": "上一次購買時間",
-      "help": "因為遊戲不顯示今天已經購買了幾張，所以這裡記錄上一次購買的時間以防止任務重複運行，這個數值是自動記錄的，一般不需要修改",
-      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
+      "help": "因為遊戲不顯示今天已經購買了幾張，所以這裡記錄上一次購買的時間以防止任務重複運行，這個數值是自動記錄的，一般不需要修改"
     }
   },
   "Shipyard": {
@@ -2128,8 +2059,7 @@
     },
     "LastRun": {
       "name": "上一次購買時間",
-      "help": "因為遊戲不顯示今天已經購買了幾張，所以這裡記錄上一次購買的時間以防止任務重複運行，這個數值是自動記錄的，一般不需要修改",
-      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
+      "help": "因為遊戲不顯示今天已經購買了幾張，所以這裡記錄上一次購買的時間以防止任務重複運行，這個數值是自動記錄的，一般不需要修改"
     }
   },
   "Gacha": {
@@ -2458,8 +2388,7 @@
     },
     "OpponentRefreshRecord": {
       "name": "演習對手刷新紀錄時間",
-      "help": "",
-      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
+      "help": ""
     }
   },
   "Sos": {
@@ -2736,7 +2665,7 @@
   "IslandProduction": {
     "_info": {
       "name": "離島生產",
-      "help": ""
+      "help": "需要先配置店鋪經營的店面屬性、店員，然後配置工具-離島生產規劃器，最後執行離島生產規劃器，規劃器執行得到結果後方可執行離島生產。"
     },
     "HardFloorItems": {
       "name": "硬性保底物品",
@@ -2792,14 +2721,19 @@
       "gold": "黃金",
       "diamond": "鑽石"
     },
-    "KoiWaitress": {
-      "name": "有魚餐館服務員",
-      "help": "無表示不運營此餐廳，任意表示不限制服務員的選擇，此時將選擇管理等級最高的角色\n如果選擇的特定角色不可用，餐廳將回退到任意而不是跳過此餐廳",
+    "KoiWaitress1": {
+      "name": "有魚餐館服務員1",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
       "none": "無",
       "any": "任意",
-      "Chao_Ho": "肇和",
-      "any+any": "任意 + 任意",
-      "Chao_Ho+any": "肇和 + 任意"
+      "Chao_Ho": "肇和"
+    },
+    "KoiWaitress2": {
+      "name": "有魚餐館服務員2",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
+      "none": "無",
+      "any": "任意",
+      "Chao_Ho": "肇和"
     },
     "KoiMenu": {
       "name": "有魚餐館菜單",
@@ -2813,14 +2747,19 @@
       "gold": "黃金",
       "diamond": "鑽石"
     },
-    "BearWaitress": {
-      "name": "白熊飲品服務員",
-      "help": "無表示不運營此餐廳，任意表示不限制服務員的選擇，此時將選擇管理等級最高的角色\n如果選擇的特定角色不可用，餐廳將回退到任意而不是跳過此餐廳",
+    "BearWaitress1": {
+      "name": "白熊飲品服務員1",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
       "none": "無",
       "any": "任意",
-      "Cheshire": "柴郡",
-      "any+any": "任意 + 任意",
-      "Cheshire+any": "柴郡 + 任意"
+      "Cheshire": "柴郡"
+    },
+    "BearWaitress2": {
+      "name": "白熊飲品服務員2",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
+      "none": "無",
+      "any": "任意",
+      "Cheshire": "柴郡"
     },
     "BearMenu": {
       "name": "白熊飲品菜單",
@@ -2834,17 +2773,21 @@
       "gold": "黃金",
       "diamond": "鑽石"
     },
-    "EateryWaitress": {
-      "name": "啾啾簡餐服務員",
-      "help": "無表示不運營此餐廳，任意表示不限制服務員的選擇，此時將選擇管理等級最高的角色\n如果選擇的特定角色不可用，餐廳將回退到任意而不是跳過此餐廳",
+    "EateryWaitress1": {
+      "name": "啾啾簡餐服務員1",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
       "none": "無",
       "any": "任意",
       "Helena": "海倫娜",
-      "Prinz_Eugen": "歐根親王",
-      "any+any": "任意 + 任意",
-      "Helena+any": "海倫娜 + 任意",
-      "Prinz_Eugen+any": "歐根親王 + 任意",
-      "Helena+Prinz_Eugen": "海倫娜 + 歐根親王"
+      "Prinz_Eugen": "歐根親王"
+    },
+    "EateryWaitress2": {
+      "name": "啾啾簡餐服務員2",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
+      "none": "無",
+      "any": "任意",
+      "Helena": "海倫娜",
+      "Prinz_Eugen": "歐根親王"
     },
     "EateryMenu": {
       "name": "啾啾簡餐菜單",
@@ -2858,17 +2801,21 @@
       "gold": "黃金",
       "diamond": "鑽石"
     },
-    "GrillWaitress": {
-      "name": "烏魚烤肉服務員",
-      "help": "無表示不運營此餐廳，任意表示不限制服務員的選擇，此時將選擇管理等級最高的角色\n如果選擇的特定角色不可用，餐廳將回退到任意而不是跳過此餐廳",
+    "GrillWaitress1": {
+      "name": "烏魚烤肉服務員1",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
       "none": "無",
       "any": "任意",
       "August_von_Parseval": "奧古斯特·馮·帕塞瓦爾",
-      "Prinz_Eugen": "歐根親王",
-      "any+any": "任意 + 任意",
-      "August_von_Parseval+any": "奧古斯特·馮·帕塞瓦爾 + 任意",
-      "Prinz_Eugen+any": "歐根親王 + 任意",
-      "August_von_Parseval+Prinz_Eugen": "奧古斯特·馮·帕塞瓦爾 + 歐根親王"
+      "Prinz_Eugen": "歐根親王"
+    },
+    "GrillWaitress2": {
+      "name": "烏魚烤肉服務員2",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
+      "none": "無",
+      "any": "任意",
+      "August_von_Parseval": "奧古斯特·馮·帕塞瓦爾",
+      "Prinz_Eugen": "歐根親王"
     },
     "GrillMenu": {
       "name": "烏魚烤肉菜單",
@@ -2882,14 +2829,19 @@
       "gold": "黃金",
       "diamond": "鑽石"
     },
-    "CafeWaitress": {
-      "name": "啾咖啡服務員",
-      "help": "無表示不運營此餐廳，任意表示不限制服務員的選擇，此時將選擇管理等級最高的角色\n如果選擇的特定角色不可用，餐廳將回退到任意而不是跳過此餐廳",
+    "CafeWaitress1": {
+      "name": "啾咖啡服務員1",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
       "none": "無",
       "any": "任意",
-      "Cheshire": "柴郡",
-      "any+any": "任意 + 任意",
-      "Cheshire+any": "柴郡 + 任意"
+      "Cheshire": "柴郡"
+    },
+    "CafeWaitress2": {
+      "name": "啾咖啡服務員2",
+      "help": "兩個服務員槽位沒有順序。無表示空槽位，兩個槽位都是無時停用餐廳；任意會選擇管理等級最高的空閒角色。命名角色優先選擇，重複的命名角色會被清除。",
+      "none": "無",
+      "any": "任意",
+      "Cheshire": "柴郡"
     },
     "CafeMenu": {
       "name": "啾咖啡菜單",
@@ -3066,8 +3018,7 @@
       "Running": "執行中",
       "Inactive": "閒置",
       "Warning": "發生錯誤",
-      "Updating": "等待更新",
-      "CommissionShipInsufficient": "執行中（委託艦船不足）"
+      "Updating": "等待更新"
     },
     "MenuAlas": {
       "Overview": "總覽",
