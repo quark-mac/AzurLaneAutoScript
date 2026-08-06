@@ -48,7 +48,7 @@
 - 保留自动启动、日志清理、自定义状态等本地功能
 - 保留 Git 历史，兼容 ALAS 自带更新逻辑
 - 自动检查关键本地配置、i18n、任务入口和功能文件是否仍存在
-- 已同步至 `upstream/main` 提交 `4d50c6b8c`
+- 已同步至 `upstream/main` 提交 `cd504b695`
 - 已恢复同步中被覆盖的 AutoStart、LogCleaner、委托舰船检测和 Scheduler 开关控制
 
 ---

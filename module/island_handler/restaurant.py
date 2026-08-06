@@ -424,6 +424,8 @@ class IslandRestaurant(IslandDock):
 
     def select_dishes(self):
         plan = self.get_sell_plan()
+        if not plan:
+            return False
         self.swipe_bottom_to_top()
         result = self.scan_item_grid(self.restaurant_grid)
         plan_to_click = []
