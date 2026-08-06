@@ -1,6 +1,7 @@
 import re
 import typing as t
 from copy import deepcopy
+from functools import partial
 
 from cached_property import cached_property
 
@@ -11,6 +12,10 @@ from module.config.env import IS_ON_PHONE_CLOUD
 from module.config.server import VALID_CHANNEL_PACKAGE, VALID_PACKAGE, VALID_SERVER_LIST, to_package, to_server
 from module.config.utils import *
 from module.config.redirect_utils.utils import *
+from module.island_handler.restaurant_config import (
+    RESTAURANT_CONFIG,
+    legacy_waitress_to_slots,
+)
 
 CONFIG_IMPORT = '''
 import datetime
@@ -557,6 +562,17 @@ class ConfigGenerator:
 class ConfigUpdater:
     # source, target, (optional)convert_func
     redirection = [
+        *[
+            (
+                f'IslandBusiness.IslandRestaurant.{data["legacy_waitress_key"]}',
+                tuple(
+                    f'IslandBusiness.IslandRestaurant.{key}'
+                    for key in data['waitress_keys']
+                ),
+                partial(legacy_waitress_to_slots, restaurant_id=restaurant_id),
+            )
+            for restaurant_id, data in RESTAURANT_CONFIG.items()
+        ],
         # ('OpsiDaily.OpsiDaily.BuySupply', 'OpsiShop.Scheduler.Enable'),
         # ('OpsiDaily.Scheduler.Enable', 'OpsiDaily.OpsiDaily.DoMission'),
         # ('OpsiShop.Scheduler.Enable', 'OpsiShop.OpsiShop.BuySupply'),
