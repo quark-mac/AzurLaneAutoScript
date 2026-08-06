@@ -149,6 +149,62 @@ def check_task_entries(errors):
     for text in required_task_text:
         check(text in task_yaml, 'Missing task.yaml entry containing: %s' % text.strip(), errors)
 
+    required_runtime_text = (
+        'LogCleaner(config=self.config)',
+        'log_cleaner.run_on_startup()',
+        'log_cleaner.start_scheduler()',
+    )
+    for text in required_runtime_text:
+        check(text in alas, 'Missing LogCleaner runtime integration: %s' % text, errors)
+
+    gui = read_text('gui.py')
+    check('config.AutoStart_Enable' in gui, 'Missing AutoStart runtime integration', errors)
+
+    commission = read_text('module/commission/commission.py')
+    check(
+        'Commission_EnableShipCheck' in commission and 'Commission_ShipCheckTimeout' in commission,
+        'Missing commission ship check runtime integration',
+        errors,
+    )
+
+
+def check_input_validation(errors):
+    argument_yaml = read_text('module/config/argument/argument.yaml')
+    check(argument_yaml.count('validate:') >= 3, 'Missing custom input validation rules', errors)
+
+    updater = read_text('module/config/config_updater.py')
+    check(
+        "words=('name', 'help', 'invalid_feedback')" in updater,
+        'Missing invalid_feedback generation support',
+        errors,
+    )
+
+    app = read_text('module/webui/app.py')
+    check('re_fullmatch(validate, v_str)' in app, 'Missing WebUI regex validation', errors)
+    check(
+        'pin["_".join(k.split("."))] = to_pin_value(default)' not in app,
+        'Empty WebUI fields still push defaults back immediately',
+        errors,
+    )
+
+
+def check_scheduler_controls(errors):
+    override = read_text('module/config/argument/override.yaml')
+    for task in ('Commission', 'Research', 'Reward'):
+        pattern = r'%s:\n  Scheduler:\n    Enable:\n      type: lock' % task
+        check(
+            re.search(pattern, override) is None,
+            'Scheduler enable is forced on for task: %s' % task,
+            errors,
+        )
+
+    css = read_text('assets/gui/css/alas.css')
+    check(
+        '#pywebio-scope-Scheduler_Enable' not in css,
+        'Scheduler enable checkbox is hidden by CSS',
+        errors,
+    )
+
 
 def check_files(errors):
     required_files = (
@@ -174,6 +230,8 @@ def main():
     check_argument_sources(errors)
     check_i18n(errors)
     check_task_entries(errors)
+    check_input_validation(errors)
+    check_scheduler_controls(errors)
     check_files(errors)
 
     if errors:

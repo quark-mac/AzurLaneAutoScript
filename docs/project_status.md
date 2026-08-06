@@ -1,6 +1,6 @@
 # 项目状态报告
 
-> 最后更新：2026-07-04
+> 最后更新：2026-08-07
 
 ---
 
@@ -48,6 +48,8 @@
 - 保留自动启动、日志清理、自定义状态等本地功能
 - 保留 Git 历史，兼容 ALAS 自带更新逻辑
 - 自动检查关键本地配置、i18n、任务入口和功能文件是否仍存在
+- 已同步至 `upstream/main` 提交 `4d50c6b8c`
+- 已恢复同步中被覆盖的 AutoStart、LogCleaner、委托舰船检测和 Scheduler 开关控制
 
 ---
 
@@ -71,6 +73,13 @@
 - 文档：`docs/upstream-sync-guide.md`
 - 工作流：`.github/workflows/sync-upstream.yml`
 - 健康检查：`scripts/check_custom_features.py`
+
+### 6. 同步后保护项
+- 验证 AutoStart 和 LogCleaner 配置、翻译及运行时接入
+- 验证委托舰船不足检测和状态显示
+- 验证 WebUI 正则输入校验和空字段行为
+- 验证 Commission、Research、Reward 的 Scheduler 开关未被强制锁定
+- 验证 GemsFarming 和 Island 任务入口仍存在
 
 ---
 

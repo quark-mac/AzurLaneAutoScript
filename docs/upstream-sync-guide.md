@@ -60,6 +60,9 @@ git push origin master
 - 委托舰船不足 WebUI 状态翻译
 - `GemsFarming`、`Island*`、`IslandProductionPlanner` 任务入口
 - 自定义功能关键文件是否仍存在
+- LogCleaner 和 AutoStart 的运行时接入
+- WebUI 输入验证规则、反馈生成和空字段行为
+- Commission、Research、Reward 的 Scheduler 开关未被强制锁定
 
 如果 upstream merge 成功但这些检查失败，workflow 不会推送 `master`，而是创建或更新 `sync-conflict` Issue。
 

@@ -26,6 +26,17 @@
       "TaskHoardingDuration": 0,
       "WhenTaskQueueEmpty": "goto_main"
     },
+    "AutoStart": {
+      "Enable": false,
+      "Delay": 10
+    },
+    "LogCleaner": {
+      "Enable": false,
+      "CleanOnStartup": true,
+      "ScheduledClean": false,
+      "ScheduledTime": "00:00",
+      "KeepDays": 7
+    },
     "DropRecord": {
       "SaveFolder": "./screenshots",
       "AzurStatsID": null,
@@ -802,6 +813,25 @@
       "Storage": {}
     }
   },
+  "EventShop": {
+    "Scheduler": {
+      "Enable": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "EventShop",
+      "SuccessInterval": 30,
+      "FailureInterval": 30,
+      "ServerUpdate": "00:00"
+    },
+    "EventShop": {
+      "UnlockSSRShip": true,
+      "BuyURShip": 2,
+      "PresetFilter": "all",
+      "CustomFilter": "EquipUR > EquipSSR > Cube > GachaTicket\n> Array > Chip > CatT3 \n> Meta > SkinBox\n> Oil > Coin > Medal > ExpBookT1 > FoodT1\n> DR > PR\n> AugmentCore > AugmentEnhanceT2 > AugmentChangeT2 > AugmentChangeT1\n> CatT2 > CatT1 > PlateGeneralT3 > PlateT3 > BoxT4\n> ShipSSR"
+    },
+    "Storage": {
+      "Storage": {}
+    }
+  },
   "WarArchives": {
     "Scheduler": {
       "Enable": false,
@@ -871,25 +901,6 @@
     },
     "EnemyPriority": {
       "EnemyScaleBalanceWeight": "default_mode"
-    },
-    "Storage": {
-      "Storage": {}
-    }
-  },
-  "EventShop": {
-    "Scheduler": {
-      "Enable": false,
-      "NextRun": "2020-01-01 00:00:00",
-      "Command": "EventShop",
-      "SuccessInterval": 30,
-      "FailureInterval": 30,
-      "ServerUpdate": "00:00"
-    },
-    "EventShop": {
-      "UnlockSSRShip": true,
-      "BuyURShip": 2,
-      "PresetFilter": "all",
-      "CustomFilter": "EquipUR > EquipSSR > Cube > GachaTicket\n> Array > Chip > CatT3 \n> Meta > SkinBox\n> Oil > Coin > Medal > ExpBookT1 > FoodT1\n> DR > PR\n> AugmentCore > AugmentEnhanceT2 > AugmentChangeT2 > AugmentChangeT1\n> CatT2 > CatT1 > PlateGeneralT3 > PlateT3 > BoxT4\n> ShipSSR"
     },
     "Storage": {
       "Storage": {}
@@ -1378,7 +1389,7 @@
   },
   "Commission": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Commission",
       "SuccessInterval": "30-60",
@@ -1388,7 +1399,9 @@
     "Commission": {
       "PresetFilter": "cube",
       "CustomFilter": "DailyEvent > Gem-4 > Gem-2 > Gem-8 > ExtraCube-0:30\n> UrgentCube-1:30 > UrgentCube-1:45 > UrgentCube-3\n> ExtraDrill-5:20 > ExtraDrill-2 > ExtraDrill-3:20\n> UrgentCube-2:15 > UrgentCube-4\n> ExtraDrill-1 > UrgentCube-6 > ExtraCube-1:30\n> ExtraDrill-2:40 > ExtraDrill-0:20\n> Major > DailyChip > DailyResource\n> ExtraPart-0:30 > ExtraOil-1 > UrgentBox-6\n> ExtraCube-3 > ExtraPart-1 > UrgentBox-3\n> ExtraCube-4 > ExtraPart-1:30 > ExtraOil-4\n> UrgentBox-1 > ExtraCube-5 > UrgentBox-1\n> ExtraCube-8 > ExtraOil-8\n> UrgentDrill-4 > UrgentDrill-2:40 > UrgentDrill-2\n> UrgentDrill-1 > UrgentDrill-1:30 > UrgentDrill-1:10\n> Extra-0:20 > Extra-0:30 > Extra-1:00 > Extra-1:30 > Extra-2:00\n> shortest",
-      "DoMajorCommission": false
+      "DoMajorCommission": false,
+      "EnableShipCheck": true,
+      "ShipCheckTimeout": 15
     },
     "Storage": {
       "Storage": {}
@@ -1396,7 +1409,7 @@
   },
   "Tactical": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Tactical",
       "SuccessInterval": "30-60",
@@ -1425,7 +1438,7 @@
   },
   "Research": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Research",
       "SuccessInterval": "30-60",
@@ -1446,7 +1459,7 @@
   },
   "Dorm": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Dorm",
       "SuccessInterval": 278,
@@ -1469,7 +1482,7 @@
   },
   "Meowfficer": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Meowfficer",
       "SuccessInterval": 30,
@@ -1495,7 +1508,7 @@
   },
   "Guild": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Guild",
       "SuccessInterval": 30,
@@ -1521,7 +1534,7 @@
   },
   "Reward": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Reward",
       "SuccessInterval": "120-240",
@@ -1735,7 +1748,7 @@
   },
   "Freebies": {
     "Scheduler": {
-      "Enable": true,
+      "Enable": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "Freebies",
       "SuccessInterval": 30,

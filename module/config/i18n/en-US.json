@@ -332,7 +332,8 @@
     },
     "NextRun": {
       "name": "Next Run",
-      "help": "Updated automatically after completing the task to set next scheduled run, typically not manually modified\nHowever you can force immediate scheduling if text field cleared"
+      "help": "Updated automatically after completing the task to set next scheduled run, typically not manually modified\nHowever you can force immediate scheduling if text field cleared",
+      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
     },
     "Command": {
       "name": "Command",
@@ -572,6 +573,49 @@
       "stay_there": "Stay There",
       "goto_main": "Goto Main Page",
       "close_game": "Close Game"
+    }
+  },
+  "AutoStart": {
+    "_info": {
+      "name": "Auto Start",
+      "help": "Automatically start a selected config after WebUI launches"
+    },
+    "Enable": {
+      "name": "Enable Auto Start",
+      "help": "Automatically run the current config after WebUI initialization"
+    },
+    "Delay": {
+      "name": "Startup Delay",
+      "help": "Wait X seconds after WebUI launch before starting the config, range 0-600 seconds",
+      "invalid_feedback": "Please enter an integer between 0-600 (seconds)"
+    }
+  },
+  "LogCleaner": {
+    "_info": {
+      "name": "Log Cleaner",
+      "help": "Automatically clean expired log files"
+    },
+    "Enable": {
+      "name": "Enable Log Cleaner",
+      "help": "Automatically clean old logs according to settings"
+    },
+    "CleanOnStartup": {
+      "name": "Clean On Startup",
+      "help": "Run log cleanup once when ALAS starts"
+    },
+    "ScheduledClean": {
+      "name": "Enable Scheduled Clean",
+      "help": "Run log cleanup daily at the specified time"
+    },
+    "ScheduledTime": {
+      "name": "Scheduled Clean Time",
+      "help": "Daily log cleanup time in HH:MM format, e.g. 03:00",
+      "invalid_feedback": "Please enter correct time format (HH:MM), e.g.: 08:30"
+    },
+    "KeepDays": {
+      "name": "Log Retention Days",
+      "help": "Keep log files from the latest N days and delete older ones, range 1-365",
+      "invalid_feedback": "Please enter an integer between 1-365"
     }
   },
   "DropRecord": {
@@ -1074,7 +1118,8 @@
     },
     "Fleet1Record": {
       "name": "Fleet 1 Emotion Record",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
     },
     "Fleet1Control": {
       "name": "Fleet 1 Emotion Control",
@@ -1101,7 +1146,8 @@
     },
     "Fleet2Record": {
       "name": "Fleet 2 Emotion Record",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
     },
     "Fleet2Control": {
       "name": "Fleet 2 Emotion Control",
@@ -1302,7 +1348,8 @@
     },
     "TimeLimit": {
       "name": "Event Time Limit",
-      "help": "When the local time exceeds the given value, disable all event tasks. '2020-01-01 00:00:00' means no limit and the time will be reset once it's triggered\nThis can prevent the occurrence of forgetting to disable event tasks after the event ends"
+      "help": "When the local time exceeds the given value, disable all event tasks. '2020-01-01 00:00:00' means no limit and the time will be reset once it's triggered\nThis can prevent the occurrence of forgetting to disable event tasks after the event ends",
+      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
     }
   },
   "TaskBalancer": {
@@ -1459,6 +1506,16 @@
     "DoMajorCommission": {
       "name": "Do Major Commissions",
       "help": "1200 oil commission is now outdated, the yield is very low, it is recommended to disable"
+    },
+    "EnableShipCheck": {
+      "name": "Enable Ship Insufficient Check",
+      "help": "After clicking Recommend, if the Start button does not appear for a long time, treat it as no eligible ships and skip this commission",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "Ship Check Timeout",
+      "help": "Maximum time to wait for the Start button after clicking Recommend (seconds). Skip the current commission after timeout"
     }
   },
   "Tactical": {
@@ -1627,7 +1684,8 @@
     },
     "LastRun": {
       "name": "Last Check Time",
-      "help": "The time of the last check is recorded here to prevent the task from running repeatedly. Check interval is 6 days. This value is automatically recorded and generally does not need to be modified."
+      "help": "The time of the last check is recorded here to prevent the task from running repeatedly. Check interval is 6 days. This value is automatically recorded and generally does not need to be modified.",
+      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
     }
   },
   "Meowfficer": {
@@ -2024,7 +2082,8 @@
     },
     "LastRun": {
       "name": "Last Purchase Time",
-      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified."
+      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified.",
+      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
     }
   },
   "Shipyard": {
@@ -2059,7 +2118,8 @@
     },
     "LastRun": {
       "name": "Last Purchase Time",
-      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified."
+      "help": "Because AL does not display how many blueprints have been purchased today, the time of the last purchase is recorded here to prevent the task from running repeatedly. This value is automatically recorded and generally does not need to be modified.",
+      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
     }
   },
   "Gacha": {
@@ -2388,7 +2448,8 @@
     },
     "OpponentRefreshRecord": {
       "name": "Last Refresh Record",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
     }
   },
   "Sos": {
@@ -3018,7 +3079,8 @@
       "Running": "Running",
       "Inactive": "Inactive",
       "Warning": "Warning",
-      "Updating": "Waiting Update"
+      "Updating": "Waiting Update",
+      "CommissionShipInsufficient": "Running (Commission ships insufficient)"
     },
     "MenuAlas": {
       "Overview": "Overview",

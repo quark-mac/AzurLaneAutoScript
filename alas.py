@@ -555,8 +555,26 @@ class AzurLaneAutoScript:
         return task.command
 
     def loop(self):
+        from module.config.server import set_server
+
+        set_server(self.config.Emulator_ServerName)
+
         logger.set_file_logger(self.config_name)
         logger.info(f'Start scheduler loop: {self.config_name}')
+
+        # Clear custom status message on scheduler start/restart
+        status_file = f'./config/.status_{self.config_name}'
+        try:
+            if os.path.exists(status_file):
+                os.remove(status_file)
+        except Exception as e:
+            logger.warning(f'Failed to clear custom status message: {e}')
+
+        from module.log_cleaner import LogCleaner
+
+        log_cleaner = LogCleaner(config=self.config)
+        log_cleaner.run_on_startup()
+        log_cleaner.start_scheduler()
 
         while 1:
             # Check update event from GUI

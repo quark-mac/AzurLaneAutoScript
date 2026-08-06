@@ -332,7 +332,8 @@
     },
     "NextRun": {
       "name": "下一次运行时间",
-      "help": "自动计算的数值，不需要手动修改。清空后将立即运行"
+      "help": "自动计算的数值，不需要手动修改。清空后将立即运行",
+      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
     },
     "Command": {
       "name": "内部任务名称",
@@ -572,6 +573,49 @@
       "stay_there": "停在原处",
       "goto_main": "前往主界面",
       "close_game": "关闭游戏"
+    }
+  },
+  "AutoStart": {
+    "_info": {
+      "name": "自动启动",
+      "help": "启动 WebUI 后自动运行指定配置"
+    },
+    "Enable": {
+      "name": "启用自动启动",
+      "help": "WebUI 初始化完成后自动运行当前配置"
+    },
+    "Delay": {
+      "name": "启动延迟",
+      "help": "WebUI 启动后等待 X 秒再运行配置，范围 0-600 秒",
+      "invalid_feedback": "请输入 0-600 之间的整数（秒）"
+    }
+  },
+  "LogCleaner": {
+    "_info": {
+      "name": "日志清理",
+      "help": "自动清理过期日志文件"
+    },
+    "Enable": {
+      "name": "启用日志清理",
+      "help": "启用后按设置自动清理旧日志"
+    },
+    "CleanOnStartup": {
+      "name": "启动时清理",
+      "help": "启动 ALAS 时立即执行一次日志清理"
+    },
+    "ScheduledClean": {
+      "name": "启用定时清理",
+      "help": "每天在指定时间自动执行日志清理"
+    },
+    "ScheduledTime": {
+      "name": "定时清理时间",
+      "help": "每天执行日志清理的时间，格式为 HH:MM，例如 03:00",
+      "invalid_feedback": "请输入正确的时间格式（HH:MM），例如：08:30"
+    },
+    "KeepDays": {
+      "name": "日志保留天数",
+      "help": "保留最近 N 天内的日志文件，范围 1-365",
+      "invalid_feedback": "请输入 1-365 之间的整数"
     }
   },
   "DropRecord": {
@@ -1074,7 +1118,8 @@
     },
     "Fleet1Record": {
       "name": "一队心情记录时间",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
     },
     "Fleet1Control": {
       "name": "一队心情控制",
@@ -1101,7 +1146,8 @@
     },
     "Fleet2Record": {
       "name": "二队心情记录时间",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
     },
     "Fleet2Control": {
       "name": "二队心情控制",
@@ -1302,7 +1348,8 @@
     },
     "TimeLimit": {
       "name": "活动时间限制",
-      "help": "当本地时间超过给定数值后，禁用所有活动任务，'2020-01-01 00:00:00' 表示不限制，触发一次后时间将被重置\n设置后能防止活动结束后忘记关闭任务的事情发生"
+      "help": "当本地时间超过给定数值后，禁用所有活动任务，'2020-01-01 00:00:00' 表示不限制，触发一次后时间将被重置\n设置后能防止活动结束后忘记关闭任务的事情发生",
+      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
     }
   },
   "TaskBalancer": {
@@ -1459,6 +1506,16 @@
     "DoMajorCommission": {
       "name": "做主要委托（1200油/1000油委托）",
       "help": "1200油委托现在已经过时，收益很低，建议关闭"
+    },
+    "EnableShipCheck": {
+      "name": "启用舰船不足检测",
+      "help": "点击推荐后，如果长时间没有出现开始按钮，则认为没有满足委托条件的舰船并跳过该委托",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "舰船不足检测超时",
+      "help": "点击推荐后等待开始按钮出现的最长时间（秒）。超过该时间将跳过当前委托"
     }
   },
   "Tactical": {
@@ -1627,7 +1684,8 @@
     },
     "LastRun": {
       "name": "上次检查时间",
-      "help": "记录上一次检查的时间以防止任务重复运行，检查间隔为6天，这个数值是自动记录的，一般不需要修改"
+      "help": "记录上一次检查的时间以防止任务重复运行，检查间隔为6天，这个数值是自动记录的，一般不需要修改",
+      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
     }
   },
   "Meowfficer": {
@@ -2024,7 +2082,8 @@
     },
     "LastRun": {
       "name": "上一次购买时间",
-      "help": "因为游戏不显示今天已经购买了几张，所以这里记录上一次购买的时间以防止任务重复运行，这个数值是自动记录的，一般不需要修改"
+      "help": "因为游戏不显示今天已经购买了几张，所以这里记录上一次购买的时间以防止任务重复运行，这个数值是自动记录的，一般不需要修改",
+      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
     }
   },
   "Shipyard": {
@@ -2059,7 +2118,8 @@
     },
     "LastRun": {
       "name": "上一次购买时间",
-      "help": "因为游戏不显示今天已经购买了几张，所以这里记录上一次购买的时间以防止任务重复运行，这个数值是自动记录的，一般不需要修改"
+      "help": "因为游戏不显示今天已经购买了几张，所以这里记录上一次购买的时间以防止任务重复运行，这个数值是自动记录的，一般不需要修改",
+      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
     }
   },
   "Gacha": {
@@ -2388,7 +2448,8 @@
     },
     "OpponentRefreshRecord": {
       "name": "演习对手刷新记录时间",
-      "help": ""
+      "help": "",
+      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
     }
   },
   "Sos": {
@@ -3018,7 +3079,8 @@
       "Running": "运行中",
       "Inactive": "闲置",
       "Warning": "发生错误",
-      "Updating": "等待更新"
+      "Updating": "等待更新",
+      "CommissionShipInsufficient": "运行中（委托舰船不足）"
     },
     "MenuAlas": {
       "Overview": "总览",

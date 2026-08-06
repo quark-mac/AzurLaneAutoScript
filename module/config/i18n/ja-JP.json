@@ -332,7 +332,8 @@
     },
     "NextRun": {
       "name": "Scheduler.NextRun.name",
-      "help": "Scheduler.NextRun.help"
+      "help": "Scheduler.NextRun.help",
+      "invalid_feedback": "Scheduler.NextRun.invalid_feedback"
     },
     "Command": {
       "name": "Scheduler.Command.name",
@@ -572,6 +573,49 @@
       "stay_there": "stay_there",
       "goto_main": "goto_main",
       "close_game": "close_game"
+    }
+  },
+  "AutoStart": {
+    "_info": {
+      "name": "自動起動",
+      "help": "WebUI の起動後に指定した設定を自動実行します"
+    },
+    "Enable": {
+      "name": "自動起動を有効化",
+      "help": "WebUI の初期化後に現在の設定を自動実行します"
+    },
+    "Delay": {
+      "name": "起動遅延",
+      "help": "WebUI の起動後、設定の開始まで X 秒待機します。範囲は 0-600 秒です",
+      "invalid_feedback": "0-600 の整数を入力してください（秒）"
+    }
+  },
+  "LogCleaner": {
+    "_info": {
+      "name": "ログクリーナー",
+      "help": "期限切れのログファイルを自動削除します"
+    },
+    "Enable": {
+      "name": "ログクリーナーを有効化",
+      "help": "設定に従って古いログを自動削除します"
+    },
+    "CleanOnStartup": {
+      "name": "起動時に削除",
+      "help": "ALAS の起動時にログ削除を一度実行します"
+    },
+    "ScheduledClean": {
+      "name": "定期削除を有効化",
+      "help": "指定時刻に毎日ログ削除を実行します"
+    },
+    "ScheduledTime": {
+      "name": "定期削除時刻",
+      "help": "毎日のログ削除時刻。形式は HH:MM、例：03:00",
+      "invalid_feedback": "正しい時刻形式（HH:MM）を入力してください。例：08:30"
+    },
+    "KeepDays": {
+      "name": "ログ保持日数",
+      "help": "直近 N 日分のログを保持します。範囲は 1-365 です",
+      "invalid_feedback": "1-365 の整数を入力してください"
     }
   },
   "DropRecord": {
@@ -1074,7 +1118,8 @@
     },
     "Fleet1Record": {
       "name": "Emotion.Fleet1Record.name",
-      "help": "Emotion.Fleet1Record.help"
+      "help": "Emotion.Fleet1Record.help",
+      "invalid_feedback": "Emotion.Fleet1Record.invalid_feedback"
     },
     "Fleet1Control": {
       "name": "Emotion.Fleet1Control.name",
@@ -1101,7 +1146,8 @@
     },
     "Fleet2Record": {
       "name": "Emotion.Fleet2Record.name",
-      "help": "Emotion.Fleet2Record.help"
+      "help": "Emotion.Fleet2Record.help",
+      "invalid_feedback": "Emotion.Fleet2Record.invalid_feedback"
     },
     "Fleet2Control": {
       "name": "Emotion.Fleet2Control.name",
@@ -1302,7 +1348,8 @@
     },
     "TimeLimit": {
       "name": "EventGeneral.TimeLimit.name",
-      "help": "EventGeneral.TimeLimit.help"
+      "help": "EventGeneral.TimeLimit.help",
+      "invalid_feedback": "EventGeneral.TimeLimit.invalid_feedback"
     }
   },
   "TaskBalancer": {
@@ -1459,6 +1506,16 @@
     "DoMajorCommission": {
       "name": "Commission.DoMajorCommission.name",
       "help": "Commission.DoMajorCommission.help"
+    },
+    "EnableShipCheck": {
+      "name": "艦船不足検出を有効化",
+      "help": "おすすめを押した後、開始ボタンが長時間表示されない場合、条件を満たす艦船がいないと判断してこの委託をスキップします",
+      "True": "True",
+      "False": "False"
+    },
+    "ShipCheckTimeout": {
+      "name": "艦船不足検出タイムアウト",
+      "help": "おすすめを押した後、開始ボタンの表示を待つ最大時間（秒）。タイムアウト後は現在の委託をスキップします"
     }
   },
   "Tactical": {
@@ -1627,7 +1684,8 @@
     },
     "LastRun": {
       "name": "BuyFurniture.LastRun.name",
-      "help": "BuyFurniture.LastRun.help"
+      "help": "BuyFurniture.LastRun.help",
+      "invalid_feedback": "BuyFurniture.LastRun.invalid_feedback"
     }
   },
   "Meowfficer": {
@@ -2024,7 +2082,8 @@
     },
     "LastRun": {
       "name": "ShipyardDr.LastRun.name",
-      "help": "ShipyardDr.LastRun.help"
+      "help": "ShipyardDr.LastRun.help",
+      "invalid_feedback": "ShipyardDr.LastRun.invalid_feedback"
     }
   },
   "Shipyard": {
@@ -2059,7 +2118,8 @@
     },
     "LastRun": {
       "name": "Shipyard.LastRun.name",
-      "help": "Shipyard.LastRun.help"
+      "help": "Shipyard.LastRun.help",
+      "invalid_feedback": "Shipyard.LastRun.invalid_feedback"
     }
   },
   "Gacha": {
@@ -2388,7 +2448,8 @@
     },
     "OpponentRefreshRecord": {
       "name": "Exercise.OpponentRefreshRecord.name",
-      "help": "Exercise.OpponentRefreshRecord.help"
+      "help": "Exercise.OpponentRefreshRecord.help",
+      "invalid_feedback": "Exercise.OpponentRefreshRecord.invalid_feedback"
     }
   },
   "Sos": {
@@ -3018,7 +3079,8 @@
       "Running": "実行中",
       "Inactive": "実行中止",
       "Warning": "エラー発生",
-      "Updating": "アップデータを待っています"
+      "Updating": "アップデータを待っています",
+      "CommissionShipInsufficient": "実行中（委託の艦船不足）"
     },
     "MenuAlas": {
       "Overview": "概要",

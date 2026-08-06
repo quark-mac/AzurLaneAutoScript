@@ -13,6 +13,8 @@ Alas:
       - EmulatorInfo
       - Error
       - Optimization
+      - AutoStart
+      - LogCleaner
       - DropRecord
     General:
       - Retirement
