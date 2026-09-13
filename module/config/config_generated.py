@@ -317,6 +317,7 @@ class GeneratedConfig:
 
     # Group `MeritShop`
     MeritShop_Refresh = False
+    MeritShop_BuyUnobtainedShip = False
     MeritShop_Filter = 'Cube'
 
     # Group `CoreShop`
@@ -464,9 +465,8 @@ class GeneratedConfig:
 
     # Group `IslandProduction`
     IslandProduction_HardFloorItems = '{}'
-    IslandProduction_ReserveItems = '{}'
-    IslandProduction_RequestBufferItems = '{}'
     IslandProduction_DailyBufferItems = '{}'
+    IslandProduction_ManualBufferItems = '{}'
     IslandProduction_IdleAccumulatingItems = '{}'
 
     # Group `IslandOrder`
@@ -477,24 +477,24 @@ class GeneratedConfig:
 
     # Group `IslandRestaurant`
     IslandRestaurant_KoiGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_KoiWaitress1 = 'any'  # none, any, Chao_Ho
-    IslandRestaurant_KoiWaitress2 = 'none'  # none, any, Chao_Ho
+    IslandRestaurant_KoiWaitress1 = 'any'  # none, any, Chao_Ho, Chang_Feng
+    IslandRestaurant_KoiWaitress2 = 'none'  # none, any, Chao_Ho, Chang_Feng
     IslandRestaurant_KoiMenu = '{}'
     IslandRestaurant_BearGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_BearWaitress1 = 'any'  # none, any, Cheshire
-    IslandRestaurant_BearWaitress2 = 'none'  # none, any, Cheshire
+    IslandRestaurant_BearWaitress1 = 'any'  # none, any, Cheshire, Chang_Feng
+    IslandRestaurant_BearWaitress2 = 'none'  # none, any, Cheshire, Chang_Feng
     IslandRestaurant_BearMenu = '{}'
     IslandRestaurant_EateryGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_EateryWaitress1 = 'any'  # none, any, Helena, Prinz_Eugen
-    IslandRestaurant_EateryWaitress2 = 'none'  # none, any, Helena, Prinz_Eugen
+    IslandRestaurant_EateryWaitress1 = 'any'  # none, any, Helena, Prinz_Eugen, Chang_Feng
+    IslandRestaurant_EateryWaitress2 = 'none'  # none, any, Helena, Prinz_Eugen, Chang_Feng
     IslandRestaurant_EateryMenu = '{}'
     IslandRestaurant_GrillGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_GrillWaitress1 = 'any'  # none, any, August_von_Parseval, Prinz_Eugen
-    IslandRestaurant_GrillWaitress2 = 'none'  # none, any, August_von_Parseval, Prinz_Eugen
+    IslandRestaurant_GrillWaitress1 = 'any'  # none, any, August_von_Parseval, Prinz_Eugen, Chang_Feng
+    IslandRestaurant_GrillWaitress2 = 'none'  # none, any, August_von_Parseval, Prinz_Eugen, Chang_Feng
     IslandRestaurant_GrillMenu = '{}'
     IslandRestaurant_CafeGrade = 'bronze'  # bronze, silver, gold, diamond
-    IslandRestaurant_CafeWaitress1 = 'any'  # none, any, Cheshire
-    IslandRestaurant_CafeWaitress2 = 'none'  # none, any, Cheshire
+    IslandRestaurant_CafeWaitress1 = 'any'  # none, any, Cheshire, Belfast, Chang_Feng
+    IslandRestaurant_CafeWaitress2 = 'none'  # none, any, Cheshire, Belfast, Chang_Feng
     IslandRestaurant_CafeMenu = '{}'
 
     # Group `IslandSeasonTask`

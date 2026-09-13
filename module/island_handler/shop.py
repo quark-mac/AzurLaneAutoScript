@@ -40,10 +40,8 @@ class IslandShop(IslandShopUI):
     def _island_shop_item_name_ocr(self):
         if server.server == 'jp':
             lang = 'jp'
-        elif server.server == 'cn':
-            lang = 'cnocr'
         else:
-            lang = 'azur_lane'
+            lang = 'cnocr'
         return Ocr(
             self._island_shop_item_name_grid.buttons,
             lang=lang,
@@ -134,7 +132,7 @@ class IslandShop(IslandShopUI):
                 middle = 10*(q + 1) + 1
             return middle
 
-        if server.server == 'cn':
+        if server.server in ['cn', 'tw']:
             lang = 'cnocr'
         else:
             lang = 'azur_lane'
@@ -210,6 +208,9 @@ class IslandShop(IslandShopUI):
                 target_shop_id = shop_id
                 logger.info(f"Recipe {recipe_id} is in shop {shop_id}, name {DIC_ISLAND_SHOP[shop_id]['name'][server.server]}")
                 break
+        if target_shop_id is None:
+            logger.warning(f'Recipe {recipe_id} is not available in the searched shops')
+            return False
         order = [0, 0, 0]
         for index in range(3):
             order[2 - index] = DIC_ISLAND_SHOP[target_shop_id]['order']

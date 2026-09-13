@@ -596,6 +596,7 @@ MedalShop2:
     option: [ general, gun, torpedo, antiair, plane ]
 MeritShop:
   Refresh: false
+  BuyUnobtainedShip: false
   Filter: |-
     Cube
 CoreShop:
@@ -803,15 +804,11 @@ IslandProduction:
     type: textarea
     value: |-
       {}
-  ReserveItems:
-    type: textarea
-    value: |-
-      {}
-  RequestBufferItems:
-    type: textarea
-    value: |-
-      {}
   DailyBufferItems:
+    type: textarea
+    value: |-
+      {}
+  ManualBufferItems:
     type: textarea
     value: |-
       {}
@@ -829,7 +826,7 @@ IslandRestaurant:
     option: [ bronze, silver, gold, diamond ]
   KoiWaitress1: &KoiWaitressSlot
     value: any
-    option: &KoiWaitressOptions [ none, any, Chao_Ho ]
+    option: &KoiWaitressOptions [ none, any, Chao_Ho, Chang_Feng ]
   KoiWaitress2:
     <<: *KoiWaitressSlot
     value: none
@@ -842,7 +839,7 @@ IslandRestaurant:
     option: [ bronze, silver, gold, diamond ]
   BearWaitress1: &BearWaitressSlot
     value: any
-    option: &BearWaitressOptions [ none, any, Cheshire ]
+    option: &BearWaitressOptions [ none, any, Cheshire, Chang_Feng ]
   BearWaitress2:
     <<: *BearWaitressSlot
     value: none
@@ -855,7 +852,7 @@ IslandRestaurant:
     option: [ bronze, silver, gold, diamond ]
   EateryWaitress1: &EateryWaitressSlot
     value: any
-    option: &EateryWaitressOptions [ none, any, Helena, Prinz_Eugen ]
+    option: &EateryWaitressOptions [ none, any, Helena, Prinz_Eugen, Chang_Feng ]
   EateryWaitress2:
     <<: *EateryWaitressSlot
     value: none
@@ -868,7 +865,7 @@ IslandRestaurant:
     option: [ bronze, silver, gold, diamond ]
   GrillWaitress1: &GrillWaitressSlot
     value: any
-    option: &GrillWaitressOptions [ none, any, August_von_Parseval, Prinz_Eugen ]
+    option: &GrillWaitressOptions [ none, any, August_von_Parseval, Prinz_Eugen, Chang_Feng ]
   GrillWaitress2:
     <<: *GrillWaitressSlot
     value: none
@@ -881,7 +878,7 @@ IslandRestaurant:
     option: [ bronze, silver, gold, diamond ]
   CafeWaitress1: &CafeWaitressSlot
     value: any
-    option: &CafeWaitressOptions [ none, any, Cheshire ]
+    option: &CafeWaitressOptions [ none, any, Cheshire, Belfast, Chang_Feng ]
   CafeWaitress2:
     <<: *CafeWaitressSlot
     value: none

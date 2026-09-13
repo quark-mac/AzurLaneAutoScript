@@ -13,10 +13,10 @@ from module.config.utils import get_server_next_update
 from module.island.assets import ISLAND_CLICK_SAFE_AREA
 from module.island.data import DIC_ISLAND_ITEM, DIC_ISLAND_RESTAURANT_MENU_TO_RECIPE
 from module.island.utils import (
+    get_stuck_season_order_requirements,
     load_hard_floor_items,
     load_item_mapping,
-    load_request_buffer_items,
-    load_reserve_items,
+    merge_task_target_stuck_order_items,
     normalize_item_keys,
 )
 from module.island_handler.assets import *
@@ -27,6 +27,7 @@ from module.island_handler.restaurant_config import (
     WAITRESS_ANY,
     WAITRESS_NONE,
     get_config_key,
+    get_restaurant_capacity,
     get_restaurant_config,
     get_selected_named_waitresses,
     get_waitress_effect,
@@ -63,6 +64,13 @@ class RestaurantItem(Item):
         return sum_ > 400
 
 
+class RestaurantItemAmount(Digit):
+    def pre_process(self, image):
+        image = super().pre_process(image)
+        image = cv2.copyMakeBorder(image, 4, 2, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
+        return image
+
+
 class RestaurantItemGrid(ItemGrid):
     item_class = RestaurantItem
     similarity = 0.75
@@ -72,11 +80,11 @@ class RestaurantItemGrid(ItemGrid):
             grid,
             templates={},
             template_area=(12, 21, 72, 67),
-            amount_area=(38, 67, 83, 86),
+            amount_area=(42, 67, 77, 85),
             tag_area=(66, 2, 72, 5)
         )
         if server.server == 'jp':
-            self.amount_ocr = Digit([], letter=(237, 237, 237), threshold=160, name='Amount_ocr')
+            self.amount_ocr = RestaurantItemAmount([], letter=(220, 220, 220), lang='azur_lane', threshold=128, name='Amount_ocr')
         else:
             self.amount_ocr = Digit([], lang='cnocr', threshold=160, name='Amount_ocr')
         self.load_template_folder('./assets/island/restaurant')
@@ -107,27 +115,12 @@ class RestaurantItemGrid(ItemGrid):
 class IslandRestaurant(IslandDock):
     working_restaurant_id = None
 
-    @staticmethod
-    def get_initial_capacity_from_grade(grade):
-        if grade == 'bronze':
-            return 5
-        elif grade in ['silver', 'gold', 'diamond']:
-            return 6
-        else:
-            raise ValueError(f"Invalid grade: {grade}")
-
     @cached_property
     def restaurant_capacity(self):
-        capacity = {}
-        for restaurant_id in RESTAURANT_IDS:
-            config_data = get_restaurant_config(restaurant_id)
-            grade = self.config.cross_get(
-                get_config_key(restaurant_id, config_data['grade_key'])
-            )
-            slots = get_waitress_slots(self.config, restaurant_id)
-            capacity_delta, _ = get_waitress_effect(restaurant_id, slots)
-            capacity[restaurant_id] = self.get_initial_capacity_from_grade(grade) + capacity_delta
-        return capacity
+        return {
+            restaurant_id: get_restaurant_capacity(self.config, restaurant_id)
+            for restaurant_id in RESTAURANT_IDS
+        }
 
     @staticmethod
     def get_quantity_from_grade(grade):
@@ -265,20 +258,22 @@ class IslandRestaurant(IslandDock):
             if item.tag == 'bonus':
                 return item.price * amount * (1 + self.event_buff / 100)
             return item.price * amount
-        def sell_amount(item):
-            return min(item.amount, capacity)
-        def is_sellable_surplus(item):
-            return item.amount - sell_amount(item) >= protected_items.get(item.id, 0)
+        def has_sellable_capacity(item):
+            return item.amount >= capacity + protected_items.get(item.id, 0)
         items = self.scan_all_items()
         menu_items = [
             item for item in items
             if item.id in menu
-            and item.amount >= capacity
+            # Sell one full waitress-capacity tranche while preserving manual
+            # hard floors, task targets, and remaining season-order
+            # requirements. Reserves and daily buffers are soft and may be
+            # consumed by restaurants.
+            and has_sellable_capacity(item)
         ]
         surplus_items = [
             item for item in items
             if item.id not in menu
-            and is_sellable_surplus(item)
+            and has_sellable_capacity(item)
         ]
         sellable_items = menu_items + surplus_items
         quantity = self.restaurant_quantity[self.working_restaurant_id]
@@ -294,27 +289,21 @@ class IslandRestaurant(IslandDock):
         hard_floor_items = normalize_item_keys(load_hard_floor_items(
             self.config.cross_get("IslandProduction.IslandProduction.HardFloorItems", "")
         ))
-        reserve_items = normalize_item_keys(load_reserve_items(
-            self.config.cross_get("IslandProduction.IslandProduction.ReserveItems", "")
-        ))
-        request_buffer_items = normalize_item_keys(load_request_buffer_items(
-            self.config.cross_get("IslandProduction.IslandProduction.RequestBufferItems", "")
-        ))
-        daily_buffer_items = normalize_item_keys(load_item_mapping(
-            self.config.cross_get("IslandProduction.IslandProduction.DailyBufferItems", ""),
-            config_name='DailyBufferItems',
-        ))
-        item_ids = set()
-        item_ids.update(hard_floor_items)
-        item_ids.update(reserve_items)
-        item_ids.update(request_buffer_items)
-        item_ids.update(daily_buffer_items)
+        stuck_season_order_id = self.config.cross_get(
+            "IslandOrder.IslandOrder.StuckSeasonOrderId", 0
+        )
+        task_target_items = load_item_mapping(
+            self.config.cross_get("IslandSeasonTask.IslandSeasonTask.TaskTarget", "{}"),
+            config_name='TaskTarget',
+        )
+        protected_target_items = merge_task_target_stuck_order_items(
+            task_target_items,
+            get_stuck_season_order_requirements(stuck_season_order_id),
+        )
+        item_ids = set(hard_floor_items) | set(protected_target_items)
         return {
-            item_id: (
-                hard_floor_items.get(item_id, 0)
-                + reserve_items.get(item_id, 0)
-                + max(request_buffer_items.get(item_id, 0), daily_buffer_items.get(item_id, 0))
-            )
+            item_id: max(hard_floor_items.get(item_id, 0), 0)
+            + max(protected_target_items.get(item_id, {}).get('total_need_count', 0), 0)
             for item_id in item_ids
         }
 
@@ -402,19 +391,21 @@ class IslandRestaurant(IslandDock):
                 | selected_waitresses
                 | all_named_waitresses
             )
-            selected = self.island_dock_select_character_with_blacklist(fallback_blacklist)
-            if selected is None:
+            candidate = self.island_dock_find_character_with_blacklist(fallback_blacklist)
+            if candidate is None:
                 success = False
             else:
-                selected_waitresses.add(selected)
+                self.island_dock_select_one(candidate.button)
+                selected_waitresses.add(candidate.identity)
 
         for _ in range(active_waitresses.count(WAITRESS_ANY)):
             blacklist = unavailable_waitress_list | selected_waitresses | all_named_waitresses
-            selected = self.island_dock_select_character_with_blacklist(blacklist)
-            if selected is None:
+            candidate = self.island_dock_find_character_with_blacklist(blacklist)
+            if candidate is None:
                 success = False
             else:
-                selected_waitresses.add(selected)
+                self.island_dock_select_one(candidate.button)
+                selected_waitresses.add(candidate.identity)
         if not success:
             logger.warning("Failed to choose waitress")
             self.ui_back(check_button=self.is_in_island_restaurant)
