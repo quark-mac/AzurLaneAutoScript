@@ -384,10 +384,10 @@ See `docs/input-validation-spec.md` for complete guide and `docs/input-validatio
 ### Upstream Synchronization
 This fork can sync with upstream `guoh064/AzurLaneAutoScript`:
 
-**Automatic sync**: GitHub Actions runs daily at UTC 00:00
-**Manual sync**: `git sync` (uses merge) or `git sync-clean` (uses rebase)
+**Automatic sync**: OpenChamber runs weekly on Sunday at 09:00 Asia/Shanghai in an isolated worktree. GitHub Actions is manual-only.
+**Manual sync**: Fetch and merge `upstream/main`, verify, then push normally.
 
-See `docs/upstream-sync-guide.md` for detailed workflow and conflict resolution.
+Before syncing, resolving upstream conflicts, or auditing retained customizations, read `docs/upstream-sync-guide.md` and `docs/custom-feature-inventory.md`. Preserve each inventoried behavior and run `scripts/check_custom_features.py` before publishing.
 
 ## Additional Resources
 

@@ -105,12 +105,15 @@ def check_i18n(errors):
         'Commission.EnableShipCheck.name',
         'Commission.ShipCheckTimeout.name',
         'Gui.Status.CommissionShipInsufficient',
+        'AutoStart.Delay.invalid_feedback',
+        'LogCleaner.ScheduledTime.invalid_feedback',
+        'LogCleaner.KeepDays.invalid_feedback',
     )
     for lang in LANGS:
         data = load_json('module/config/i18n/%s.json' % lang)
         for path in required:
             value = deep_get(data, path)
-            check(value not in (None, ''), 'Missing i18n path for %s: %s' % (lang, path), errors)
+            check(value not in (None, '', path), 'Missing i18n path for %s: %s' % (lang, path), errors)
 
 
 def check_task_entries(errors):
@@ -183,11 +186,30 @@ def check_input_validation(errors):
 
     app = read_text('module/webui/app.py')
     check('re_fullmatch(validate, v_str)' in app, 'Missing WebUI regex validation', errors)
+    save_config = app.split('    def _save_config(', 1)[-1].split('\n    def ', 1)[0]
     check(
-        'pin["_".join(k.split("."))] = to_pin_value(default)' not in app,
+        not re.search(r'pin\[.*?\]\s*=\s*(?:to_pin_value\()?default', save_config),
         'Empty WebUI fields still push defaults back immediately',
         errors,
     )
+    check(
+        0 <= save_config.find('re_fullmatch(validate, v_str)') < save_config.find('parse_pin_value(v, valuetype)'),
+        'Input validation must run before type conversion',
+        errors,
+    )
+    args = load_json('module/config/argument/args.json')
+    cases = (
+        ('AutoStart.Delay', ('0', '10', '600'), ('-1', '601', '1.5', 'abc')),
+        ('LogCleaner.KeepDays', ('1', '7', '365'), ('0', '366', '-1', '1.5')),
+        ('LogCleaner.ScheduledTime', ('00:00', '09:30', '23:59'), ('24:00', '12:60', '9:00', 'abc')),
+    )
+    for path, valid, invalid in cases:
+        rule = deep_get(args, 'Alas.%s.validate' % path)
+        check(bool(rule), 'Missing generated validation rule: %s' % path, errors)
+        if rule:
+            for value in valid + invalid:
+                check(bool(re.fullmatch(rule, value)) == (value in valid),
+                      'Validation boundary changed: %s = %s' % (path, value), errors)
 
 
 def check_scheduler_controls(errors):
@@ -214,6 +236,17 @@ def check_scheduler_controls(errors):
         'Scheduler enable is forced on by config loading',
         errors,
     )
+    args = load_json('module/config/argument/args.json')
+    template = load_json('config/template.json')
+    for task in ('Commission', 'Tactical', 'Research', 'Dorm', 'Meowfficer', 'Guild', 'Reward', 'Freebies'):
+        check(deep_get(args, '%s.Scheduler.Enable.type' % task) == 'checkbox',
+              'Task enable is no longer editable: %s' % task, errors)
+        check(deep_get(args, '%s.Scheduler.Enable.value' % task) is False
+              and deep_get(template, '%s.Scheduler.Enable' % task) is False,
+              'New configurations unexpectedly enable task: %s' % task, errors)
+    connection = read_text('module/device/connection_attr.py')
+    check('chr(8)' not in connection and "if 'oc' in v['type']" not in connection,
+          'Device connection depends on locked config controls again', errors)
 
 
 def check_update_and_status(errors):
@@ -240,9 +273,28 @@ def check_update_and_status(errors):
         ('module/commission/commission.py', 'commission_ship_insufficient'),
         ('module/webui/process_manager.py', 'def custom_status_message('),
         ('module/webui/app.py', 'custom_status_message'),
+        ('module/webui/app.py', 'get_state=self.get_status_with_message'),
+        ('module/webui/app.py', 'return (state, msg)'),
         ('alas.py', 'os.remove(status_file)'),
     ):
         check(text in read_text(path), 'Missing custom runtime behavior in %s: %s' % (path, text), errors)
+
+
+def check_log_cleaner_and_fork_fixes(errors):
+    cleaner = read_text('module/log_cleaner.py')
+    for text in ('def _clean_log_files(', 'def _clean_error_dirs(', 'def _clean_screenshots(',
+                 'self.config.DropRecord_SaveFolder', 'file_date < cutoff_date', 'ts < cutoff_ms',
+                 'root != screenshot_dir', 'LogCleaner_CleanOnStartup', 'LogCleaner_ScheduledClean',
+                 'self._scheduler_thread.is_alive()', 'self._stop_event.set()'):
+        check(text in cleaner, 'Missing LogCleaner behavior: %s' % text, errors)
+    for path, text in (
+        ('module/os/map.py', "self.config.task_call('OpsiHazard1Leveling')"),
+        ('module/shop_event/ui.py', 'class EventShopScroll(Scroll):'),
+        ('module/config/config_updater.py', 'legacy_waitress_to_slots'),
+        ('campaign/event_20260625_cn/t1.py', "MAP_ENSURE_EDGE_INSIGHT_CORNER = 'bottom'"),
+        ('campaign/event_20260625_cn/ht1.py', "MAP_ENSURE_EDGE_INSIGHT_CORNER = 'bottom'"),
+    ):
+        check(text in read_text(path), 'Missing retained fork fix in %s: %s' % (path, text), errors)
 
 
 def check_files(errors):
@@ -273,6 +325,7 @@ def main():
     check_input_validation(errors)
     check_scheduler_controls(errors)
     check_update_and_status(errors)
+    check_log_cleaner_and_fork_fixes(errors)
     check_files(errors)
 
     if errors:

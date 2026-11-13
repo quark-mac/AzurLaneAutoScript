@@ -14,13 +14,25 @@
 
 ---
 
-## 自动同步
+## 自动同步（2026-11-13 起）
+
+由 OpenChamber 每周日 **09:00，Asia/Shanghai** 启动独立会话，在新的 Git worktree 中合并并验证后推送 `origin/master`。基准为 `origin/master`；每次运行仍须先 fetch 并快进到最新远程提交。
+
+任务提示必须读取 `docs/custom-feature-inventory.md`，逐项保护定制行为。失败时保留工作成果和诊断并记录待办。主目录 `D:\AzurLaneAutoScript` 用于实际运行，不由定时任务修改、重启或清理。
+
+Windows worktree 不包含 toolkit，使用 `D:\AzurLaneAutoScript\toolkit\python.exe`，当前目录和模块导入根目录必须指向 worktree；可用 `-c` 明确将 `os.getcwd()` 插到 `sys.path[0]` 后再运行脚本。
+
+发布命令为 `git push origin HEAD:refs/heads/master`，不得强推。推送前再次 fetch 并确认远程是当前 HEAD 的祖先，否则整合新远程并重新验证。不要在 worktree 中 checkout/reset 主目录正在使用的 master 分支。
+
+OpenChamber 与电脑需在计划时间运行，模型和 GitHub 凭据需可用。定时任务同步的是远程源码；本机 ALAS 由用户择机通过更新器部署。
+
+## GitHub Actions 手动备用
 
 工作流文件：`.github/workflows/sync-upstream.yml`
 
 行为：
 
-1. 每天 UTC 00:00 自动运行
+1. 仅在 GitHub Actions 页面手动触发（已取消每日 cron，避免双重自动发布）
 2. 拉取 `upstream/main`
 3. 如果 `upstream/main` 已经包含在 `origin/master` 中，直接跳过
 4. 如果有新 upstream，执行普通 merge
@@ -112,7 +124,7 @@ git push origin master
 
 ## 当前结论
 
-- 平时：GitHub Actions 自动 merge upstream 并推送
+- 平时：OpenChamber 每周自动 merge upstream 并推送；GitHub Actions 仅手动备用
 - 推送前：运行生成器、格式检查、编译检查和自定义功能健康检查
 - 冲突或验证失败时：创建 Issue，人工处理一次
 - 不再使用 overlay force push

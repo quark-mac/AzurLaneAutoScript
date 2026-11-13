@@ -10,7 +10,7 @@
 
 - `master` 跟随 `upstream/main` 自动 merge 更新
 - merge 成功后先验证配置生成、Python 编译和自定义功能入口
-- 无冲突且验证通过时 GitHub Actions 自动推送，失败时才人工介入
+- OpenChamber 每周日北京时间 09:00 独立 worktree 验证后推送，GitHub Actions 仅手动备用
 
 换句话说，现在维护重点是尽量让普通 merge 自动通过；真正冲突时再手动处理。
 
@@ -33,8 +33,8 @@
 
 | 项目 | 状态 |
 |------|------|
-| 自动同步脚本 | `.github/workflows/sync-upstream.yml` |
-| GitHub Actions | `.github/workflows/sync-upstream.yml` |
+| 自动同步 | OpenChamber 每周日 09:00（Asia/Shanghai），独立 worktree |
+| GitHub Actions | `.github/workflows/sync-upstream.yml`，仅 workflow_dispatch |
 | 同步策略 | 普通 `git merge upstream/main` |
 | 成功行为 | 验证通过后自动推送到 `master` |
 | 失败行为 | 创建/更新 Issue，人工处理 |
@@ -43,6 +43,8 @@
 ---
 
 ## 已验证的能力
+
+完整历史核验见 [定制功能历史清单](custom-feature-inventory.md)：18 项保留的运行功能/行为、同步基础设施、被主动替代或删除的历史方案，以及验证边界。
 
 - 保留本地输入验证系统
 - 保留自动启动、日志清理、自定义状态等本地功能
