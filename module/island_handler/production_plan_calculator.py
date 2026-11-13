@@ -5,27 +5,30 @@ unit tested and reused: every input is passed in explicitly and every result
 is stored as a plain attribute on ProductionPlanCalculator.
 """
 from collections import defaultdict
-from datetime import datetime
 from typing import Dict
 
 import numpy as np
-from scipy.optimize import linprog
 
 import module.config.server as server
 from module.island.data import *
+from module.island.season_data import DIC_ISLAND_SEASON
 from module.island.utils import (
+    apply_server_overrides,
     ceil_with_epsilon,
     count_level,
     format_item_need_data,
-    get_stuck_season_order_requirements,
+    get_season_data,
+    get_slot_recipe_ids,
+    get_stuck_season_order_items,
     get_sub_dict,
     item_mapping_to_yaml,
     item_name,
+    is_shop_recipe_available,
     merge_item_needs,
     normalize_item_keys,
     normalize_item_needs,
-    normalize_stuck_season_order_id,
 )
+from module.island_handler.milp import Bounds, LinearConstraint, milp
 from module.island_handler.restaurant_config import (
     RESTAURANT_IDS,
     get_initial_capacity_from_grade,
@@ -36,24 +39,87 @@ from module.island_handler.restaurant_config import (
 from module.logger import logger
 
 
-def get_current_activity_list(time):
+def extend_problem(problem, columns=(), rows=()):
     """
+    Append columns, then rows, to a problem built by ProductionPlanCalculator.
+
+    Existing column indices and row labels keep their meaning, so the first
+    len(problem['c']) values of a solution of the extended problem read as a
+    solution of the original problem.
+
     Args:
-        time (datetime): Time in server timezone.
+        problem (dict): With c, constraints, bounds and constraint_labels, and
+            integrality and column_labels if it was extended before.
+        columns (list[dict]): Columns to append, each with
+            label: Unique label, not an int.
+            cost (float): Objective coefficient, default 0.
+            lb (float): Lower bound, default 0.
+            ub (float): Upper bound, default inf.
+            integer (bool): Integer variable, default False.
+            rows (dict): {row label: coefficient} on existing rows.
+        rows (list[dict]): Rows to append, each with
+            label: Unique label.
+            columns (dict): {column: coefficient}, column is an index or a column label.
+            lb (float): Lower limit, default -inf.
+            ub (float): Upper limit, default inf.
 
     Returns:
-        list[int]: Activity ids of the island season covering `time`,
-            or None if no season covers it.
+        dict: A copy of problem with c, constraints, bounds, integrality and
+            constraint_labels extended, and column_labels {label: index} of
+            appended columns. The input problem is not modified.
     """
-    for season, content in DIC_ISLAND_SEASON.items():
-        start_time = datetime.strptime(content['start_time'][server.server], "%Y-%m-%d %H:%M:%S")
-        end_time = datetime.strptime(content['end_time'][server.server], "%Y-%m-%d %H:%M:%S")
-        if start_time <= time < end_time:
-            return content['activity']
+    constraints = problem['constraints']
+    variable_count = len(problem['c'])
+    row_count = constraints.A.shape[0]
+    row_index = {label: row for row, label in enumerate(problem['constraint_labels'])}
+    column_index = dict(problem.get('column_labels', {}))
+
+    a_columns = np.zeros((row_count, len(columns)))
+    for offset, column in enumerate(columns):
+        label = column['label']
+        if isinstance(label, (int, np.integer)) or label in column_index:
+            raise ValueError(f'Column label {label} is an int or not unique')
+        column_index[label] = variable_count + offset
+        for row_label, coefficient in column.get('rows', {}).items():
+            a_columns[row_index[row_label], offset] += coefficient
+
+    a_rows = np.zeros((len(rows), variable_count + len(columns)))
+    for offset, row in enumerate(rows):
+        label = row['label']
+        if label in row_index:
+            raise ValueError(f'Row label {label} is not unique')
+        row_index[label] = row_count + offset
+        for column, coefficient in row['columns'].items():
+            index = column if isinstance(column, (int, np.integer)) else column_index[column]
+            a_rows[offset, index] += coefficient
+
+    extended = dict(problem)
+    extended.update({
+        'c': np.concatenate([problem['c'], [column.get('cost', 0.) for column in columns]]),
+        'constraints': LinearConstraint(
+            np.vstack([np.hstack([constraints.A, a_columns]), a_rows]),
+            np.concatenate([constraints.lb, [row.get('lb', -np.inf) for row in rows]]),
+            np.concatenate([constraints.ub, [row.get('ub', np.inf) for row in rows]]),
+        ),
+        'bounds': Bounds(
+            np.concatenate([problem['bounds'].lb, [column.get('lb', 0.) for column in columns]]),
+            np.concatenate([problem['bounds'].ub, [column.get('ub', np.inf) for column in columns]]),
+        ),
+        'integrality': np.concatenate([
+            problem.get('integrality', np.zeros(variable_count)),
+            [1 if column.get('integer', False) else 0 for column in columns],
+        ]),
+        'constraint_labels': list(problem['constraint_labels']) + [row['label'] for row in rows],
+        'column_labels': column_index,
+    })
+    return extended
 
 
 class ProductionPlanCalculator:
     NET_ACCUMULATING_EPSILON = 1e-3
+    # Ranch second products (poultry, pelt) drop once every this many batches,
+    # planned as an amortized rate per batch.
+    RANCH_SECOND_PRODUCT_INTERVAL = 3
     SLOT_TO_GROUP = {
         9001: 'field', 9002: 'field', 9003: 'field', 9004: 'field',
         9011: 'mine', 9012: 'mine', 9013: 'mine', 9014: 'mine',
@@ -114,20 +180,16 @@ class ProductionPlanCalculator:
         'manufacturing_crafts': [9207, 9208],
         'fishery': [9211, 9212, 9213],
     }
-    RECIPE_PRODUCT_IDS = {
-        next(iter(recipe['commission_product']))
-        for recipe in DIC_ISLAND_RECIPE.values()
-        if recipe['commission_product']
-    }
     EXCHANGE_PRODUCT_IDS = {
         item_id
         for recipe in DIC_ISLAND_EXCHANGE_RECIPE.values()
         for item_id in recipe['items']
     }
+
     def __init__(
             self,
             technology_status: Dict[int, bool],
-            activity_list=None,
+            season_name=None,
             place_efficiency=None,
             restaurant_settings=None,
             daily_profit_lower_limit=0,
@@ -137,8 +199,7 @@ class ProductionPlanCalculator:
         Args:
             technology_status: {technology_id: unlocked},
                 see module.island.utils.load_technology_status.
-            activity_list (list[int]): Activity ids of the current island season,
-                see get_current_activity_list.
+            season_name (str): Shared season namespace; None enables permanent content only.
             place_efficiency (dict): User-configured efficiency bonus by production
                 place id, e.g. {101: 0.05, 501: 0, 502: 0} for field/orchard/nursery.
                 Mining (401) and logging (402) bonuses are derived from
@@ -150,12 +211,47 @@ class ProductionPlanCalculator:
             daily_buffer_safety_margin (float): Relative safety margin applied to
                 exported daily buffer amounts.
         """
-        self.activity_list = list(activity_list) if activity_list else []
+        self.season = get_season_data(season_name) if season_name is not None else None
+        season_data = self.season or {}
+        self.seasonal_recipe_ids = {
+            recipe_id for season in DIC_ISLAND_SEASON.values()
+            for recipes in season.get('production', {}).values() for recipe_id in recipes
+        }
+        self.seasonal_gather_ids = {
+            gather_id for season in DIC_ISLAND_SEASON.values()
+            for gather_id in season.get('wild_gather', {})
+        }
+        self.recipe_data = apply_server_overrides(
+            DIC_ISLAND_RECIPE, 'recipe_overrides',
+        )
+        self.shop_recipe_data = apply_server_overrides(
+            DIC_ISLAND_SHOP_RECIPE, 'shop_goods_overrides',
+        )
+        self.wild_gather_data = apply_server_overrides(
+            {**DIC_ISLAND_WILD_GATHER, **season_data.get('wild_gather', {})},
+            'wild_gather_overrides',
+        )
+        self.recipe_product_ids = {
+            item_id for recipe in self.recipe_data.values()
+            for item_id in recipe['commission_product']
+        }
+        # Converting items into items of the same PT, e.g. wheat into flour,
+        # gains no PT over holding the input.
+        self.pt_neutral_shop_ids = {
+            shop_id for shop_id, recipe in self.shop_recipe_data.items()
+            if 1 not in recipe['resource_consume']
+            and sum(DIC_ISLAND_ITEM[item_id]['pt_num'] * amount
+                    for item_id, amount in recipe['resource_consume'].items())
+            == sum(DIC_ISLAND_ITEM[item_id]['pt_num'] * amount
+                   for item_id, amount in recipe['items'].items())
+        }
         self.place_efficiency = dict(place_efficiency) if place_efficiency else {}
         self.daily_profit_lower_limit = float(daily_profit_lower_limit or 0)
         self.daily_buffer_safety_margin = max(float(daily_buffer_safety_margin or 0), 0)
 
         restaurant_settings = restaurant_settings or {}
+        self.restaurant_grade = {}
+        self.restaurant_waitress_slots = {}
         self.restaurant_capacity = {}
         self.restaurant_quantity = {}
         self.restaurant_sales_bonus = {}
@@ -164,6 +260,8 @@ class ProductionPlanCalculator:
             settings = restaurant_settings.get(restaurant_id, {})
             grade = settings.get('grade') or 'bronze'
             slots = normalize_waitress_slots(restaurant_id, settings.get('waitress_slots'))
+            self.restaurant_grade[restaurant_id] = grade
+            self.restaurant_waitress_slots[restaurant_id] = slots
             capacity_delta, sales_bonus = get_waitress_effect(restaurant_id, slots)
             self.restaurant_capacity[restaurant_id] = get_initial_capacity_from_grade(grade) + capacity_delta
             self.restaurant_quantity[restaurant_id] = self.get_quantity_from_grade(grade)
@@ -174,15 +272,12 @@ class ProductionPlanCalculator:
         self._reset_lp_result()
 
     def analyze_technology_status(self, technology_status: Dict[int, bool]):
-        self.recipe_available = {}
-        self.wild_gather_available = {}
-        for activity_id in self.activity_list:
-            if DIC_ISLAND_ACTIVITY[activity_id]['type'] == 5003:
-                for gather_id in DIC_ISLAND_ACTIVITY[activity_id]['config_data']:
-                    self.wild_gather_available[gather_id] = True
-            if DIC_ISLAND_ACTIVITY[activity_id]['type'] == 5004:
-                for recipe_id in DIC_ISLAND_ACTIVITY[activity_id]['config_data']:
-                    self.recipe_available[recipe_id] = True
+        season = self.season or {}
+        self.recipe_available = {
+            recipe_id: True
+            for recipes in season.get('production', {}).values() for recipe_id in recipes
+        }
+        self.wild_gather_available = dict.fromkeys(season.get('wild_gather', {}), True)
 
         self.slot_available = {
             # Fields
@@ -247,16 +342,13 @@ class ProductionPlanCalculator:
         }
         self.recipe_group = {}
         self.available_slot_recipes = set()
-        for slot, slot_data in DIC_ISLAND_SLOT.items():
+        for slot in DIC_ISLAND_SLOT:
             if not self.slot_available.get(slot, False):
                 continue
             group = self.SLOT_TO_GROUP.get(slot)
             if group is None:
                 continue
-            for recipe_id in slot_data.get('formula', []):
-                self.available_slot_recipes.add(recipe_id)
-                self.recipe_group.setdefault(recipe_id, group)
-            for recipe_id in slot_data.get('activity_formula', []):
+            for recipe_id in get_slot_recipe_ids(slot, self.season):
                 self.available_slot_recipes.add(recipe_id)
                 self.recipe_group.setdefault(recipe_id, group)
         self.recipe_available.update({
@@ -356,15 +448,8 @@ class ProductionPlanCalculator:
             701022: technology_status.get(650203, False),  # 净水滤芯
             701023: technology_status.get(630205, False),  # 装饰画
         })
-        for recipe_id in DIC_ISLAND_RECIPE:
-            if recipe_id < 9900000:
-                self.recipe_available.setdefault(recipe_id, True)
-            else:
-                self.recipe_available.setdefault(recipe_id, False)
-        for recipe_id in self.available_slot_recipes:
-            if recipe_id >= 9900000:
-                self.recipe_available[recipe_id] = True
-
+        for recipe_id in self.recipe_data:
+            self.recipe_available.setdefault(recipe_id, recipe_id not in self.seasonal_recipe_ids)
         self.mining_additional = technology_status.get(220401, False)
         self.wood_additional = technology_status.get(210401, False)
         self.ranch_additional = technology_status.get(400001, False)
@@ -378,11 +463,8 @@ class ProductionPlanCalculator:
             5: technology_status.get(450301, False),
             6: technology_status.get(450302, False),
         })
-        for id, item in DIC_ISLAND_WILD_GATHER.items():
-            if id < 10:
-                self.wild_gather_available.setdefault(id, True)
-            else:
-                self.wild_gather_available.setdefault(id, False)
+        for gather_id in DIC_ISLAND_WILD_GATHER:
+            self.wild_gather_available.setdefault(gather_id, gather_id not in self.seasonal_gather_ids)
 
         self.place_efficiency_bonus = {
             101: self.place_efficiency.get(101) or 0,
@@ -407,6 +489,7 @@ class ProductionPlanCalculator:
         self.lp_status = None
         self.lp_success = False
         self.lp_message = ''
+        self.failure_diagnostics = []
         self._clear_solution_state()
 
     def _clear_solution_state(self):
@@ -456,29 +539,40 @@ class ProductionPlanCalculator:
             return 0
         return idle_accumulating_amount
 
-    def _redirect_exchange_idle_accumulating_items(self, solution, activities):
-        """Translate idle exchange outputs into equivalent source production.
+    def _is_idle_redirected_conversion(self, activity):
+        return activity['kind'] == 'exchange' or (
+            activity['kind'] == 'shop' and activity['id'] in self.pt_neutral_shop_ids
+        )
+
+    def _redirect_conversion_idle_accumulating_items(self, solution, activities):
+        """Translate idle conversion outputs into equivalent source production.
+
+        Conversions are exchanges (fish into fish meat) and PT-neutral shop
+        recipes (wheat into flour). Production can only schedule the source,
+        so idle output is exported as idle source. Fish surplus is exchanged
+        anyway, and holding wheat gains the same PT as holding flour.
 
         Only the amount that the LP actually leaves accumulating is translated.
-        Required exchange output consumed by another activity remains ordinary
-        fish-meat flow. Any independently planned source-fish accumulation is
-        preserved and added to the translated amount.
-        """
-        if not self.exchange_plan:
-            return
+        Required conversion output consumed by another activity remains ordinary
+        flow. Any independently planned source accumulation is preserved and
+        added to the translated amount.
 
+        Returns:
+            dict: {column: ratio of the conversion output left idle}.
+        """
+        idle_ratios = {}
         idle_output = {
             item_id: self.net_idle_accumulating_items.get(item_id, 0)
-            for item_id in self.EXCHANGE_PRODUCT_IDS
+            for activity in activities if self._is_idle_redirected_conversion(activity)
+            for item_id in activity['outputs']
         }
         for col, activity in enumerate(activities):
-            if activity['kind'] != 'exchange':
+            if not self._is_idle_redirected_conversion(activity):
                 continue
             amount = solution[col]
             if amount <= self.NET_ACCUMULATING_EPSILON:
                 continue
-            recipe = DIC_ISLAND_EXCHANGE_RECIPE[activity['id']]
-            for output_id, output_amount in recipe['items'].items():
+            for output_id, output_amount in activity['outputs'].items():
                 total_output = output_amount * amount
                 if total_output <= self.NET_ACCUMULATING_EPSILON:
                     continue
@@ -486,19 +580,22 @@ class ProductionPlanCalculator:
                 if idle_amount <= self.NET_ACCUMULATING_EPSILON:
                     continue
                 ratio = idle_amount / total_output
+                # Conversions have a single output
+                idle_ratios[col] = ratio
                 self.net_idle_accumulating_items[output_id] = max(
                     self.net_idle_accumulating_items.get(output_id, 0) - idle_amount,
                     0,
                 )
                 if self.net_idle_accumulating_items.get(output_id, 0) <= self.NET_ACCUMULATING_EPSILON:
                     self.net_idle_accumulating_items.pop(output_id, None)
-                for input_id, input_amount in recipe['resource_consume'].items():
+                for input_id, input_amount in activity['inputs'].items():
                     translated = input_amount * amount * ratio
                     if translated > self.NET_ACCUMULATING_EPSILON:
                         self.net_idle_accumulating_items[input_id] = (
                             self.net_idle_accumulating_items.get(input_id, 0) + translated
                         )
                 idle_output[output_id] = max(idle_output.get(output_id, 0) - idle_amount, 0)
+        return idle_ratios
 
     def _subtract_passive_idle_accumulating_items(self):
         """Exclude passive collection from exported idle accumulation."""
@@ -539,7 +636,10 @@ class ProductionPlanCalculator:
         if place_id is None:
             return group
         name = DIC_ISLAND_PRODUCTION_PLACE[place_id]['name'][server.server]
-        slots = self.GROUP_TO_SLOTS.get(group, [])
+        slots = [
+            slot for slot in self.GROUP_TO_SLOTS.get(group, [])
+            if self.slot_available.get(slot, False)
+        ]
         if slots:
             slot_text = ','.join(str(slot) for slot in slots)
             return f'{name} ({slot_text})'
@@ -633,7 +733,7 @@ class ProductionPlanCalculator:
         recipe_group = getattr(self, 'recipe_group', {})
         activities = []
 
-        for recipe_id, recipe in DIC_ISLAND_RECIPE.items():
+        for recipe_id, recipe in self.recipe_data.items():
             if not self.recipe_available.get(recipe_id, False):
                 continue
             group = recipe_group.get(recipe_id)
@@ -652,7 +752,9 @@ class ProductionPlanCalculator:
                 outputs = {item_id: amount * multiplier for item_id, amount in outputs.items()}
                 if self.ranch_additional:
                     for item_id, amount in recipe['second_product_display'].items():
-                        outputs[item_id] = outputs.get(item_id, 0) + amount * multiplier
+                        outputs[item_id] = outputs.get(item_id, 0) + (
+                            amount * multiplier / self.RANCH_SECOND_PRODUCT_INTERVAL
+                        )
             activities.append({
                 'kind': 'recipe',
                 'id': recipe_id,
@@ -662,7 +764,9 @@ class ProductionPlanCalculator:
                 'outputs': outputs,
             })
 
-        for shop_id, recipe in DIC_ISLAND_SHOP_RECIPE.items():
+        for shop_id, recipe in self.shop_recipe_data.items():
+            if not is_shop_recipe_available(shop_id, self.season):
+                continue
             activities.append({
                 'kind': 'shop',
                 'id': shop_id,
@@ -683,7 +787,7 @@ class ProductionPlanCalculator:
 
         initial_supply = defaultdict(int)
         wild_gather_plan = {}
-        for gather_id, gather in DIC_ISLAND_WILD_GATHER.items():
+        for gather_id, gather in self.wild_gather_data.items():
             if self.wild_gather_available.get(gather_id, False):
                 wild_gather_plan[gather_id] = dict(gather['product'])
                 for item_id, amount in gather['product'].items():
@@ -708,7 +812,9 @@ class ProductionPlanCalculator:
         }
         sale_entries = []
         for slot, menu in sell_slots.items():
-            for item_id in menu:
+            for item_id, recipe_id in menu.items():
+                if recipe_id in self.seasonal_recipe_ids and not self.recipe_available.get(recipe_id, False):
+                    continue
                 sale_entries.append((slot, item_id))
 
         demand_items = self._drop_unobtainable_demand_items(
@@ -737,56 +843,73 @@ class ProductionPlanCalculator:
         for item_id, idx in item_index.items():
             c[end_offset + idx] = -DIC_ISLAND_ITEM.get(item_id, {}).get('pt_num', 0)
 
-        a_eq = np.zeros((item_count, total_vars))
-        b_eq = np.zeros(item_count)
+        # Item balance rows, production - consumption - end amount == -initial supply
+        a_balance = np.zeros((item_count, total_vars))
+        b_balance = np.zeros(item_count)
         for col, activity in enumerate(activities):
             for item_id, amount in activity['outputs'].items():
-                a_eq[item_index[item_id], col] += amount
+                a_balance[item_index[item_id], col] += amount
             for item_id, amount in activity['inputs'].items():
-                a_eq[item_index[item_id], col] -= amount
+                a_balance[item_index[item_id], col] -= amount
         for sale_col, (slot, item_id) in enumerate(sale_entries, start=activity_count):
-            a_eq[item_index[item_id], sale_col] -= 1
+            a_balance[item_index[item_id], sale_col] -= 1
             revenue = DIC_ISLAND_ITEM[item_id]['order_price'] * (1 + self.restaurant_sales_bonus[slot])
-            a_eq[item_index[1], sale_col] += revenue
+            a_balance[item_index[1], sale_col] += revenue
         for item_id, idx in item_index.items():
-            a_eq[idx, end_offset + idx] -= 1
-            b_eq[idx] = -initial_supply.get(item_id, 0)
+            a_balance[idx, end_offset + idx] -= 1
+            b_balance[idx] = -initial_supply.get(item_id, 0)
 
-        a_ub = []
-        b_ub = []
+        # Rows after the item balance rows, lb <= row @ x <= ub
+        a_rows = []
+        rows_lb = []
+        rows_ub = []
+        row_labels = []
         for group, capacity in group_capacity.items():
             row = np.zeros(total_vars)
             for col, activity in enumerate(activities):
                 if activity['group'] == group and activity['workload'] > 0:
                     row[col] = activity['workload']
             if row.any():
-                a_ub.append(row)
-                b_ub.append(capacity)
+                a_rows.append(row)
+                rows_lb.append(-np.inf)
+                rows_ub.append(capacity)
+                row_labels.append(('production_capacity', group))
 
+        # Each dish is capped by its shelf capacity as a variable bound
+        ub = np.full(total_vars, np.inf)
         for slot, menu in sell_slots.items():
             slot_sales = [idx for idx, entry in enumerate(sale_entries) if entry[0] == slot]
             if slot_sales:
                 row = np.zeros(total_vars)
                 for idx in slot_sales:
                     row[activity_count + idx] = 1
-                a_ub.append(row)
-                b_ub.append(self.restaurant_quantity[slot] * self.restaurant_capacity[slot])
-                for idx in slot_sales:
-                    cap_row = np.zeros(total_vars)
-                    cap_row[activity_count + idx] = 1
-                    a_ub.append(cap_row)
-                    b_ub.append(self.restaurant_capacity[slot])
+                    ub[activity_count + idx] = self.restaurant_capacity[slot]
+                a_rows.append(row)
+                rows_lb.append(-np.inf)
+                rows_ub.append(self.restaurant_quantity[slot] * self.restaurant_capacity[slot])
+                row_labels.append(('restaurant_capacity', slot))
 
         profit_row = np.zeros(total_vars)
-        profit_row[end_offset + item_index[1]] = -1
-        a_ub.append(profit_row)
-        b_ub.append(-self.daily_profit_lower_limit)
+        profit_row[end_offset + item_index[1]] = 1
+        a_rows.append(profit_row)
+        rows_lb.append(self.daily_profit_lower_limit)
+        rows_ub.append(np.inf)
+        row_labels.append(('daily_profit', 1))
 
         for item_id, demand_data in demand_items.items():
             demand_row = np.zeros(total_vars)
-            demand_row[end_offset + item_index[item_id]] = -1
-            a_ub.append(demand_row)
-            b_ub.append(-demand_data['rate_per_day'])
+            demand_row[end_offset + item_index[item_id]] = 1
+            a_rows.append(demand_row)
+            rows_lb.append(demand_data['rate_per_day'])
+            rows_ub.append(np.inf)
+            row_labels.append(('demand', item_id))
+
+        constraints = LinearConstraint(
+            np.vstack([a_balance] + a_rows),
+            np.concatenate([b_balance, rows_lb]),
+            np.concatenate([b_balance, rows_ub]),
+        )
+        constraint_labels = [('item_balance', item_id) for item_id in item_ids] + row_labels
 
         return {
             'group_slots': group_slots,
@@ -797,17 +920,15 @@ class ProductionPlanCalculator:
             'wild_gather_plan': wild_gather_plan,
             'mining_supply_plan': dict(mining_supply_plan),
             'logging_supply_plan': dict(logging_supply_plan),
+            'constraint_labels': constraint_labels,
             'demand_items': demand_items,
             'hard_floor_items': getattr(self, 'hard_floor_items', {}),
             'task_target_items': getattr(self, 'task_target_items', {}),
             'stuck_season_order_id': getattr(self, 'stuck_season_order_id', 0),
             'stuck_season_order_items': getattr(self, 'stuck_season_order_items', {}),
             'c': c,
-            'A_ub': np.array(a_ub) if a_ub else None,
-            'b_ub': np.array(b_ub) if b_ub else None,
-            'A_eq': a_eq,
-            'b_eq': b_eq,
-            'bounds': [(0, None)] * total_vars,
+            'constraints': constraints,
+            'bounds': Bounds(np.zeros(total_vars), ub),
         }
 
     def _apply_production_lp_result(self, result, problem):
@@ -858,11 +979,12 @@ class ProductionPlanCalculator:
                 idle_accumulating_amount = self._get_natural_idle_accumulating_amount(item_id, amount)
                 if idle_accumulating_amount > 0:
                     self.net_idle_accumulating_items[item_id] = idle_accumulating_amount
-        self._redirect_exchange_idle_accumulating_items(solution=solution, activities=activities)
+        # Count PT before redirecting, idle fish meat is held as fish meat not as fish
         self.total_pt = sum(
             DIC_ISLAND_ITEM[item_id].get('pt_num', 0) * amount
             for item_id, amount in self.net_idle_accumulating_items.items()
         )
+        idle_ratios = self._redirect_conversion_idle_accumulating_items(solution=solution, activities=activities)
         self._subtract_passive_idle_accumulating_items()
         self.daily_profit = self.net_items.get(1, 0)
         for col, activity in enumerate(activities):
@@ -877,6 +999,7 @@ class ProductionPlanCalculator:
             activities=activities,
             sale_entries=sale_entries,
             activity_count=activity_count,
+            idle_ratios=idle_ratios,
         )
         self.idle_accumulating_items_per_day = {
             item_id: self._round_output_amount(amount)
@@ -909,22 +1032,197 @@ class ProductionPlanCalculator:
                 }
             }
 
-    def _calculate_product_daily_buffer_items(self, solution, activities, sale_entries, activity_count):
+    def _diagnose_failed_plan(self, problem):
+        """Find actionable shortfalls and saturated capacity in an infeasible LP.
+
+        Demand and profit rows receive normalized slack; physical capacities
+        stay hard, so a feasible diagnostic solution exposes the limiting rows.
+        """
+        constraints = problem['constraints']
+        labels = problem['constraint_labels']
+        relaxable = [
+            (row, kind, key)
+            for row, (kind, key) in enumerate(labels)
+            if kind in ('daily_profit', 'demand') and constraints.lb[row] > self.NET_ACCUMULATING_EPSILON
+        ]
+        if not relaxable:
+            return ['No demand or profit constraint was available for bottleneck diagnosis.']
+
+        variable_count = len(problem['c'])
+        diagnostic = extend_problem(problem, columns=[
+            {'label': ('slack', kind, key), 'cost': 1 / max(constraints.lb[row], 1), 'rows': {(kind, key): 1}}
+            for row, kind, key in relaxable
+        ])
+        # Minimize the normalized shortfall only, production value plays no role
+        diagnostic_c = diagnostic['c'].copy()
+        diagnostic_c[:variable_count] = 0
+
+        diagnostic_result = milp(
+            diagnostic_c,
+            constraints=diagnostic['constraints'],
+            bounds=diagnostic['bounds'],
+        )
+        if not diagnostic_result.success:
+            return [
+                'Unable to isolate the planning bottleneck: '
+                f'{diagnostic_result.message}'
+            ]
+
+        solution = diagnostic_result.x[:variable_count]
+        activities = problem['activities']
+        lines = []
+        unmet_items = set()
+        has_shortfall = False
+        profit_shortfall = False
+        for slack_index, (_row, kind, key) in enumerate(relaxable):
+            shortfall = diagnostic_result.x[variable_count + slack_index]
+            if shortfall <= self.NET_ACCUMULATING_EPSILON:
+                continue
+            has_shortfall = True
+            required = max(constraints.lb[_row], 0)
+            supplied = max(required - shortfall, 0)
+            if kind == 'daily_profit':
+                profit_shortfall = True
+                lines.append(
+                    f'Profit bottleneck: requires {self._format_amount(required)} coins/day, '
+                    f'but the relaxed plan supplies {self._format_amount(supplied)} '
+                    f'(shortfall {self._format_amount(shortfall)}).'
+                )
+                continue
+
+            item_id = key
+            unmet_items.add(item_id)
+            sources = []
+            mining_amount = problem['mining_supply_plan'].get(item_id, 0)
+            if mining_amount:
+                sources.append(f'mining x{self._format_amount(mining_amount)}/day')
+            logging_amount = problem['logging_supply_plan'].get(item_id, 0)
+            if logging_amount:
+                sources.append(f'logging x{self._format_amount(logging_amount)}/day')
+            for gather_id, products in problem['wild_gather_plan'].items():
+                amount = products.get(item_id, 0)
+                if amount:
+                    sources.append(
+                        f'wild gather {gather_id} x{self._format_amount(amount)}/day'
+                    )
+            for activity in activities:
+                if item_id not in activity['outputs']:
+                    continue
+                if activity['kind'] == 'recipe':
+                    sources.append(
+                        f'recipe {self._recipe_name(activity["id"])} ({activity["id"]}) '
+                        f'at {self._slot_group_name(activity["group"])}'
+                    )
+                elif activity['kind'] == 'shop':
+                    sources.append(f'shop {self._shop_name(activity["id"])} ({activity["id"]})')
+                else:
+                    sources.append(
+                        f'exchange {self._exchange_name(activity["id"])} ({activity["id"]})'
+                    )
+            source_text = '; '.join(sources) if sources else 'no available source'
+            demand_text = format_item_need_data(
+                problem['demand_items'][item_id],
+                self._format_amount,
+            )
+            lines.append(
+                f'Demand bottleneck: {self._item_name(item_id)} ({item_id}) requires '
+                f'{self._format_amount(required)}/day ({demand_text}), '
+                f'but the relaxed plan supplies '
+                f'{self._format_amount(supplied)} (shortfall {self._format_amount(shortfall)}). '
+                f'Available sources: {source_text}.'
+            )
+
+        if not has_shortfall:
+            return [
+                'The relaxed diagnostic plan satisfies all explicit demands; '
+                'the solver failure is likely numerical.'
+            ]
+
+        relevant_groups = set()
+        relevant_recipes = set()
+        needs_coin = profit_shortfall
+        pending_items = set(unmet_items)
+        visited_items = set()
+        while pending_items:
+            item_id = pending_items.pop()
+            if item_id in visited_items:
+                continue
+            visited_items.add(item_id)
+            for activity in activities:
+                if item_id not in activity['outputs']:
+                    continue
+                if 1 in activity['inputs']:
+                    needs_coin = True
+                if activity['kind'] == 'recipe':
+                    relevant_groups.add(activity['group'])
+                    relevant_recipes.add(activity['id'])
+                pending_items.update(
+                    input_id for input_id in activity['inputs']
+                    if input_id != 1 and input_id not in visited_items
+                )
+
+        for row, (kind, key) in enumerate(labels):
+            if kind not in ('production_capacity', 'restaurant_capacity'):
+                continue
+            used = float(constraints.A[row] @ solution)
+            capacity = float(constraints.ub[row])
+            tolerance = max(abs(capacity), 1) * 1e-6
+            if used < capacity - tolerance:
+                continue
+            if kind == 'production_capacity' and key in relevant_groups:
+                recipes = [
+                    f'{self._recipe_name(activity["id"])} ({activity["id"]}) '
+                    f'x{self._format_amount(solution[index])} batches/day -> '
+                    + ', '.join(
+                        f'{self._item_name(item_id)} ({item_id}) '
+                        f'x{self._format_amount(output_amount * solution[index])}/day'
+                        for item_id, output_amount in activity['outputs'].items()
+                    )
+                    for index, activity in enumerate(activities)
+                    if activity['kind'] == 'recipe'
+                    and activity['group'] == key
+                    and activity['id'] in relevant_recipes
+                    and solution[index] > self.NET_ACCUMULATING_EPSILON
+                ]
+                recipe_text = ', '.join(recipes) if recipes else '-'
+                lines.append(
+                    f'Production bottleneck: {self._slot_group_name(key)} uses '
+                    f'{self._format_amount(used / 36000)}h/'
+                    f'{self._format_amount(capacity / 36000)}h capacity; '
+                    f'contributing recipes: {recipe_text}.'
+                )
+            elif needs_coin and kind == 'restaurant_capacity':
+                restaurant_name = DIC_ISLAND_PRODUCTION_PLACE[key]['name'][server.server]
+                lines.append(
+                    f'Restaurant bottleneck: {restaurant_name} ({key}) sells '
+                    f'{self._format_amount(used)}/{self._format_amount(capacity)} items/day.'
+                )
+        return lines
+
+    def _calculate_product_daily_buffer_items(self, solution, activities, sale_entries, activity_count,
+                                              idle_ratios=None):
+        """
+        Args:
+            idle_ratios (dict): {column: ratio of the conversion output left idle},
+                see _redirect_conversion_idle_accumulating_items. The idle share is
+                exported as idle source instead, so it needs no buffer.
+        """
         daily_product_demand = defaultdict(float)
+        idle_ratios = idle_ratios or {}
 
         for col, activity in enumerate(activities):
-            amount = solution[col]
+            amount = solution[col] * (1 - idle_ratios.get(col, 0))
             if amount <= self.NET_ACCUMULATING_EPSILON:
                 continue
             for item_id, input_amount in activity['inputs'].items():
-                if item_id in self.RECIPE_PRODUCT_IDS or item_id in self.EXCHANGE_PRODUCT_IDS:
+                if item_id in self.recipe_product_ids or item_id in self.EXCHANGE_PRODUCT_IDS:
                     daily_product_demand[item_id] += input_amount * amount
 
         for idx, (slot, item_id) in enumerate(sale_entries, start=activity_count):
             amount = solution[idx]
             if amount <= self.NET_ACCUMULATING_EPSILON:
                 continue
-            if item_id in self.RECIPE_PRODUCT_IDS:
+            if item_id in self.recipe_product_ids:
                 daily_product_demand[item_id] += amount
 
         daily_buffer_items = {}
@@ -942,13 +1240,40 @@ class ProductionPlanCalculator:
             f'LP success: {self.lp_success}',
             f'LP status: {self.lp_status}',
             f'LP message: {self.lp_message}',
+            '',
+            '[restaurant_config]',
+        ]
+        for restaurant_id in RESTAURANT_IDS:
+            restaurant_name = DIC_ISLAND_PRODUCTION_PLACE[restaurant_id]['name'][server.server]
+            waitress_text = ', '.join(self.restaurant_waitress_slots[restaurant_id])
+            capacity = self.restaurant_capacity[restaurant_id]
+            quantity = self.restaurant_quantity[restaurant_id]
+            lines.append(
+                f'{restaurant_name} ({restaurant_id}): '
+                f'grade={self.restaurant_grade[restaurant_id]}, '
+                f'waitress_slots=[{waitress_text}], '
+                f'enabled={self.restaurant_enabled[restaurant_id]}'
+            )
+            lines.append(
+                f'  shelf_count={quantity}, shelf_capacity={capacity}, '
+                f'total_capacity={self._format_amount(quantity * capacity)}/day, '
+                f'sales_bonus={self._format_amount(self.restaurant_sales_bonus[restaurant_id] * 100)}%'
+            )
+        if not self.lp_success:
+            lines.extend([
+                '',
+                '[planning_failure]',
+                *(self.failure_diagnostics or ['No bottleneck diagnostic is available.']),
+            ])
+            return '\n'.join(lines)
+        lines.extend([
             f'Total PT: {self._format_amount(self.total_pt)}',
             f'Daily coin revenue: {self._format_amount(self.daily_coin_revenue)}',
             f'Daily coin cost: {self._format_amount(self.daily_coin_cost)}',
             f'Daily profit: {self._format_amount(self.daily_profit)}',
             '',
             '[production]',
-        ]
+        ])
         if self.production_plan:
             for recipe_id, amount in sorted(self.production_plan.items()):
                 lines.append(f'{self._recipe_name(recipe_id)} ({recipe_id}): {self._format_amount(amount)} batches')
@@ -1076,7 +1401,10 @@ class ProductionPlanCalculator:
 
     def print_solved_production_plan(self):
         for line in self.format_solved_production_plan().split('\n'):
-            logger.info(line)
+            if not self.lp_success and line:
+                logger.warning(line)
+            else:
+                logger.info(line)
 
     def daily_buffer_items_to_yaml(self, use_item_name=False):
         return item_mapping_to_yaml(self.product_daily_buffer_items, use_item_name=use_item_name)
@@ -1118,41 +1446,64 @@ class ProductionPlanCalculator:
             for slot, menu in menus.items()
         }
 
+    def build_production_problem(
+            self,
+            task_target_items=None,
+            task_target_period=None,
+            stuck_season_order_id=0,
+    ):
+        """
+        Build the problem solve_production_plan solves, with TaskTarget and
+        stuck season order demands, without solving it.
+
+        Callers can append their own columns and rows with extend_problem,
+        e.g. to value transport commissions against the same production model.
+
+        Returns:
+            dict: c, constraints, bounds and constraint_labels for milp, and
+                the index data _apply_production_lp_result reads.
+        """
+        self.task_target_items = normalize_item_needs(
+            task_target_items,
+            default_period=task_target_period,
+        )
+        self.stuck_season_order_id, self.stuck_season_order_items = get_stuck_season_order_items(
+            stuck_season_order_id,
+            self.season,
+        )
+        if self.stuck_season_order_items:
+            period = next(iter(self.stuck_season_order_items.values()))['period']
+            logger.info(
+                f'Adding stuck season order {self.stuck_season_order_id} '
+                f'as production planner demand over {self._format_amount(period)} day(s)'
+            )
+        demand_items = merge_item_needs(self.task_target_items, self.stuck_season_order_items)
+        return self._build_production_problem(demand_items=demand_items)
+
     def solve_production_plan(
             self,
             hard_floor_items=None,
             task_target_items=None,
+            task_target_period=None,
             stuck_season_order_id=0,
     ):
-        stuck_season_order_items = get_stuck_season_order_requirements(stuck_season_order_id)
-        self.task_target_items = normalize_item_needs(task_target_items, default_period=10)
-        self.stuck_season_order_id = normalize_stuck_season_order_id(stuck_season_order_id)
-        self.stuck_season_order_items = normalize_item_needs(stuck_season_order_items, default_period=10)
+        # Set before building, the problem carries it over _reset_lp_result
         self.hard_floor_items = self._build_planner_hard_floor_items(hard_floor_items)
-        if self.stuck_season_order_items:
-            logger.info(
-                f'Adding stuck season order {self.stuck_season_order_id} '
-                f'as 10-day production planner demand'
-            )
-        demand_items = merge_item_needs(self.task_target_items, self.stuck_season_order_items)
-        problem = self._build_production_problem(demand_items=demand_items)
+        problem = self.build_production_problem(
+            task_target_items=task_target_items,
+            task_target_period=task_target_period,
+            stuck_season_order_id=stuck_season_order_id,
+        )
         self._reset_lp_result()
-        result = None
-        solver_attempts = [
-            ('interior-point', {'tol': 1e-9}),
-            ('revised simplex', {'tol': 1e-9}),
-        ]
-        for method, options in solver_attempts:
-            result = linprog(
-                problem['c'],
-                A_ub=problem['A_ub'],
-                b_ub=problem['b_ub'],
-                A_eq=problem['A_eq'],
-                b_eq=problem['b_eq'],
-                bounds=problem['bounds'],
-                method=method,
-                options=options,
-            )
-            if result.success:
-                break
+        result = milp(
+            problem['c'],
+            constraints=problem['constraints'],
+            bounds=problem['bounds'],
+        )
         self._apply_production_lp_result(result, problem)
+        if not result.success:
+            try:
+                self.failure_diagnostics = self._diagnose_failed_plan(problem)
+            except Exception as e:
+                logger.exception(f'Failed to diagnose production planning bottleneck: {e}')
+                self.failure_diagnostics = [f'Bottleneck diagnosis failed: {e}']

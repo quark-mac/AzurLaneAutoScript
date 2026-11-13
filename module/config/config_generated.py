@@ -365,7 +365,7 @@ class GeneratedConfig:
     PrivateQuarters_BuyRoses = True
     PrivateQuarters_BuyCake = False
     PrivateQuarters_TargetInteract = True
-    PrivateQuarters_TargetShip = 'anchorage'  # anchorage, noshiro, sirius, new_jersey, taihou, aegir, nakhimov
+    PrivateQuarters_TargetShip = 'anchorage'  # anchorage, noshiro, sirius, new_jersey, taihou, aegir, nakhimov, implacable
 
     # Group `Daily`
     Daily_UseDailySkip = True
@@ -463,11 +463,16 @@ class GeneratedConfig:
     # Group `OpsiHazard1Leveling`
     OpsiHazard1Leveling_TargetZone = 0  # 0, 44, 22
 
+    # Group `IslandGeneral`
+    IslandGeneral_Season = 'season_20261105_cn'  # season_20260806_cn, season_20261105_cn
+
     # Group `IslandProduction`
     IslandProduction_HardFloorItems = '{}'
     IslandProduction_DailyBufferItems = '{}'
     IslandProduction_ManualBufferItems = '{}'
     IslandProduction_IdleAccumulatingItems = '{}'
+    IslandProduction_SkipBufferSurplus = True
+    IslandProduction_UseWorkerjuuByDefault = True
 
     # Group `IslandOrder`
     IslandOrder_StuckSeasonOrderId = 0

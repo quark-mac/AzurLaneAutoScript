@@ -11,10 +11,12 @@ from module.base.decorator import cached_property
 from module.base.timer import Timer
 from module.base.utils import color_similarity_2d
 from module.island.assets import *
-from module.island.data import DIC_ISLAND_ITEM, DIC_ISLAND_SEASON_ORDER
+from module.island.data import DIC_ISLAND_ITEM
 from module.island.ui import IslandUI
 from module.island.utils import (
+    get_configured_season,
     get_order_effective_stock,
+    get_season_order_catalog,
     load_hard_floor_items,
     normalize_item_keys,
 )
@@ -56,14 +58,14 @@ def get_circles(image, color, inner_radius, outer_radius):
     return circles
 
 
-def get_season_order_id(requirements):
+def get_season_order_id(requirements, season):
     required_items = {
         item_id: counter[1] if isinstance(counter, (list, tuple)) and len(counter) > 1 else counter
         for item_id, counter in requirements.items()
     }
-    for id, order in DIC_ISLAND_SEASON_ORDER.items():
-        if required_items == order.get('request', {}):
-            return id
+    for order_id, order in get_season_order_catalog().items():
+        if order['activity_id'] in season['activity'] and order['request'] == required_items:
+            return order_id
     logger.warning(f'Cannot find season order id for requirements: {requirements}')
     return None
 
@@ -213,6 +215,11 @@ class IslandOrder(IslandUI):
             return True
         return False
 
+    def handle_island_additional(self):
+        if self.appear_then_click(ISLAND_ORDER_SPEED_UP_CLOSE, offset=(20, 20)):
+            return True
+        return super().handle_island_additional()
+
     def click_order(self, order_button, is_urgent=False):
         click_timer = Timer(1, count=3)
         for _ in self.loop(timeout=5, skip_first=False):
@@ -335,7 +342,7 @@ class IslandOrder(IslandUI):
                 return False
             elif is_season:
                 logger.warning('Season order can only be abandoned, skip this order')
-                stuck_season_order_id = get_season_order_id(requirements)
+                stuck_season_order_id = get_season_order_id(requirements, get_configured_season(self.config))
                 self.update_stuck_season_order(stuck_season_order_id)
                 return False
             else:

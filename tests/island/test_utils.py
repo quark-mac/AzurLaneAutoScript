@@ -1,5 +1,67 @@
 """Tests for island production utility functions."""
-from module.island.utils import get_idle_accumulating_batch_count
+from datetime import datetime
+
+import pytest
+
+import module.config.server as server
+from module.island.season_data import DIC_ISLAND_ACTIVITY, DIC_ISLAND_SEASON
+from module.island.utils import (
+    get_configured_season,
+    get_season_remaining_days,
+    get_idle_accumulating_batch_count,
+    get_stuck_season_order_remaining_days,
+    get_task_target_items,
+    resolve_stuck_season_order_id,
+)
+
+
+class FakeConfig:
+    def __init__(self, values):
+        self.values = values
+
+    def cross_get(self, key, default=None):
+        return self.values.get(key, default)
+
+
+class TestConfiguredSeason:
+    def test_configured_season(self):
+        config = FakeConfig({'IslandGeneral.IslandGeneral.Season': 'season_20260806_cn'})
+        assert get_configured_season(config)['activity'] == [990022, 990023, 990024, 990025]
+
+    def test_selected_season_uses_its_activity_deadline(self):
+        season = DIC_ISLAND_SEASON['season_20260806_cn']
+        activity = DIC_ISLAND_ACTIVITY[990022]
+        start = datetime.strptime(activity['start_time'][server.server], '%Y-%m-%d %H:%M:%S')
+        end = datetime.strptime(activity['end_time'][server.server], '%Y-%m-%d %H:%M:%S')
+        midpoint = start + (end - start) / 2
+        assert get_season_remaining_days(season, midpoint) == pytest.approx(
+            (end - midpoint).total_seconds() / 86400
+        )
+
+
+class TestStuckSeasonOrder:
+    def test_stuck_order_uses_its_activity_deadline(self):
+        order_id = 100001
+        activity = DIC_ISLAND_ACTIVITY[990002]
+        start = datetime.strptime(activity['start_time'][server.server], '%Y-%m-%d %H:%M:%S')
+        end = datetime.strptime(activity['end_time'][server.server], '%Y-%m-%d %H:%M:%S')
+        midpoint = start + (end - start) / 2
+        assert get_stuck_season_order_remaining_days(order_id, midpoint) == pytest.approx(
+            (end - midpoint).total_seconds() / 86400
+        )
+
+    def test_stuck_order_resolves_repeated_requirements_to_active_activity(self):
+        old_order_id = 100015
+        current_order_id = 100060
+        activity = DIC_ISLAND_ACTIVITY[990023]
+        start = datetime.strptime(activity['start_time'][server.server], '%Y-%m-%d %H:%M:%S')
+        end = datetime.strptime(activity['end_time'][server.server], '%Y-%m-%d %H:%M:%S')
+        midpoint = start + (end - start) / 2
+        season = DIC_ISLAND_SEASON['season_20260806_cn']
+        assert resolve_stuck_season_order_id(old_order_id, season) == current_order_id
+        assert get_stuck_season_order_remaining_days(current_order_id, midpoint) == pytest.approx(
+            (end - midpoint).total_seconds() / 86400
+        )
 
 
 class TestGetIdleAccumulatingBatchCount:
@@ -23,3 +85,28 @@ class TestGetIdleAccumulatingBatchCount:
     def test_invalid_workload(self):
         assert get_idle_accumulating_batch_count(0, 6) == 1
         assert get_idle_accumulating_batch_count(-1, 6) == 1
+
+
+def test_get_task_target_items_merges_config_and_stuck_order(monkeypatch):
+    activity = DIC_ISLAND_ACTIVITY[990023]
+    start = datetime.strptime(activity['start_time'][server.server], '%Y-%m-%d %H:%M:%S')
+    end = datetime.strptime(activity['end_time'][server.server], '%Y-%m-%d %H:%M:%S')
+    current_time = start + (end - start) / 2
+    monkeypatch.setattr('module.island.utils._get_server_time', lambda time=None: current_time)
+    config = FakeConfig({
+        'IslandGeneral.IslandGeneral.Season': 'season_20260806_cn',
+        'IslandSeasonTask.IslandSeasonTask.TaskTarget': '2700: 100',
+        'IslandOrder.IslandOrder.StuckSeasonOrderId': 100015,
+    })
+
+    items = get_task_target_items(config)
+
+    assert items[2700]['total_need_count'] == 100
+    assert items[2700]['period'] == pytest.approx(
+        get_season_remaining_days(get_configured_season(config), current_time)
+    )
+    for item_id in (4011, 4013):
+        assert items[item_id]['total_need_count'] == 5
+        assert items[item_id]['period'] == pytest.approx(
+            get_stuck_season_order_remaining_days(100060, current_time)
+        )

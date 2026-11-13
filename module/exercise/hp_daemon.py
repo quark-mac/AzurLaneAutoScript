@@ -83,6 +83,8 @@ class HpDaemon(ModuleBase):
             PAUSE_AzureCore,
             PAUSE_OldeRoyal,
             PAUSE_YoRHa,
+            PAUSE_Ritual,
+            PAUSE_Bullet,
         ]:
             self.attacker_hp = self._calculate_hp(image, area=ATTACKER_HP_AREA_New.area, reverse=True)
             self.defender_hp = self._calculate_hp(image, area=DEFENDER_HP_AREA_New.area, reverse=True)

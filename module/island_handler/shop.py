@@ -1,21 +1,71 @@
+import re
+
 from jellyfish import levenshtein_distance
 
 import module.config.server as server
-from module.base.decorator import cached_property, del_cached_property
 from module.base.button import ButtonGrid
+from module.base.decorator import cached_property, del_cached_property
 from module.island.data import DIC_ISLAND_SHOP, DIC_ISLAND_SHOP_ITEM_TO_RECIPE, DIC_ISLAND_SHOP_RECIPE
-from module.island.ui import NestedNavbar
+from module.island.utils import (
+    get_configured_season, get_shop_recipe_data, is_shop_recipe_available, item_name_with_id,
+)
 from module.island_handler.assets import *
 from module.island_handler.shop_ui import IslandShopUI
 from module.logger import logger
 from module.ocr.ocr import Digit, Ocr
-from module.ui.assets import ISLAND_GOTO_ISLAND_SHOP
 from module.ui.navbar import Navbar
-from module.ui.page import page_island, page_island_shop
+from module.ui.page import page_island_shop
 from module.ui_white.assets import BACK_ARROW_WHITE
 
-
 SHOP_ITEM_NAME_AREA = (12, 142, 134, 163)
+
+
+def shop_recipe_name_with_id(recipe_id):
+    if recipe_id not in DIC_ISLAND_SHOP_RECIPE:
+        return f'unknown shop recipe ({recipe_id})'
+    return f"{DIC_ISLAND_SHOP_RECIPE[recipe_id]['name'][server.server]} ({recipe_id})"
+
+
+class ProductNameOcr(Ocr):
+    """OCR of island product names.
+
+    cnocr takes a glyph stroke or an edge of the item icon as punctuation, such
+    as `小\\麦种子` for `小麦种子` or `_大米` for `大米`. Those characters never
+    belong to a product name, so they are removed here, and the misreads that
+    are not punctuation are revised to the real name, so that
+    item_name_to_recipe_id does not have to guess by edit distance.
+    """
+
+    def after_process(self, result):
+        """
+        Args:
+            result (str): '小\\麦种子'
+
+        Returns:
+            str: '小麦种子'
+        """
+        result = super().after_process(result)
+        prev = result
+
+        # Punctuation, symbols and stroke fragments read from the glyph strokes
+        # and the item icon, e.g. `小\麦种子`, `_大米` and `大米”`. Covers ASCII
+        # punctuation (!-/ :-@ [-` {-~), general punctuation (\u2000-\u206f,
+        # quotes and dashes), CJK punctuation (\u3000-\u303f), fullwidth forms
+        # (\uff00-\uffef) and 丶, the stroke of the first glyph of `小麦`
+        result = re.sub(r'[\u2000-\u206f\u3000-\u303f\uff00-\uffef!-/:-@\[-`{-~丶]', '', result)
+        if server.server == 'en':
+            # Latin product names keep the space between words
+            result = re.sub(r'\s+', ' ', result).strip()
+        else:
+            # Latin letters and digits never appear in a CJK product name
+            result = re.sub(r'[A-Za-z0-9]', '', result)
+            result = re.sub(r'\s+', '', result)
+        # 眸牛饲料 -> 哞哞牛饲料, the doubled prefix is read as a single glyph
+        result = re.sub(r'^[眸哞]牛饲料$', '哞哞牛饲料', result)
+
+        if result != prev:
+            logger.info(f'OCR {self.name}: Result "{prev}" is revised to "{result}"')
+        return result
 
 
 class IslandShop(IslandShopUI):
@@ -40,9 +90,11 @@ class IslandShop(IslandShopUI):
     def _island_shop_item_name_ocr(self):
         if server.server == 'jp':
             lang = 'jp'
+        elif server.server == 'tw':
+            lang = 'tw'
         else:
             lang = 'cnocr'
-        return Ocr(
+        return ProductNameOcr(
             self._island_shop_item_name_grid.buttons,
             lang=lang,
             letter=(66, 66, 66),
@@ -86,9 +138,16 @@ class IslandShop(IslandShopUI):
         return self.island_shop_get_item_ids()
 
     def island_shop_get_item_ids(self):
-        names = self._island_shop_item_name_ocr.ocr(self.device.image)
-        ids = [self.item_name_to_recipe_id(name) for name in names if name != '']
-        return ids
+        for _ in self.loop(timeout=5):
+            names = self._island_shop_item_name_ocr.ocr(self.device.image)
+            ids = [self.item_name_to_recipe_id(name) for name in names]  # need to keep all ids to pair with buttons
+            if all(id is None for id in ids):
+                logger.warning(f"Failed to get item ids from names {names}, retrying...")
+                continue
+            return ids
+        else:
+            logger.warning("Failed to get item ids, return empty list")
+            return [None] * len(self._island_shop_item_name_grid.buttons)
 
     @property
     def _island_currency_grid(self):
@@ -120,29 +179,24 @@ class IslandShop(IslandShopUI):
             return {}
 
     def island_shop_buy_ensure_amount(self, amount):
-        # having button of -10, -1, +1, +10, and the amount to buy, we can ensure the amount to buy by clicking these buttons
-        # try using least number of clicks
-        def middle_integer(N):
-            d = N - 1
-            q = d // 10
-            r = d % 10
-            if r <= 5:
-                middle = 10*q + 1
-            else:
-                middle = 10*(q + 1) + 1
-            return middle
-
+        """Select the exact amount, allowing ten-step clicks to hit the shop's limit."""
         if server.server in ['cn', 'tw']:
             lang = 'cnocr'
         else:
             lang = 'azur_lane'
         ocr = Digit([ISLAND_SHOP_BUY_AMOUNT], lang=lang, letter=(57, 58, 60), threshold=160, name="island_shop_buy_amount_ocr")
-        def one_tenth_ocr(image):
-            amount = ocr.ocr(image)
-            return amount // 10
 
-        self.ui_ensure_index(middle_integer(amount) // 10, one_tenth_ocr, ISLAND_SHOP_BUY_AMOUNT_PLUS_TEN, ISLAND_SHOP_BUY_AMOUNT_MINUS_TEN)
-        self.ui_ensure_index(amount, ocr, ISLAND_SHOP_BUY_AMOUNT_PLUS_ONE, ISLAND_SHOP_BUY_AMOUNT_MINUS_ONE)
+        def ten_step_index(image):
+            # Round the actual remaining distance to ten-step clicks, then finish
+            # with single steps. Clamping at either limit can shorten this phase.
+            diff = ocr.ocr(image) - amount
+            count = (abs(diff) + 4) // 10
+            return count if diff > 0 else -count
+
+        self.ui_ensure_index(0, ten_step_index,
+                             ISLAND_SHOP_BUY_AMOUNT_PLUS_TEN, ISLAND_SHOP_BUY_AMOUNT_MINUS_TEN)
+        self.ui_ensure_index(amount, ocr,
+                             ISLAND_SHOP_BUY_AMOUNT_PLUS_ONE, ISLAND_SHOP_BUY_AMOUNT_MINUS_ONE)
 
     def island_shop_buy_execute(self, button, amount):
         for _ in self.loop():
@@ -162,17 +216,31 @@ class IslandShop(IslandShopUI):
                 break
 
     def island_shop_buy_in_page(self, recipe_id, amount=1):
-        currency_id = list(DIC_ISLAND_SHOP_RECIPE[recipe_id]['resource_consume'].keys())[0]
+        season = get_configured_season(self.config)
+        if not is_shop_recipe_available(recipe_id, season):
+            logger.warning(f'Shop recipe {recipe_id} is inactive this season')
+            return False
+        recipe = get_shop_recipe_data(recipe_id)
+        currency_id = list(recipe['resource_consume'].keys())[0]
         currency_amount = self.island_shop_get_currency().get(currency_id, 0)
-        logger.info(f"Current currency amount: {currency_amount}, required: {DIC_ISLAND_SHOP_RECIPE[recipe_id]['resource_consume'][currency_id] * amount}")
-        if currency_amount < DIC_ISLAND_SHOP_RECIPE[recipe_id]['resource_consume'][currency_id] * amount:
-            logger.warning(f"Not enough currency to buy {amount} of recipe {recipe_id}")
+        required = recipe['resource_consume'][currency_id] * amount
+        # Items paid as currency, e.g. wheat for flour, keep their protected stock
+        protected = self.get_protected_items([currency_id]).get(currency_id, 0) if currency_id != 1 else 0
+        logger.info(
+            f'Current {item_name_with_id(currency_id)} amount: {currency_amount}, '
+            f'protected: {protected}, required: {required}'
+        )
+        if currency_amount - protected < required:
+            logger.warning(
+                f'Not enough {item_name_with_id(currency_id)} to buy {amount} of '
+                f'{shop_recipe_name_with_id(recipe_id)}'
+            )
             return False
         for id, button in zip(self.island_shop_item_ids, self._island_shop_item_grid.buttons):
             if id == recipe_id:
                 self.island_shop_buy_execute(button, amount)
                 return True
-        logger.warning(f"Recipe {recipe_id} not found in shop")
+        logger.warning(f'{shop_recipe_name_with_id(recipe_id)} not found in shop')
         return False
 
     @cached_property
@@ -187,8 +255,8 @@ class IslandShop(IslandShopUI):
             ),
             active_color=(249, 181, 76),
             inactive_color=(235, 235, 235),
-            active_threshold=221,
-            inactive_threshold=240,
+            active_threshold=30,
+            inactive_threshold=15,
             active_count=5000,
             inactive_count=5000,
             name="island_shop_tab",
@@ -206,10 +274,13 @@ class IslandShop(IslandShopUI):
         for shop_id in search_range:
             if recipe_id in DIC_ISLAND_SHOP[shop_id]['goods']:
                 target_shop_id = shop_id
-                logger.info(f"Recipe {recipe_id} is in shop {shop_id}, name {DIC_ISLAND_SHOP[shop_id]['name'][server.server]}")
+                logger.info(
+                    f'{shop_recipe_name_with_id(recipe_id)} is in shop '
+                    f'{DIC_ISLAND_SHOP[shop_id]["name"][server.server]} ({shop_id})'
+                )
                 break
         if target_shop_id is None:
-            logger.warning(f'Recipe {recipe_id} is not available in the searched shops')
+            logger.warning(f'{shop_recipe_name_with_id(recipe_id)} is not available in the searched shops')
             return False
         order = [0, 0, 0]
         for index in range(3):
@@ -241,6 +312,7 @@ class IslandShop(IslandShopUI):
                             notice that the behaviour of multiple items to buy and isolated=True is undefined.
         """
         self.wait_island_shop_loading()
+        season = get_configured_season(self.config)
         success = True
         for item_id, amount in shopping_dict.items():
             if item_id not in DIC_ISLAND_SHOP_ITEM_TO_RECIPE:
@@ -250,13 +322,22 @@ class IslandShop(IslandShopUI):
             if recipe_id not in DIC_ISLAND_SHOP_RECIPE:
                 logger.warning(f"Recipe {recipe_id} not found in data, cannot buy")
                 continue
-            buy_count = (amount - 1) // DIC_ISLAND_SHOP_RECIPE[recipe_id]['items'][item_id] + 1
-            logger.info(f"Buying {amount} of item {item_id} requires recipe {recipe_id} with buy count {buy_count}")
+            if not is_shop_recipe_available(recipe_id, season):
+                logger.warning(f'Shop recipe {recipe_id} is inactive this season')
+                success = False
+                continue
+            buy_count = (amount - 1) // get_shop_recipe_data(recipe_id)['items'][item_id] + 1
+            logger.info(
+                f'Buying {amount} of {item_name_with_id(item_id)} requires '
+                f'{shop_recipe_name_with_id(recipe_id)} with buy count {buy_count}'
+            )
             if self.island_shop_set_navbar_and_tab(recipe_id, isolated=isolated):
                 if not self.island_shop_buy_in_page(recipe_id, buy_count):
-                    logger.warning(f"Failed to buy recipe {recipe_id}")
+                    logger.warning(f'Failed to buy {shop_recipe_name_with_id(recipe_id)}')
                     success = False
             else:
-                logger.warning(f"Failed to set tabs for recipe {recipe_id}, cannot buy")
+                logger.warning(
+                    f'Failed to set tabs for {shop_recipe_name_with_id(recipe_id)}, cannot buy'
+                )
                 success = False
         return success

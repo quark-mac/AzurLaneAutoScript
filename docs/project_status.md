@@ -1,6 +1,6 @@
 # 项目状态报告
 
-> 最后更新：2026-08-07
+> 最后更新：2026-11-13
 
 ---
 
@@ -48,8 +48,19 @@
 - 保留自动启动、日志清理、自定义状态等本地功能
 - 保留 Git 历史，兼容 ALAS 自带更新逻辑
 - 自动检查关键本地配置、i18n、任务入口和功能文件是否仍存在
-- 已同步至 `upstream/main` 提交 `cd504b695`
+- 已同步至 `upstream/main` 提交 `cbf7b8241`（本次合入 216 个上游提交）
 - 已恢复同步中被覆盖的 AutoStart、LogCleaner、委托舰船检测和 Scheduler 开关控制
+
+### 2026-11-13 本地验证
+
+- 使用 toolkit Python 3.7.6 完成配置生成、编译和自定义功能健康检查。
+- 上游自动化测试：1,855 项通过。101 项截图测试缺少上游未入库的 `collection/` 素材；另 1 项开发工具测试断言目录名为 `CN`，在 Windows 大小写不敏感目录下解析为 `cn`，未计入通过项。相关实现与上游一致，未修改测试。
+- `dev_tools/test_log_cleaner.py`：20 项通过，覆盖保留期限边界、日志、错误目录和截图。
+- `alas.py` 中 88 个任务及运行时导入通过；现有用户自定义配置经新版本迁移后保持原值。
+- 舰队菜单检测冲突采用上游 `FleetBarDetector`，移除已无调用方的旧 `bar_opened` 检测。
+- 本地未跟踪的旧岛屿模块及无引用识图资源移至仓库外备份；配置、启动器和仍使用的本地资源保留。
+- 同步前恢复分支：`backup/pre-sync-20261113`。
+- 本机配置及清理备份：`C:\Users\Administrator\AppData\Local\Temp\opencode\alas-sync-20261113`。
 
 ---
 
@@ -80,6 +91,7 @@
 - 验证 WebUI 正则输入校验和空字段行为
 - 验证 Commission、Research、Reward 的 Scheduler 开关未被强制锁定
 - 验证 GemsFarming 和 Island 任务入口仍存在
+- 验证 IslandTransport 入口、手动更新绕过 AutoUpdate、更新失败仍可启动及空提交历史处理
 
 ---
 

@@ -124,6 +124,7 @@ def check_task_entries(errors):
         'island_season_task',
         'island_business',
         'island_production_planner',
+        'island_transport',
     )
     for method in required_methods:
         check(
@@ -145,6 +146,7 @@ def check_task_entries(errors):
         '    IslandSeasonTask:',
         '    IslandBusiness:',
         '    IslandProductionPlanner:',
+        '    IslandTransport:',
     )
     for text in required_task_text:
         check(text in task_yaml, 'Missing task.yaml entry containing: %s' % text.strip(), errors)
@@ -205,6 +207,43 @@ def check_scheduler_controls(errors):
         errors,
     )
 
+    config = read_text('module/config/config.py')
+    override = config.split('    def override(', 1)[-1].split('\n    config_override =', 1)[0]
+    check(
+        'Scheduler.Enable' not in override,
+        'Scheduler enable is forced on by config loading',
+        errors,
+    )
+
+
+def check_update_and_status(errors):
+    updater = read_text('module/webui/updater.py')
+    install = updater.split('    def git_install(self):', 1)[-1].split('\n    @', 1)[0]
+    check(
+        'self.git_repository_init(' in install and 'super().git_install()' not in install,
+        'Manual WebUI update must bypass startup AutoUpdate and propagate Git errors',
+        errors,
+    )
+    check(
+        'return []' in updater.split('    def get_commit(', 1)[-1].split('\n    def ', 1)[0],
+        'Empty commit history must return a list for multiple commits',
+        errors,
+    )
+    for path in ('deploy/git.py', 'deploy/Windows/git.py'):
+        check(
+            'Continue startup without update' in read_text(path),
+            'Missing startup recovery after Git update failure: %s' % path,
+            errors,
+        )
+    for path, text in (
+        ('gui.py', 'while not State._init:'),
+        ('module/commission/commission.py', 'commission_ship_insufficient'),
+        ('module/webui/process_manager.py', 'def custom_status_message('),
+        ('module/webui/app.py', 'custom_status_message'),
+        ('alas.py', 'os.remove(status_file)'),
+    ):
+        check(text in read_text(path), 'Missing custom runtime behavior in %s: %s' % (path, text), errors)
+
 
 def check_files(errors):
     required_files = (
@@ -218,6 +257,7 @@ def check_files(errors):
         'module/island/season_task.py',
         'module/island/business.py',
         'module/island_handler/production_planner.py',
+        'module/island/transport.py',
     )
     for path in required_files:
         check((ROOT / path).exists(), 'Missing custom feature file: %s' % path, errors)
@@ -232,6 +272,7 @@ def main():
     check_task_entries(errors)
     check_input_validation(errors)
     check_scheduler_controls(errors)
+    check_update_and_status(errors)
     check_files(errors)
 
     if errors:

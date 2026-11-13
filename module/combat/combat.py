@@ -138,6 +138,10 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
             return PAUSE_OldeRoyal
         if PAUSE_YoRHa.match_template_color(self.device.image, offset=(10, 10)):
             return PAUSE_YoRHa
+        if PAUSE_Ritual.match_template_color(self.device.image, offset=(10, 10)):
+            return PAUSE_Ritual
+        if PAUSE_Bullet.match_template_color(self.device.image, offset=(10, 10)):
+            return PAUSE_Bullet
         return False
 
     def handle_combat_quit(self, offset=(20, 20), interval=3):
@@ -199,6 +203,10 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
             return True
         if QUIT_YoRHa.match_luma(self.device.image, offset=offset):
             self.device.click(QUIT_YoRHa)
+            timer.reset()
+            return True
+        if QUIT_Ritual.match_luma(self.device.image, offset=offset):
+            self.device.click(QUIT_Ritual)
             timer.reset()
             return True
         return False
@@ -498,19 +506,18 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
     def handle_exp_info(self):
         """
         Returns:
-            bool:
+            bool: If an EXP screen is detected, including while waiting to retry.
         """
         if self.is_combat_executing():
             return False
-        if self.appear_then_click(EXP_INFO_S):
-            self.device.sleep((0.25, 0.5))
-            return True
-        if self.appear_then_click(EXP_INFO_A):
-            self.device.sleep((0.25, 0.5))
-            return True
-        if self.appear_then_click(EXP_INFO_B):
-            self.device.sleep((0.25, 0.5))
-            return True
+        for button in [EXP_INFO_S, EXP_INFO_A, EXP_INFO_B]:
+            if self.appear(button, threshold=30):
+                # Keep handling this screen while throttling animation-skip clicks.
+                timer = self.get_interval_timer(button, interval=1, renew=True)
+                if timer.reached():
+                    self.device.click(button)
+                    timer.reset()
+                return True
 
         return False
 
@@ -522,7 +529,7 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         Returns:
             bool:
         """
-        if self.appear_then_click(GET_SHIP, interval=1):
+        if self.appear_then_click(GET_SHIP, offset=(20, 20), interval=1):
             if self.appear(NEW_SHIP):
                 logger.info('Get a new SHIP')
                 if drop:

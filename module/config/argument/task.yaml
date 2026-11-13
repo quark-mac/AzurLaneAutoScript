@@ -353,12 +353,16 @@ Island:
   menu: 'collapse'
   page: 'setting'
   tasks:
+    IslandGeneral:
+      - IslandGeneral
     IslandProduction:
       - Scheduler
       - IslandProduction
     IslandOrder:
       - Scheduler
       - IslandOrder
+    IslandTransport:
+      - Scheduler
     IslandFreebie:
       - Scheduler
       - IslandFreebie
